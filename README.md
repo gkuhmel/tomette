@@ -13,9 +13,9 @@ npm test         # tests Vitest de src/core
 npm run build    # vérification des types + build statique dans dist/
 ```
 
-- Sur iPhone : ouvrir l'URL du serveur de dev dans Safari.
-- Sur ordinateur : ajouter `?dev=1` (désactive la garde Safari, active la souris,
-  affiche le bouton ⚙ du panneau de debug).
+- Fonctionne sur iPhone (Safari) et sur ordinateur (Chrome, etc.).
+- Sur ordinateur : glisser à la souris, Espace maintenue pour faire monter la pile.
+- `?dev=1` affiche en plus le bouton ⚙ du panneau de debug.
 
 ## Jouer
 
@@ -33,7 +33,7 @@ npm run build    # vérification des types + build statique dans dist/
   gravité, chaînes, montée, RNG, orchestration à 60 Hz).
 - `src/render/` : rendu Canvas 2D (sprites pré-rendus par couleur).
 - `src/input/` : geste glisser-tenir (Pointer Events).
-- `src/ui/` : écrans, garde Safari, panneau de debug, localStorage.
+- `src/ui/` : écrans, panneau de debug, localStorage.
 
 ## Choix d'implémentation à noter
 

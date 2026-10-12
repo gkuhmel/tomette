@@ -7,20 +7,16 @@ import { computeLayout, Layout } from './render/layout';
 import { Renderer } from './render/renderer';
 import { attachLongPress, DebugPanel, loadSavedConfig } from './ui/debug';
 import { el, formatTime } from './ui/dom';
-import { isDevMode, isIosSafari } from './ui/guard';
-import { gameOverScreen, guardScreen, homeScreen, pauseScreen, rotateScreen } from './ui/screens';
+import { isDevMode, isPhone } from './ui/guard';
+import { gameOverScreen, homeScreen, pauseScreen, rotateScreen } from './ui/screens';
 import { loadBest, saveBest } from './ui/storage';
 
 type State = 'home' | 'playing' | 'paused' | 'over';
 
 const dev = isDevMode();
-const ios = isIosSafari();
+const phone = isPhone();
 
 function boot(): void {
-  if (!ios && !dev) {
-    guardScreen(location.origin + location.pathname).show();
-    return;
-  }
   if (dev) document.body.classList.add('dev');
   loadSavedConfig();
 
@@ -58,7 +54,7 @@ function boot(): void {
   let debugOpen = false;
 
   const renderer = new Renderer(canvas);
-  const input = new BoardInput(canvas, () => (state === 'playing' ? game : null), () => layout, dev);
+  const input = new BoardInput(canvas, () => (state === 'playing' ? game : null), () => layout);
 
   const debug = new DebugPanel({
     getGame: () => game,
@@ -120,7 +116,7 @@ function boot(): void {
     pause.show();
   }
 
-  const isLandscape = () => ios && window.matchMedia('(orientation: landscape)').matches;
+  const isLandscape = () => phone && window.matchMedia('(orientation: landscape)').matches;
 
   function updateOrientation(): void {
     if (isLandscape()) {
@@ -148,7 +144,6 @@ function boot(): void {
     raise.classList.toggle('active', game.manualRise);
   };
   raise.addEventListener('pointerdown', (e) => {
-    if (e.pointerType === 'mouse' && !dev) return;
     e.preventDefault();
     try {
       raise.setPointerCapture(e.pointerId);
@@ -160,6 +155,17 @@ function boot(): void {
   for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture'] as const) {
     raise.addEventListener(ev, () => setRise(false));
   }
+  // Clavier (ordinateur) : Espace maintenue = accélération.
+  window.addEventListener('keydown', (e) => {
+    if (e.code !== 'Space' || debugOpen) return;
+    e.preventDefault();
+    if (state === 'playing') setRise(true);
+    else if (!e.repeat && (state === 'home' || state === 'over')) startGame();
+  });
+  window.addEventListener('keyup', (e) => {
+    if (e.code === 'Space') setRise(false);
+  });
+  window.addEventListener('blur', () => setRise(false));
 
   // --- Plateforme ---------------------------------------------------------
   document.addEventListener('visibilitychange', () => {

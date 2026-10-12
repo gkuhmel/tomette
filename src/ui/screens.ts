@@ -56,14 +56,6 @@ export function pauseScreen(): Screen {
   return new Screen('screen-pause', [el('h2', {}, ['Pause']), el('p', { class: 'cta' }, ['Touche pour reprendre'])]);
 }
 
-export function guardScreen(url: string): Screen {
-  return new Screen('screen-guard', [
-    el('h1', {}, ['Tomettes']),
-    el('p', {}, ['Tomettes se joue sur iPhone, dans Safari.']),
-    el('p', { class: 'url' }, [url]),
-  ]);
-}
-
 export function rotateScreen(): Screen {
   return new Screen('screen-rotate', [el('p', { class: 'rotate-icon' }, ['📱']), el('p', {}, ['Tourne ton téléphone'])]);
 }

@@ -17,7 +17,6 @@ export class BoardInput {
     private canvas: HTMLCanvasElement,
     private getGame: () => Game | null,
     private getLayout: () => Layout | null,
-    private allowMouse: boolean,
   ) {
     canvas.addEventListener('pointerdown', this.onDown);
     canvas.addEventListener('pointermove', this.onMove);
@@ -46,7 +45,7 @@ export class BoardInput {
   }
 
   private onDown = (e: PointerEvent): void => {
-    if (e.pointerType === 'mouse' && !this.allowMouse) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
     if (this.pointerId !== null) return;
     const game = this.getGame();
     if (!game || game.over) return;
