@@ -22,6 +22,10 @@ export const defaultConfig = {
   clearDurationMs: 600,
   pointsPerTile: 10,
   comboBonusPerExtraTile: 30,
+  /** Rosace : 6 tuiles de même couleur autour d'une autre (1 = activée, 0 = désactivée). */
+  rosace: 1,
+  rosaceBonus: 500,
+  rosacePauseS: 3,
 };
 
 export type Config = typeof defaultConfig;

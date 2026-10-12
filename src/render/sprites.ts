@@ -4,6 +4,9 @@ const GLYPH_COLOR = 'rgba(255, 248, 232, 0.92)';
 
 export type Variant = 'normal' | 'dim' | 'flash';
 
+/** « Couleur » de sprite réservée à la tomette d'or. */
+export const GOLD = 99;
+
 /** Trace un hexagone flat-top centré en (x, y). */
 export function hexPath(ctx: CanvasRenderingContext2D, x: number, y: number, r: number): void {
   ctx.beginPath();
@@ -77,6 +80,21 @@ function drawGlyph(ctx: CanvasRenderingContext2D, kind: number, x: number, y: nu
   }
 }
 
+/** Rosace à 6 pétales (glyphe de la tomette d'or). */
+function drawRosette(ctx: CanvasRenderingContext2D, x: number, y: number, s: number): void {
+  ctx.fillStyle = '#d0951a';
+  for (let i = 0; i < 6; i++) {
+    const a = (Math.PI / 3) * i + Math.PI / 6;
+    ctx.beginPath();
+    ctx.ellipse(x + Math.cos(a) * s * 0.5, y + Math.sin(a) * s * 0.5, s * 0.42, s * 0.2, a, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.beginPath();
+  ctx.arc(x, y, s * 0.22, 0, Math.PI * 2);
+  ctx.fillStyle = '#b5543a';
+  ctx.fill();
+}
+
 /** Cache de sprites pré-rendus (une image par couleur et variante), reconstruit au redimensionnement. */
 export class SpriteCache {
   private cache = new Map<string, HTMLCanvasElement>();
@@ -114,7 +132,8 @@ export class SpriteCache {
     const cx = this.half;
     const cy = this.half;
     const r = R * 0.94;
-    const base = TILE_COLORS[color % TILE_COLORS.length];
+    const gold = color === GOLD;
+    const base = gold ? '#efe2bf' : TILE_COLORS[color % TILE_COLORS.length];
 
     // Émail : dégradé radial clair au centre.
     const grad = ctx.createRadialGradient(cx - r * 0.25, cy - r * 0.3, r * 0.1, cx, cy, r);
@@ -126,14 +145,15 @@ export class SpriteCache {
     ctx.fill();
     // Liseré.
     ctx.lineWidth = Math.max(1, R * 0.08);
-    ctx.strokeStyle = shade(base, -0.45);
+    ctx.strokeStyle = gold ? '#c08a1e' : shade(base, -0.45);
     ctx.stroke();
     hexPath(ctx, cx, cy, r * 0.84);
     ctx.lineWidth = Math.max(1, R * 0.04);
     ctx.strokeStyle = 'rgba(255,255,255,0.22)';
     ctx.stroke();
 
-    drawGlyph(ctx, color, cx, cy, R * 0.42);
+    if (gold) drawRosette(ctx, cx, cy, R * 0.62);
+    else drawGlyph(ctx, color, cx, cy, R * 0.42);
 
     if (variant === 'dim') {
       hexPath(ctx, cx, cy, r + 1);

@@ -15,6 +15,8 @@ export interface Tile {
   /** Décalage (en cases) d'où vient la tuile pendant un échange, pour l'animation. */
   swapDc: number;
   swapDr: number;
+  /** Tomette d'or (née d'une rosace) : ne s'aligne pas, s'active par échange. */
+  special: boolean;
 }
 
 export class Grid {
@@ -44,7 +46,7 @@ export class Grid {
   }
 
   makeTile(color: number): Tile {
-    return { id: this.nextId++, color, state: 'idle', timer: 0, fall: 0, chain: false, swapDc: 0, swapDr: 0 };
+    return { id: this.nextId++, color, state: 'idle', timer: 0, fall: 0, chain: false, swapDc: 0, swapDr: 0, special: false };
   }
 
   /** Crée et pose une tuile idle. */

@@ -23,6 +23,10 @@ npm run build    # vérification des types + build statique dans dist/
   (haut-gauche, bas-gauche, haut-droite, bas-droite) : les tuiles s'échangent.
   On peut enchaîner plusieurs échanges dans le même glissé. Jamais en vertical.
 - Alignements de 3+ sur les 3 axes (vertical et deux diagonales).
+- Rosace : 6 tuiles d'une même couleur autour d'une tuile d'une autre couleur.
+  L'anneau disparaît (bonus + pause) et le centre devient une tomette d'or ;
+  l'échanger avec une voisine fait disparaître toute la couleur de cette voisine.
+  Désactivable dans le panneau de debug (`rosace` = 0).
 - Bouton « Monter » : accélère la pile (et annule le stop time).
 - Panneau de debug : appui long (1 s) dans le coin haut-gauche.
 

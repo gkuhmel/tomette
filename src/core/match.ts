@@ -10,7 +10,7 @@ export function findMatches(grid: Grid): Cell[] {
   const hit = new Uint8Array(grid.cols * grid.rows);
   const colorAt = (c: number, r: number): number => {
     const t = grid.get(c, r);
-    return t && t.state === 'idle' ? t.color : -1;
+    return t && t.state === 'idle' && !t.special ? t.color : -1;
   };
 
   for (let r = 0; r < grid.rows; r++) {

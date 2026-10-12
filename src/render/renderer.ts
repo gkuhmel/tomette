@@ -1,7 +1,7 @@
 import type { Game } from '../core/game';
 import { cellCenter } from '../core/hex';
 import { Layout } from './layout';
-import { hexPath, SpriteCache } from './sprites';
+import { GOLD, hexPath, SpriteCache } from './sprites';
 
 interface Popup {
   text: string;
@@ -65,7 +65,7 @@ export class Renderer {
       return;
     }
     for (const e of game.events) {
-      if (e.chain < 2 && e.size < 4) continue;
+      if (e.chain < 2 && e.size < 4 && !e.rosaces && !e.gold) continue;
       let x = 0;
       let y = 0;
       for (const { c, r } of e.cells) {
@@ -76,8 +76,11 @@ export class Renderer {
       x = x / e.cells.length + L.x0;
       y = y / e.cells.length + L.y0 - game.riseOffset * L.h;
       this.popups.push({
-        text: e.chain >= 2 ? `×${e.chain}` : `${e.size}`,
-        sub: e.chain >= 2 && e.size >= 4 ? `combo ${e.size}` : e.chain >= 2 ? 'chaîne' : 'combo',
+        text: e.rosaces ? 'Rosace !' : e.gold ? 'Or !' : e.chain >= 2 ? `×${e.chain}` : `${e.size}`,
+        sub: e.rosaces
+          ? e.chain >= 2 ? `chaîne ×${e.chain}` : `+${e.points}`
+          : e.gold ? `${e.size - 1} tuiles`
+          : e.chain >= 2 && e.size >= 4 ? `combo ${e.size}` : e.chain >= 2 ? 'chaîne' : 'combo',
         x,
         y,
         born: now,
@@ -117,6 +120,7 @@ export class Renderer {
       for (let c = 0; c < g.cols; c++) {
         const t = g.get(c, r);
         if (!t) continue;
+        const color = t.special ? GOLD : t.color;
         const p = cellCenter(c, r, R);
         let x = x0 + p.x;
         let y = y0 + p.y - rise;
@@ -137,11 +141,11 @@ export class Renderer {
           const k = 1 - t.timer / Math.max(1, cfg.clearDurationMs);
           if (k < 0.65) {
             const flash = Math.floor(now / 70) % 2 === 0;
-            ctx.drawImage(this.sprites.get(t.color, flash ? 'flash' : 'normal'), x - half, y - half, size, size);
+            ctx.drawImage(this.sprites.get(color, flash ? 'flash' : 'normal'), x - half, y - half, size, size);
           } else {
             const s = Math.max(0, 1 - (k - 0.65) / 0.35);
             const sz = size * s;
-            ctx.drawImage(this.sprites.get(t.color, 'flash'), x - sz / 2, y - sz / 2, sz, sz);
+            ctx.drawImage(this.sprites.get(color, 'flash'), x - sz / 2, y - sz / 2, sz, sz);
           }
           continue;
         }
@@ -149,9 +153,16 @@ export class Renderer {
         if (t.id === heldId) {
           held = { x, y };
           const sz = size * 1.1;
-          ctx.drawImage(this.sprites.get(t.color, 'normal'), x - sz / 2, y - sz / 2, sz, sz);
+          ctx.drawImage(this.sprites.get(color, 'normal'), x - sz / 2, y - sz / 2, sz, sz);
         } else {
-          ctx.drawImage(this.sprites.get(t.color, 'normal'), x - half, y - half, size, size);
+          ctx.drawImage(this.sprites.get(color, 'normal'), x - half, y - half, size, size);
+        }
+        if (t.special) {
+          // Halo qui pulse autour de la tomette d'or.
+          hexPath(ctx, x, y, R * 0.98);
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = `rgba(255, 236, 170, ${0.35 + 0.35 * Math.sin(now * 0.006 + t.id)})`;
+          ctx.stroke();
         }
       }
     }

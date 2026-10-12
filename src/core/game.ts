@@ -4,6 +4,7 @@ import { stepGravity } from './gravity';
 import { Grid, Tile } from './grid';
 import { Cell, directionTo, LATERAL_DIRS } from './hex';
 import { findMatches } from './match';
+import { findRosaces, Rosace } from './rosace';
 import { activatePreview, fillInitial, generatePreview, levelAt, secondsPerRow } from './rise';
 import { Rng } from './rng';
 
@@ -16,6 +17,10 @@ export interface ClearEvent {
   chain: number;
   size: number;
   points: number;
+  /** Nombre de rosaces formées par ce clear. */
+  rosaces: number;
+  /** Clear déclenché par une tomette d'or. */
+  gold: boolean;
 }
 
 export type GameEvent = ClearEvent;
@@ -97,6 +102,11 @@ export class Game {
     const g = this.grid;
     const a = g.get(c1, r1);
     const b = g.get(c2, r2);
+    // Tomette d'or échangée avec une tuile normale : toute la couleur disparaît.
+    if (a && b && a.special !== b.special) {
+      this.activateGold(a.special ? { c: c1, r: r1 } : { c: c2, r: r2 }, a.special ? b.color : a.color);
+      return true;
+    }
     g.set(c1, r1, b);
     g.set(c2, r2, a);
     const dur = this.cfg.swapDurationMs;
@@ -140,7 +150,8 @@ export class Game {
 
     // 3. Alignements.
     const matched = findMatches(g);
-    if (matched.length > 0) this.startClear(matched);
+    const rosaces = cfg.rosace ? findRosaces(g) : [];
+    if (matched.length > 0 || rosaces.length > 0) this.startClear(matched, rosaces);
 
     // 4. Une tuile posée qui ne participe pas à un clear perd son drapeau chain.
     g.forEach((t) => {
@@ -158,22 +169,48 @@ export class Game {
     this.updateRise(dtS);
   }
 
-  private startClear(cells: Cell[]): void {
+  /** Lance la disparition des alignements et des anneaux de rosace ; les centres deviennent des tomettes d'or. */
+  private startClear(matched: Cell[], rosaces: Rosace[] = [], gold = false): void {
     const cfg = this.cfg;
-    const tiles = cells.map(({ c, r }) => this.grid.get(c, r)!);
+    const g = this.grid;
+    const key = ({ c, r }: Cell) => r * g.cols + c;
+    const centers = new Set(rosaces.map((k) => key(k.center)));
+    const seen = new Set<number>();
+    const cells: Cell[] = [];
+    for (const cell of [...matched, ...rosaces.flatMap((k) => k.ring)]) {
+      const k = key(cell);
+      if (seen.has(k) || centers.has(k)) continue;
+      seen.add(k);
+      cells.push(cell);
+    }
+    const tiles = cells.map(({ c, r }) => g.get(c, r)!);
     if (tiles.some((t) => t.chain)) this.chain++;
     for (const t of tiles) {
       t.state = 'clearing';
       t.timer = cfg.clearDurationMs;
     }
+    for (const k of rosaces) g.get(k.center.c, k.center.r)!.special = true;
+
     const size = cells.length;
-    const points = pointsFor(cfg, this.chain, size);
+    const points = pointsFor(cfg, this.chain, size) + rosaces.length * cfg.rosaceBonus * this.chain;
     this.score += points;
-    this.stopTime = Math.max(this.stopTime, stopTimeFor(cfg, this.chain, size));
+    const pause = Math.max(stopTimeFor(cfg, this.chain, size), rosaces.length ? cfg.rosacePauseS : 0);
+    this.stopTime = Math.max(this.stopTime, pause);
     // Un clear pendant la grâce annule l'alerte.
     this.alert = false;
     this.graceLeft = 0;
-    this.events.push({ kind: 'clear', cells, chain: this.chain, size, points });
+    const where = rosaces.length ? rosaces.map((k) => k.center) : gold ? [cells[0]] : cells;
+    this.events.push({ kind: 'clear', cells: where, chain: this.chain, size, points, rosaces: rosaces.length, gold });
+  }
+
+  /** La tomette d'or en `at` et toutes les tuiles posées de la couleur `color` disparaissent. */
+  private activateGold(at: Cell, color: number): void {
+    const cells: Cell[] = [at];
+    this.grid.forEach((t, c, r) => {
+      if (t.special || t.color !== color) return;
+      if (t.state === 'idle' || t.state === 'hovering') cells.push({ c, r });
+    });
+    this.startClear(cells, [], true);
   }
 
   private updateRise(dtS: number): void {

@@ -1,5 +1,5 @@
 import { Cell, cellCenter, cellHeight } from '../core/hex';
-import { SpriteCache, Variant } from '../render/sprites';
+import { GOLD, SpriteCache, Variant } from '../render/sprites';
 import { el } from './dom';
 import { Screen } from './screens';
 
@@ -8,6 +8,8 @@ interface SceneTile extends Cell {
   color: number;
   variant?: Variant;
   ring?: boolean;
+  /** Tomette d'or. */
+  gold?: boolean;
 }
 
 interface Scene {
@@ -72,7 +74,7 @@ function drawScene(scene: Scene, dpr: number): HTMLCanvasElement {
   for (const t of scene.tiles) {
     const p = at(t.c, t.r);
     const variant: Variant = t.variant ?? (t.r === scene.previewRow ? 'dim' : 'normal');
-    ctx.drawImage(sprites.get(t.color, variant), p.x - half, p.y - half, half * 2, half * 2);
+    ctx.drawImage(sprites.get(t.gold ? GOLD : t.color, variant), p.x - half, p.y - half, half * 2, half * 2);
   }
   for (const t of scene.tiles) {
     if (!t.ring) continue;
@@ -279,6 +281,38 @@ const riseScene: Scene = {
   ]),
 };
 
+const rosaceBefore: Scene = {
+  R: 24,
+  cols: 3,
+  rows: 3,
+  tiles: [
+    { c: 1, r: 1, color: RED_ },
+    ...[[1, 0], [1, 2], [0, 1], [0, 2], [2, 1], [2, 2]].map(([c, r]) => ({ c, r, color: TEAL, ring: true })),
+  ],
+};
+
+const rosaceAfter: Scene = {
+  R: 24,
+  cols: 3,
+  rows: 3,
+  tiles: [{ c: 1, r: 2, color: RED_, gold: true }],
+  falls: [[{ c: 1, r: 1 }, { c: 1, r: 2 }]],
+};
+
+const goldUse: Scene = {
+  R: 26,
+  cols: 3,
+  rows: 3,
+  tiles: [
+    { c: 1, r: 2, color: RED_, gold: true },
+    { c: 0, r: 2, color: BLUE, ring: true },
+    { c: 0, r: 0, color: BLUE, ring: true },
+    { c: 2, r: 1, color: BLUE, ring: true },
+    ...filler([[0, 1, GREEN], [1, 1, YELLOW], [1, 0, RED_], [2, 2, PURPLE]]),
+  ],
+  arrows: [[{ c: 1, r: 2 }, { c: 0, r: 2 }]],
+};
+
 // --- Écran -----------------------------------------------------------------
 
 export function howToScreen(onPlay: () => void, onBack: () => void): Screen {
@@ -328,6 +362,17 @@ export function howToScreen(onPlay: () => void, onBack: () => void): Screen {
         'Une nouvelle rangée (assombrie) arrive par le bas, de plus en plus vite.',
         'Maintiens « Monter » (ou la touche Espace) pour accélérer.',
         'Si une tuile touche le haut, le cadre devient rouge : tu as 2 secondes pour faire un alignement, sinon c\'est perdu.',
+      ),
+      section(
+        '6. La rosace',
+        fig(rosaceBefore, '→', rosaceAfter),
+        'Entoure une tuile de 6 tuiles d\'une même autre couleur : c\'est une rosace ! L\'anneau disparaît (gros bonus, longue pause de la pile) et la tuile du centre devient une tomette d\'or.',
+        'Pas de rosace sur les bords : il faut les 6 voisines.',
+      ),
+      section(
+        '',
+        fig(goldUse),
+        'Échange la tomette d\'or avec une voisine : toutes les tuiles de cette couleur disparaissent de la grille. Garde-la pour te sortir d\'une situation difficile !',
       ),
       el('div', { class: 'howto-buttons' }, [back, play]),
     ]),
