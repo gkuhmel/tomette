@@ -84,11 +84,13 @@ body {
 #controls {
   display: flex;
   justify-content: center;
+  gap: 8px;
   padding: 6px 12px 10px;
 }
 
 #raise {
-  width: min(100%, 360px);
+  flex: 1;
+  max-width: 360px;
   height: 52px;
   border: 0;
   border-radius: 14px;
@@ -310,17 +312,15 @@ body.alert #hud {
 }
 
 #debug-gear {
-  position: fixed;
-  right: calc(8px + env(safe-area-inset-right));
-  bottom: calc(76px + env(safe-area-inset-bottom));
-  z-index: 15;
-  width: 40px;
-  height: 40px;
-  border: 0;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.45);
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border: 2px solid var(--terracotta);
+  border-radius: 14px;
+  background: transparent;
   color: var(--fg);
-  font-size: 20px;
+  font-size: 22px;
+  cursor: pointer;
 }
 
 #debug-panel {

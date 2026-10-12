@@ -15,7 +15,7 @@ npm run build    # vérification des types + build statique dans dist/
 
 - Fonctionne sur iPhone (Safari) et sur ordinateur (Chrome, etc.).
 - Sur ordinateur : glisser à la souris, Espace maintenue pour faire monter la pile.
-- `?dev=1` affiche en plus le bouton ⚙ du panneau de debug.
+- Panneau de debug : bouton ⚙ à côté de « Monter » (ou appui long 1 s en haut à gauche).
 
 ## Jouer
 
@@ -29,7 +29,6 @@ npm run build    # vérification des types + build statique dans dist/
   l'échanger avec une voisine fait disparaître toute la couleur de cette voisine.
   Désactivable dans le panneau de debug (`rosace` = 0).
 - Bouton « Monter » : accélère la pile (et annule le stop time).
-- Panneau de debug : appui long (1 s) dans le coin haut-gauche.
 
 ## Organisation
 

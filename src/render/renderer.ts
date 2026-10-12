@@ -12,6 +12,9 @@ interface Popup {
 }
 
 const POPUP_MS = 1100;
+/** Durée du fondu d'une nouvelle rangée d'aperçu, et du passage aperçu → jouable. */
+const PREVIEW_FADE_MS = 450;
+const ACTIVATE_FADE_MS = 250;
 const BG = '#2a1a14';
 
 export class Renderer {
@@ -20,6 +23,10 @@ export class Renderer {
   private boardBg: HTMLCanvasElement | null = null;
   private layout: Layout | null = null;
   private popups: Popup[] = [];
+  private previewId = -1;
+  private previewBorn = 0;
+  private activatedIds = new Set<number>();
+  private activatedAt = 0;
 
   constructor(private canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext('2d', { alpha: false })!;
@@ -35,6 +42,26 @@ export class Renderer {
 
   reset(): void {
     this.popups = [];
+    this.previewId = -1;
+    this.activatedIds.clear();
+  }
+
+  /** Repère l'arrivée d'une nouvelle rangée d'aperçu pour l'animer. */
+  private trackPreview(game: Game, now: number): void {
+    const first = game.preview[0];
+    if (!first || first.id === this.previewId) return;
+    // L'ancienne rangée d'aperçu vient de devenir jouable.
+    this.activatedIds = new Set();
+    if (this.previewId >= 0) {
+      game.grid.forEach((t, _c, r) => {
+        if (r === game.grid.rows - 1) this.activatedIds.add(t.id);
+      });
+      this.activatedAt = now;
+      this.previewBorn = now;
+    } else {
+      this.previewBorn = now - PREVIEW_FADE_MS; // première rangée : pas de fondu
+    }
+    this.previewId = first.id;
   }
 
   private renderBoardBg(L: Layout, cols: number, rows: number): HTMLCanvasElement {
@@ -107,13 +134,18 @@ export class Renderer {
     const size = half * 2;
     const shake = game.alert ? Math.min(3, R * 0.08) : 0;
 
-    // Rangée d'aperçu (assombrie, non interactive).
+    // Rangée d'aperçu (assombrie, non interactive), en fondu à son arrivée.
+    this.trackPreview(game, now);
+    const fadeIn = Math.min(1, (now - this.previewBorn) / PREVIEW_FADE_MS);
+    ctx.globalAlpha = fadeIn * fadeIn * (3 - 2 * fadeIn);
     for (let c = 0; c < g.cols; c++) {
       const t = game.preview[c];
       if (!t) continue;
       const p = cellCenter(c, g.rows, R);
       ctx.drawImage(this.sprites.get(t.color, 'dim'), x0 + p.x - half, y0 + p.y - rise - half, size, size);
     }
+    ctx.globalAlpha = 1;
+    const activating = Math.max(0, 1 - (now - this.activatedAt) / ACTIVATE_FADE_MS);
 
     let held: { x: number; y: number } | null = null;
     for (let r = 0; r < g.rows; r++) {
@@ -156,6 +188,12 @@ export class Renderer {
           ctx.drawImage(this.sprites.get(color, 'normal'), x - sz / 2, y - sz / 2, sz, sz);
         } else {
           ctx.drawImage(this.sprites.get(color, 'normal'), x - half, y - half, size, size);
+        }
+        if (activating > 0 && this.activatedIds.has(t.id)) {
+          // La rangée qui devient jouable s'éclaire progressivement.
+          ctx.globalAlpha = activating;
+          ctx.drawImage(this.sprites.get(color, 'dim'), x - half, y - half, size, size);
+          ctx.globalAlpha = 1;
         }
         if (t.special) {
           // Halo qui pulse autour de la tomette d'or.
