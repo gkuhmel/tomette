@@ -1,5 +1,5 @@
-import { Grid, Tile } from './grid';
-import { ColorLookup, wouldMatch } from './match';
+import { Grid, Tile, TileKind } from './grid';
+import { ColorLookup, findMatches, wouldMatch } from './match';
 import { Rng } from './rng';
 import { findRosaces } from './rosace';
 
@@ -79,12 +79,31 @@ function shiftedLookup(grid: Grid, preview: readonly (Tile | null)[]): ColorLook
   };
 }
 
+/** Probabilités d'apparition des tuiles spéciales dans les nouvelles rangées. */
+export interface KindChances {
+  cracked: number;
+  sealed: number;
+  joker: number;
+}
+
+const NO_KINDS: KindChances = { cracked: 0, sealed: 0, joker: 0 };
+
+function pickKind(rng: Rng, p: KindChances): TileKind {
+  const x = rng.next();
+  if (x < p.joker) return 'joker';
+  if (x < p.joker + p.cracked) return 'cracked';
+  if (x < p.joker + p.cracked + p.sealed) return 'sealed';
+  return 'normal';
+}
+
 /** Génère une rangée d'aperçu qui ne crée pas d'alignement avec la grille actuelle. */
-export function generatePreview(grid: Grid, rng: Rng, colors: number): Tile[] {
+export function generatePreview(grid: Grid, rng: Rng, colors: number, chances: KindChances = NO_KINDS): Tile[] {
   const preview: (Tile | null)[] = new Array(grid.cols).fill(null);
   const lookup = shiftedLookup(grid, preview);
   for (let c = 0; c < grid.cols; c++) {
-    preview[c] = grid.makeTile(pickColor(rng, colors, lookup, c, grid.rows - 1));
+    const t = grid.makeTile(pickColor(rng, colors, lookup, c, grid.rows - 1));
+    t.kind = pickKind(rng, chances);
+    preview[c] = t;
   }
   return preview as Tile[];
 }
@@ -106,5 +125,17 @@ export function activatePreview(grid: Grid, preview: Tile[], rng: Rng, colors: n
     if (wouldMatch(lookup, c, last, t.color)) t.color = pickColor(rng, colors, lookup, c, last);
     grid.set(c, last, t);
   }
-  breakRosaces(grid, rng, colors);
+  // Les jokers (de la nouvelle rangée ou déjà en jeu) peuvent compléter une
+  // série : on corrige la nouvelle rangée jusqu'à n'avoir ni alignement ni rosace.
+  for (let guard = 0; guard < 30; guard++) {
+    breakRosaces(grid, rng, colors);
+    const bad = findMatches(grid).filter((k) => k.r === last);
+    if (bad.length === 0) return;
+    for (const { c } of bad) {
+      const t = grid.get(c, last)!;
+      if (t.kind === 'joker') t.kind = 'normal';
+      else t.color = pickColor(rng, colors, lookup, c, last);
+    }
+    if (guard > 10) for (const { c } of bad) grid.get(c, last)!.kind = 'cracked';
+  }
 }

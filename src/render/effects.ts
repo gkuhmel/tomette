@@ -34,6 +34,7 @@ interface Seen {
   x: number;
   y: number;
   color: number;
+  kind: string;
 }
 
 const MAX_PARTICLES = 260;
@@ -82,9 +83,13 @@ export class Effects {
     const next = new Map<number, Seen>();
     g.forEach((t, c, r) => {
       const p = cellCenter(c, r, L.R);
-      const s = { state: t.state, x: L.x0 + p.x, y: L.y0 + p.y - rise, color: t.special ? -1 : t.color };
+      const s = { state: t.state, x: L.x0 + p.x, y: L.y0 + p.y - rise, color: t.special || t.kind === 'joker' ? -1 : t.color, kind: t.kind };
       const prev = this.seen.get(t.id);
       if (prev && prev.state === 'falling' && t.state !== 'falling') this.landed.set(t.id, now);
+      // Tuile réparée ou libérée : petite onde.
+      if (this.enabled && prev && prev.kind !== 'normal' && prev.kind !== 'joker' && t.kind === 'normal') {
+        this.rings.push({ x: s.x, y: s.y, born: now, life: 420, maxR: L.R * 1.4, color: theme.gold.border });
+      }
       next.set(t.id, s);
     });
     if (this.enabled) {

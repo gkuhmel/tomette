@@ -2,7 +2,7 @@ import type { Game } from '../core/game';
 import { cellCenter } from '../core/hex';
 import { Layout } from './layout';
 import { Effects } from './effects';
-import { GOLD, hexPath, SpriteCache } from './sprites';
+import { GOLD, hexPath, JOKER, SpriteCache } from './sprites';
 import { Theme, themeFor } from './theme';
 
 interface Popup {
@@ -184,7 +184,15 @@ export class Renderer {
       const t = game.preview[c];
       if (!t) continue;
       const p = cellCenter(c, g.rows, R);
-      ctx.drawImage(this.sprites.get(t.color, 'dim'), x0 + p.x - half, y0 + p.y - rise - half, size, size);
+      const px = x0 + p.x - half;
+      const py = y0 + p.y - rise - half;
+      ctx.drawImage(this.sprites.get(t.kind === 'joker' ? JOKER : t.color, 'dim'), px, py, size, size);
+      if (t.kind === 'cracked' || t.kind === 'sealed') {
+        const a = ctx.globalAlpha;
+        ctx.globalAlpha = a * 0.55;
+        ctx.drawImage(this.sprites.overlay(t.kind), px, py, size, size);
+        ctx.globalAlpha = a;
+      }
     }
     ctx.globalAlpha = 1;
     const activating = Math.max(0, 1 - (now - this.activatedAt) / ACTIVATE_FADE_MS);
@@ -194,7 +202,7 @@ export class Renderer {
       for (let c = 0; c < g.cols; c++) {
         const t = g.get(c, r);
         if (!t) continue;
-        const color = t.special ? GOLD : t.color;
+        const color = t.special ? GOLD : t.kind === 'joker' ? JOKER : t.color;
         const p = cellCenter(c, r, R);
         let x = x0 + p.x;
         let y = y0 + p.y - rise;
@@ -238,6 +246,10 @@ export class Renderer {
           } else {
             ctx.drawImage(this.sprites.get(color, 'normal'), x - half, y - half, size, size);
           }
+        }
+        if (t.kind === 'cracked' || t.kind === 'sealed') {
+          const sz = t.id === heldId ? size * 1.1 : size;
+          ctx.drawImage(this.sprites.overlay(t.kind), x - sz / 2, y - sz / 2, sz, sz);
         }
         if (activating > 0 && this.activatedIds.has(t.id)) {
           // La rangée qui devient jouable s'éclaire progressivement.

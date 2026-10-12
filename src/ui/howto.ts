@@ -1,5 +1,5 @@
 import { Cell, cellCenter, cellHeight } from '../core/hex';
-import { GOLD, SpriteCache, Variant } from '../render/sprites';
+import { GOLD, JOKER, SpriteCache, Variant } from '../render/sprites';
 import { Theme, THEMES } from '../render/theme';
 import { el } from './dom';
 import { Screen } from './screens';
@@ -11,6 +11,7 @@ interface SceneTile extends Cell {
   ring?: boolean;
   /** Tomette d'or. */
   gold?: boolean;
+  kind?: 'cracked' | 'sealed' | 'joker';
 }
 
 interface Scene {
@@ -75,7 +76,8 @@ function drawScene(scene: Scene, dpr: number): HTMLCanvasElement {
   for (const t of scene.tiles) {
     const p = at(t.c, t.r);
     const variant: Variant = t.variant ?? (t.r === scene.previewRow ? 'dim' : 'normal');
-    ctx.drawImage(sprites.get(t.gold ? GOLD : t.color, variant), p.x - half, p.y - half, half * 2, half * 2);
+    ctx.drawImage(sprites.get(t.gold ? GOLD : t.kind === 'joker' ? JOKER : t.color, variant), p.x - half, p.y - half, half * 2, half * 2);
+    if (t.kind === 'cracked' || t.kind === 'sealed') ctx.drawImage(sprites.overlay(t.kind), p.x - half, p.y - half, half * 2, half * 2);
   }
   for (const t of scene.tiles) {
     if (!t.ring) continue;
@@ -315,6 +317,28 @@ const goldUse: Scene = {
   arrows: [[{ c: 1, r: 2 }, { c: 0, r: 2 }]],
 };
 
+const specialsScene: Scene = {
+  R: 26,
+  cols: 5,
+  rows: 1,
+  tiles: [
+    { c: 0, r: 0, color: GREEN, kind: 'cracked' },
+    { c: 2, r: 0, color: BLUE, kind: 'sealed' },
+    { c: 4, r: 0, color: RED_, kind: 'joker' },
+  ],
+};
+
+const jokerScene: Scene = {
+  R: 22,
+  cols: 3,
+  rows: 3,
+  tiles: [
+    ...[0, 2].map((r) => ({ c: 1, r, color: PURPLE, ring: true })),
+    { c: 1, r: 1, color: RED_, kind: 'joker' as const, ring: true },
+    ...filler([[0, 1, YELLOW], [0, 2, GREEN], [2, 1, TEAL], [2, 2, BLUE]]),
+  ],
+};
+
 // --- Écran -----------------------------------------------------------------
 
 export function howToScreen(onPlay: () => void, onBack: () => void): Screen & { setTheme(t: Theme): void } {
@@ -377,8 +401,16 @@ export function howToScreen(onPlay: () => void, onBack: () => void): Screen & { 
         fig(goldUse),
         'Échange la tomette d\'or avec une voisine : toutes les tuiles de cette couleur disparaissent de la grille. Garde-la pour te sortir d\'une situation difficile !',
       ),
+      section(
+        '7. Tuiles spéciales',
+        fig(specialsScene),
+        'Fêlée (à gauche) : elle ne s\'aligne pas. Fais un alignement juste à côté pour la réparer, elle redevient normale.',
+        'Scellée (au milieu) : impossible de la déplacer, mais elle peut s\'aligner. Un alignement juste à côté la libère.',
+        'Joker (à droite) : il compte comme n\'importe quelle couleur.',
+      ),
+      section('', fig(jokerScene), 'Deux violettes + un joker = un alignement.'),
       el('section', {}, [
-        el('h3', {}, ['7. Les modes']),
+        el('h3', {}, ['8. Les modes']),
         el('p', {}, ['Classique : sans fin, la pile accélère avec le temps.']),
         el('p', {}, ['Contre-la-montre : le meilleur score possible avant la fin du chrono.']),
         el('p', {}, ['Mosaïque : un maximum de rosaces avant la fin du chrono.']),

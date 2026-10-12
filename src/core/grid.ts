@@ -2,6 +2,13 @@ import { inBounds } from './hex';
 
 export type TileState = 'idle' | 'swapping' | 'hovering' | 'falling' | 'clearing';
 
+/**
+ * normal ; cracked = tomette fêlée (ne s'aligne pas, réparée par un clear voisin) ;
+ * sealed = tuile scellée (ne peut pas être échangée, libérée par un clear voisin) ;
+ * joker = compte comme n'importe quelle couleur.
+ */
+export type TileKind = 'normal' | 'cracked' | 'sealed' | 'joker';
+
 export interface Tile {
   id: number;
   color: number;
@@ -17,6 +24,7 @@ export interface Tile {
   swapDr: number;
   /** Tomette d'or (née d'une rosace) : ne s'aligne pas, s'active par échange. */
   special: boolean;
+  kind: TileKind;
 }
 
 export class Grid {
@@ -46,7 +54,7 @@ export class Grid {
   }
 
   makeTile(color: number): Tile {
-    return { id: this.nextId++, color, state: 'idle', timer: 0, fall: 0, chain: false, swapDc: 0, swapDr: 0, special: false };
+    return { id: this.nextId++, color, state: 'idle', timer: 0, fall: 0, chain: false, swapDc: 0, swapDr: 0, special: false, kind: 'normal' };
   }
 
   /** Crée et pose une tuile idle. */

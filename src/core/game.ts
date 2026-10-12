@@ -2,7 +2,7 @@ import type { Config } from '../config';
 import { chainInProgress, markChainAbove, pointsFor, stopTimeFor } from './chain';
 import { stepGravity } from './gravity';
 import { Grid, Tile } from './grid';
-import { Cell, directionTo, LATERAL_DIRS } from './hex';
+import { ALL_DIRS, Cell, directionTo, LATERAL_DIRS, neighbor } from './hex';
 import { findMatches } from './match';
 import { findRosaces, Rosace } from './rosace';
 import { activatePreview, fillInitial, generatePreview, levelAt, secondsPerRow } from './rise';
@@ -72,7 +72,12 @@ export class Game {
     this.colors = clampInt(cfg.colors, 3, 6);
     this.grid = new Grid(cols, rows);
     if (!options.empty) fillInitial(this.grid, this.rng, this.colors, clampInt(cfg.initialRows, 0, rows - 2));
-    this.preview = generatePreview(this.grid, this.rng, this.colors);
+    this.preview = generatePreview(this.grid, this.rng, this.colors, this.kindChances());
+  }
+
+  private kindChances() {
+    const k = (v: number) => Math.max(0, Math.min(1, v || 0));
+    return { cracked: k(this.cfg.crackedChance), sealed: k(this.cfg.sealedChance), joker: k(this.cfg.jokerChance) };
   }
 
   get level(): number {
@@ -121,6 +126,7 @@ export class Game {
     if (!a && !b) return false;
     for (const t of [a, b]) {
       if (t && t.state !== 'idle' && t.state !== 'hovering') return false;
+      if (t && t.kind === 'sealed') return false;
     }
     return true;
   }
@@ -132,7 +138,7 @@ export class Game {
     const a = g.get(c1, r1);
     const b = g.get(c2, r2);
     // Tomette d'or échangée avec une tuile normale : toute la couleur disparaît.
-    if (a && b && a.special !== b.special) {
+    if (a && b && a.special !== b.special && (a.special ? b : a).kind !== 'joker') {
       this.activateGold(a.special ? { c: c1, r: r1 } : { c: c2, r: r2 }, a.special ? b.color : a.color);
       return true;
     }
@@ -159,7 +165,7 @@ export class Game {
   forceRise(): boolean {
     if (this.grid.topRowOccupied()) return false;
     activatePreview(this.grid, this.preview, this.rng, this.colors);
-    this.preview = generatePreview(this.grid, this.rng, this.colors);
+    this.preview = generatePreview(this.grid, this.rng, this.colors, this.kindChances());
     this.riseOffset = 0;
     return true;
   }
@@ -238,6 +244,14 @@ export class Game {
       t.timer = cfg.clearDurationMs;
     }
     for (const k of rosaces) g.get(k.center.c, k.center.r)!.special = true;
+    // Un clear répare les tomettes fêlées et libère les tuiles scellées voisines.
+    for (const { c, r } of cells) {
+      for (const dir of ALL_DIRS) {
+        const n = neighbor(c, r, dir);
+        const t = g.get(n.c, n.r);
+        if (t && t.state !== 'clearing' && (t.kind === 'cracked' || t.kind === 'sealed')) t.kind = 'normal';
+      }
+    }
     this.rosaceCount += rosaces.length;
 
     const size = cells.length;
@@ -256,7 +270,7 @@ export class Game {
   private activateGold(at: Cell, color: number): void {
     const cells: Cell[] = [at];
     this.grid.forEach((t, c, r) => {
-      if (t.special || t.color !== color) return;
+      if (t.special || t.kind === 'joker' || t.color !== color) return;
       if (t.state === 'idle' || t.state === 'hovering') cells.push({ c, r });
     });
     this.startClear(cells, [], true);

@@ -4,6 +4,8 @@ export type Variant = 'normal' | 'dim' | 'flash';
 
 /** « Couleur » de sprite réservée à la tomette d'or. */
 export const GOLD = 99;
+/** « Couleur » de sprite réservée au joker. */
+export const JOKER = 98;
 
 /** Trace un hexagone flat-top centré en (x, y). */
 /** Hexagone flat-top aux coins arrondis. */
@@ -110,6 +112,73 @@ function drawRosette(ctx: CanvasRenderingContext2D, x: number, y: number, s: num
   ctx.fill();
 }
 
+/** Joker : 6 pastilles de toutes les couleurs autour d'une étoile. */
+function drawJoker(ctx: CanvasRenderingContext2D, x: number, y: number, R: number, colors: string[]): void {
+  for (let i = 0; i < 6; i++) {
+    const a = (Math.PI / 3) * i + Math.PI / 6;
+    ctx.beginPath();
+    ctx.arc(x + Math.cos(a) * R * 0.5, y + Math.sin(a) * R * 0.5, R * 0.16, 0, Math.PI * 2);
+    ctx.fillStyle = colors[i % colors.length];
+    ctx.fill();
+  }
+  ctx.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const a = -Math.PI / 2 + (Math.PI / 5) * i;
+    const rr = i % 2 === 0 ? R * 0.3 : R * 0.13;
+    const px = x + rr * Math.cos(a);
+    const py = y + rr * Math.sin(a);
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.fillStyle = '#6b5a4e';
+  ctx.fill();
+}
+
+/** Fêlures : traits sombres avec un liseré clair. */
+function drawCracks(ctx: CanvasRenderingContext2D, x: number, y: number, R: number): void {
+  const lines = [
+    [[-0.7, -0.45], [-0.2, -0.12], [0.02, -0.4], [0.38, 0.02], [0.78, 0.18]],
+    [[-0.2, -0.12], [-0.3, 0.38], [0.08, 0.74]],
+  ];
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  for (const [color, w, dy] of [['rgba(255,255,255,0.55)', 0.11, 0.04], ['rgba(45,30,25,0.75)', 0.07, 0]] as const) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = Math.max(1.2, R * w);
+    for (const pts of lines) {
+      ctx.beginPath();
+      pts.forEach(([px, py], i) => (i ? ctx.lineTo(x + px * R, y + (py + dy) * R) : ctx.moveTo(x + px * R, y + (py + dy) * R)));
+      ctx.stroke();
+    }
+  }
+}
+
+/** Tuile scellée : contour épais et petit cadenas. */
+function drawSeal(ctx: CanvasRenderingContext2D, x: number, y: number, R: number): void {
+  hexPath(ctx, x, y, R * 0.86);
+  ctx.lineWidth = Math.max(2, R * 0.12);
+  ctx.strokeStyle = 'rgba(60, 50, 45, 0.7)';
+  ctx.stroke();
+  const lx = x + R * 0.42;
+  const ly = y - R * 0.38;
+  const s = R * 0.3;
+  ctx.fillStyle = '#4a3f39';
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = Math.max(1, R * 0.05);
+  ctx.beginPath();
+  ctx.arc(lx, ly - s * 0.35, s * 0.42, Math.PI, 0);
+  ctx.lineWidth = Math.max(1.5, R * 0.08);
+  ctx.strokeStyle = '#4a3f39';
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.rect(lx - s * 0.6, ly - s * 0.35, s * 1.2, s * 0.95);
+  ctx.fill();
+  ctx.lineWidth = Math.max(1, R * 0.04);
+  ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+  ctx.stroke();
+}
+
 /** Cache de sprites pré-rendus (une image par couleur et variante), reconstruit au redimensionnement. */
 export class SpriteCache {
   private cache = new Map<string, HTMLCanvasElement>();
@@ -131,6 +200,27 @@ export class SpriteCache {
     this.dpr = dpr;
     this.half = R * 1.08 + 2;
     this.cache.clear();
+  }
+
+  /** Calque posé sur une tuile fêlée ou scellée. */
+  overlay(kind: 'cracked' | 'sealed'): HTMLCanvasElement {
+    const key = `overlay:${kind}`;
+    let c = this.cache.get(key);
+    if (!c) {
+      const size = Math.ceil(this.half * 2 * this.dpr);
+      c = document.createElement('canvas');
+      c.width = size;
+      c.height = size;
+      const ctx = c.getContext('2d')!;
+      ctx.scale(this.dpr, this.dpr);
+      const R = this.R;
+      const cx = this.half;
+      const cy = this.half;
+      if (kind === 'cracked') drawCracks(ctx, cx, cy, R);
+      else drawSeal(ctx, cx, cy, R);
+      this.cache.set(key, c);
+    }
+    return c;
   }
 
   get(color: number, variant: Variant): HTMLCanvasElement {
@@ -156,7 +246,8 @@ export class SpriteCache {
     const r = R * 0.94;
     const th = this.theme;
     const gold = color === GOLD;
-    const base = gold ? th.gold.base : th.tiles[color % th.tiles.length];
+    const joker = color === JOKER;
+    const base = gold || joker ? th.gold.base : th.tiles[color % th.tiles.length];
     const flat = th.style === 'flat';
     const path = (rr: number) => (flat ? roundHexPath(ctx, cx, cy, rr, R * 0.2) : hexPath(ctx, cx, cy, rr));
 
@@ -205,6 +296,7 @@ export class SpriteCache {
     }
 
     if (gold) drawRosette(ctx, cx, cy, R * 0.62, th.gold.petals, th.gold.heart);
+    else if (joker) drawJoker(ctx, cx, cy, R, th.tiles);
     else drawGlyph(ctx, color, cx, cy, R * 0.42, th.glyph);
 
     if (variant === 'dim' || variant === 'flash') {

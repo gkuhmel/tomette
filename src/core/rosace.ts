@@ -22,7 +22,7 @@ export function findRosaces(grid: Grid, min = 6): Rosace[] {
     for (const dir of ALL_DIRS) {
       const n = neighbor(c, r, dir);
       const t = grid.get(n.c, n.r);
-      if (!t || t.state !== 'idle' || t.special) continue;
+      if (!t || t.state !== 'idle' || t.special || t.kind === 'cracked' || t.kind === 'joker') continue;
       const list = byColor.get(t.color) ?? [];
       list.push(n);
       byColor.set(t.color, list);

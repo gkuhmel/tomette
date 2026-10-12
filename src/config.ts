@@ -31,6 +31,10 @@ export const defaultConfig = {
   rosaceBonus: 500,
   rosacePauseS: 3,
   /** Thème graphique : 0 = terre cuite, 1 = pastel clair, 2 = pastel sombre. */
+  /** Tuiles spéciales dans les nouvelles rangées (probabilité par tuile, 0 = jamais). */
+  crackedChance: 0.05,
+  sealedChance: 0.03,
+  jokerChance: 0.015,
   /** Durées et niveau de départ des modes. */
   timeAttackS: 120,
   mosaicS: 180,

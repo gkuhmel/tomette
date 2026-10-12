@@ -3,31 +3,37 @@ import { Grid } from './grid';
 
 /**
  * Détecte toutes les séries de ≥ 3 tuiles idle de même couleur sur les 3 axes.
+ * Un joker compte comme n'importe quelle couleur (une série doit contenir au
+ * moins une tuile normale) ; une tomette fêlée ou d'or ne s'aligne jamais.
  * Renvoie l'union des cases concernées (une case n'apparaît qu'une fois),
  * ce qui forme un seul « clear » (L, Y, croix compris).
  */
 export function findMatches(grid: Grid): Cell[] {
   const hit = new Uint8Array(grid.cols * grid.rows);
+  /** -2 = joker, -1 = ne s'aligne pas, sinon la couleur. */
   const colorAt = (c: number, r: number): number => {
     const t = grid.get(c, r);
-    return t && t.state === 'idle' && !t.special ? t.color : -1;
+    if (!t || t.state !== 'idle' || t.special || t.kind === 'cracked') return -1;
+    return t.kind === 'joker' ? -2 : t.color;
   };
 
   for (let r = 0; r < grid.rows; r++) {
     for (let c = 0; c < grid.cols; c++) {
-      const color = colorAt(c, r);
-      if (color < 0) continue;
-      for (const [back, fwd] of AXES) {
-        // Ne démarrer qu'en début de série.
-        const p = neighbor(c, r, back);
-        if (colorAt(p.c, p.r) === color) continue;
+      const first = colorAt(c, r);
+      if (first === -1) continue;
+      for (const [, fwd] of AXES) {
+        // Série la plus longue partant de (c, r) : avec des jokers, chaque départ compte.
+        let color = first;
         const run: Cell[] = [{ c, r }];
         let n = neighbor(c, r, fwd);
-        while (colorAt(n.c, n.r) === color) {
+        for (;;) {
+          const k = colorAt(n.c, n.r);
+          if (k === -1 || (k >= 0 && color >= 0 && k !== color)) break;
+          if (k >= 0) color = k;
           run.push(n);
           n = neighbor(n.c, n.r, fwd);
         }
-        if (run.length >= 3) for (const k of run) hit[k.r * grid.cols + k.c] = 1;
+        if (run.length >= 3 && color >= 0) for (const k of run) hit[k.r * grid.cols + k.c] = 1;
       }
     }
   }

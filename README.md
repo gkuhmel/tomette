@@ -31,6 +31,9 @@ rosaces en 3 min), Express (départ au niveau 8). Un record par mode.
   L'anneau disparaît (bonus + pause) et le centre devient une tomette d'or ;
   l'échanger avec une voisine fait disparaître toute la couleur de cette voisine.
   Désactivable dans le panneau de debug (`rosace` = 0).
+- Tuiles spéciales dans les nouvelles rangées : fêlée (ne s'aligne pas,
+  réparée par un alignement voisin), scellée (non déplaçable, libérée par un
+  alignement voisin), joker (toutes les couleurs). Fréquences réglables.
 - Bouton « Monter » : accélère la pile (et annule le stop time).
 
 ## Hors ligne
