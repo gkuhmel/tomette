@@ -24,6 +24,8 @@ export const defaultConfig = {
   comboBonusPerExtraTile: 30,
   /** Rosace : 6 tuiles de même couleur autour d'une autre (1 = activée, 0 = désactivée). */
   rosace: 1,
+  /** Nombre de voisines de même couleur nécessaires (5 ou 6). */
+  rosaceMin: 5,
   rosaceBonus: 500,
   rosacePauseS: 3,
 };

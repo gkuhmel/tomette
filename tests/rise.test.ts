@@ -2,15 +2,17 @@ import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/config';
 import { Game } from '../src/core/game';
 import { findMatches } from '../src/core/match';
+import { findRosaces } from '../src/core/rosace';
 import { levelAt, secondsPerRow } from '../src/core/rise';
 import { cfg, emptyGame } from './helpers';
 
 describe('génération (§8.6)', () => {
-  it('grille initiale et rangées d\'aperçu sans alignement, sur 1 000 graines', () => {
+  it('grille initiale et rangées d\'aperçu sans alignement ni rosace, sur 1 000 graines', () => {
     for (let seed = 1; seed <= 1000; seed++) {
       const game = new Game(cfg(), seed);
       const g = game.grid;
       expect(findMatches(g)).toHaveLength(0);
+      expect(findRosaces(g, 5)).toHaveLength(0);
       // 4 rangées remplies par le bas.
       let count = 0;
       g.forEach(() => count++);
@@ -20,6 +22,7 @@ describe('génération (§8.6)', () => {
       for (let i = 0; i < 5; i++) {
         expect(game.forceRise()).toBe(true);
         expect(findMatches(g)).toHaveLength(0);
+        expect(findRosaces(g, 5)).toHaveLength(0);
       }
     }
   });

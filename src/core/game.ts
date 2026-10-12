@@ -150,7 +150,7 @@ export class Game {
 
     // 3. Alignements.
     const matched = findMatches(g);
-    const rosaces = cfg.rosace ? findRosaces(g) : [];
+    const rosaces = cfg.rosace ? findRosaces(g, cfg.rosaceMin) : [];
     if (matched.length > 0 || rosaces.length > 0) this.startClear(matched, rosaces);
 
     // 4. Une tuile posée qui ne participe pas à un clear perd son drapeau chain.

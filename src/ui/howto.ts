@@ -287,7 +287,8 @@ const rosaceBefore: Scene = {
   rows: 3,
   tiles: [
     { c: 1, r: 1, color: RED_ },
-    ...[[1, 0], [1, 2], [0, 1], [0, 2], [2, 1], [2, 2]].map(([c, r]) => ({ c, r, color: TEAL, ring: true })),
+    { c: 1, r: 2, color: BLUE },
+    ...[[1, 0], [0, 1], [0, 2], [2, 1], [2, 2]].map(([c, r]) => ({ c, r, color: TEAL, ring: true })),
   ],
 };
 
@@ -295,8 +296,7 @@ const rosaceAfter: Scene = {
   R: 24,
   cols: 3,
   rows: 3,
-  tiles: [{ c: 1, r: 2, color: RED_, gold: true }],
-  falls: [[{ c: 1, r: 1 }, { c: 1, r: 2 }]],
+  tiles: [{ c: 1, r: 1, color: RED_, gold: true }, { c: 1, r: 2, color: BLUE }],
 };
 
 const goldUse: Scene = {
@@ -366,8 +366,9 @@ export function howToScreen(onPlay: () => void, onBack: () => void): Screen {
       section(
         '6. La rosace',
         fig(rosaceBefore, '→', rosaceAfter),
-        'Entoure une tuile de 6 tuiles d\'une même autre couleur : c\'est une rosace ! L\'anneau disparaît (gros bonus, longue pause de la pile) et la tuile du centre devient une tomette d\'or.',
-        'Pas de rosace sur les bords : il faut les 6 voisines.',
+        'Entoure une tuile d\'au moins 5 tuiles d\'une même autre couleur : c\'est une rosace ! L\'anneau disparaît (gros bonus, longue pause de la pile) et la tuile du centre devient une tomette d\'or.',
+        'La 6e voisine peut être d\'une autre couleur, vide ou hors de la grille : une rosace se construit aussi contre le bas ou un côté.',
+        'Astuce : les tuiles de l\'anneau ne forment jamais de ligne entre elles, mais une tuile de la même couleur juste au-dessus ou en dessous d\'une paire de côté fait une ligne de 3 et casse ta rosace. Pose souvent la dernière tuile en la faisant tomber sur le centre.',
       ),
       section(
         '',

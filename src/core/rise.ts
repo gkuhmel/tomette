@@ -1,6 +1,7 @@
 import { Grid, Tile } from './grid';
 import { ColorLookup, wouldMatch } from './match';
 import { Rng } from './rng';
+import { findRosaces } from './rosace';
 
 export interface SpeedParams {
   baseSecondsPerRow: number;
@@ -31,6 +32,25 @@ const gridLookup =
     return t ? t.color : -1;
   };
 
+/** Recolore des tuiles pour qu'aucune rosace (même de 5) n'existe sans action du joueur. */
+function breakRosaces(grid: Grid, rng: Rng, colors: number): void {
+  const lookup = gridLookup(grid);
+  for (let guard = 0; guard < 50; guard++) {
+    const ros = findRosaces(grid, 5);
+    if (ros.length === 0) return;
+    // De préférence la tuile la plus basse (souvent la rangée qui vient d'arriver).
+    const { c, r } = ros[0].ring.reduce((a, b) => (b.r > a.r ? b : a));
+    const t = grid.get(c, r)!;
+    const options: number[] = [];
+    for (let k = 0; k < colors; k++) {
+      if (k === t.color || wouldMatch(lookup, c, r, k)) continue;
+      t.color = k;
+      if (findRosaces(grid, 5).length < ros.length) options.push(k);
+    }
+    t.color = options.length ? rng.pick(options) : (t.color + 1) % colors;
+  }
+}
+
 /** Remplit `rowsToFill` rangées par le bas, sans aucun alignement. */
 export function fillInitial(grid: Grid, rng: Rng, colors: number, rowsToFill: number): void {
   const lookup = gridLookup(grid);
@@ -40,6 +60,7 @@ export function fillInitial(grid: Grid, rng: Rng, colors: number, rowsToFill: nu
       grid.place(c, r, pickColor(rng, colors, lookup, c, r));
     }
   }
+  breakRosaces(grid, rng, colors);
 }
 
 /**
@@ -85,4 +106,5 @@ export function activatePreview(grid: Grid, preview: Tile[], rng: Rng, colors: n
     if (wouldMatch(lookup, c, last, t.color)) t.color = pickColor(rng, colors, lookup, c, last);
     grid.set(c, last, t);
   }
+  breakRosaces(grid, rng, colors);
 }
