@@ -1,0 +1,33 @@
+/**
+ * Tous les paramètres réglables du jeu. L'objet `config` est muté en direct
+ * par le panneau de debug ; la logique le relit à chaque tick.
+ */
+export const defaultConfig = {
+  columns: 7,
+  rows: 12,
+  colors: 6,
+  initialRows: 6,
+  baseSecondsPerRow: 10,
+  speedFactor: 0.85,
+  minSecondsPerRow: 1.5,
+  levelDurationS: 30,
+  manualRiseSecondsPerRow: 0.25,
+  chainPauseBaseS: 1,
+  chainPausePerLinkS: 0.5,
+  comboPausePerExtraTileS: 0.3,
+  graceS: 2,
+  swapDurationMs: 100,
+  hoverMs: 120,
+  fallCellsPerSecond: 20,
+  clearDurationMs: 600,
+  pointsPerTile: 10,
+  comboBonusPerExtraTile: 30,
+};
+
+export type Config = typeof defaultConfig;
+export type ConfigKey = keyof Config;
+
+/** Paramètres structurels : appliqués au prochain redémarrage seulement. */
+export const structuralKeys: ConfigKey[] = ['columns', 'rows', 'colors', 'initialRows'];
+
+export const config: Config = { ...defaultConfig };
