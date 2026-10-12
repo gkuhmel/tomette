@@ -36,6 +36,7 @@ describe('rosace', () => {
     expect(game.events[0].size).toBe(6);
     expect(center.special).toBe(true);
     expect(center.state).toBe('idle');
+    expect(game.rosaceCount).toBe(1);
     for (const dir of ALL_DIRS) {
       const n = neighbor(3, 10, dir);
       expect(game.grid.get(n.c, n.r)!.state).toBe('clearing');

@@ -377,6 +377,14 @@ export function howToScreen(onPlay: () => void, onBack: () => void): Screen & { 
         fig(goldUse),
         'Échange la tomette d\'or avec une voisine : toutes les tuiles de cette couleur disparaissent de la grille. Garde-la pour te sortir d\'une situation difficile !',
       ),
+      el('section', {}, [
+        el('h3', {}, ['7. Les modes']),
+        el('p', {}, ['Classique : sans fin, la pile accélère avec le temps.']),
+        el('p', {}, ['Contre-la-montre : le meilleur score possible avant la fin du chrono.']),
+        el('p', {}, ['Mosaïque : un maximum de rosaces avant la fin du chrono.']),
+        el('p', {}, ['Express : une partie classique qui démarre directement à grande vitesse.']),
+        el('p', {}, ['Dans les modes chronométrés, si la pile touche le haut, la partie s\'arrête aussi.']),
+      ]),
       el('div', { class: 'howto-buttons' }, [back, play]),
     ]),
   ];

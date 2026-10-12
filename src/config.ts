@@ -31,6 +31,10 @@ export const defaultConfig = {
   rosaceBonus: 500,
   rosacePauseS: 3,
   /** Thème graphique : 0 = terre cuite, 1 = pastel clair, 2 = pastel sombre. */
+  /** Durées et niveau de départ des modes. */
+  timeAttackS: 120,
+  mosaicS: 180,
+  expressLevel: 8,
   theme: 1,
   /** Effets visuels (éclats, écrasement, bandeau de niveau…) : 1 = activés. */
   animations: 1,

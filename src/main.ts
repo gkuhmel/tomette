@@ -1,6 +1,7 @@
 import './style.css';
 import { config } from './config';
 import { Game, STEP_MS } from './core/game';
+import { MODES, modeById, ModeId } from './core/modes';
 import { randomSeed } from './core/rng';
 import { BoardInput } from './input/board-input';
 import { computeLayout, Layout } from './render/layout';
@@ -11,7 +12,7 @@ import { attachLongPress, DebugPanel, loadSavedConfig } from './ui/debug';
 import { el, formatTime } from './ui/dom';
 import { isDevMode, isPhone } from './ui/guard';
 import { howToScreen } from './ui/howto';
-import { gameOverScreen, homeScreen, pauseScreen, rotateScreen } from './ui/screens';
+import { gameOverScreen, homeScreen, modeButton, pauseScreen, rotateScreen } from './ui/screens';
 import { loadBest, saveBest } from './ui/storage';
 
 type State = 'home' | 'playing' | 'paused' | 'over';
@@ -28,12 +29,15 @@ function boot(): void {
   const hudBest = el('span', { class: 'v' });
   const hudLevel = el('span', { class: 'v' });
   const hudTime = el('span', { class: 'v' });
-  const hudItem = (label: string, v: HTMLElement) => el('div', { class: 'hud-item' }, [el('span', { class: 'k' }, [label]), v]);
+  const hudLevelLabel = el('span', { class: 'k' }, ['Niveau']);
+  const hudTimeLabel = el('span', { class: 'k' }, ['Temps']);
+  const hudItem = (label: string | HTMLElement, v: HTMLElement) =>
+    el('div', { class: 'hud-item' }, [typeof label === 'string' ? el('span', { class: 'k' }, [label]) : label, v]);
   const hud = el('header', { id: 'hud' }, [
     hudItem('Score', hudScore),
     hudItem('Record', hudBest),
-    hudItem('Niveau', hudLevel),
-    hudItem('Temps', hudTime),
+    hudItem(hudLevelLabel, hudLevel),
+    hudItem(hudTimeLabel, hudTime),
   ]);
   const canvas = el('canvas', { id: 'board' });
   const stage = el('main', { id: 'stage' }, [canvas]);
@@ -50,7 +54,8 @@ function boot(): void {
 
   // --- État --------------------------------------------------------------
   let state: State = 'home';
-  let best = loadBest();
+  let mode: ModeId = 'endless';
+  let best = loadBest(mode);
   let game = new Game(config, randomSeed());
   let layout: Layout | null = null;
   let fps = 60;
@@ -87,11 +92,16 @@ function boot(): void {
   let overTimer = 0;
   let shownScore = 0;
 
-  function startGame(seed: number = randomSeed()): void {
+  function startGame(seed: number = randomSeed(), m: ModeId = mode): void {
     window.clearTimeout(overTimer);
     shownScore = 0;
+    mode = m;
+    best = loadBest(mode);
+    const info = modeById(mode);
+    hudLevelLabel.textContent = info.record === 'rosaces' ? 'Rosaces' : 'Niveau';
+    hudTimeLabel.textContent = info.timeLimitS(config) > 0 ? 'Reste' : 'Temps';
     const prev = game.grid;
-    game = new Game(config, seed);
+    game = new Game(config, seed, { mode });
     input.release();
     renderer.reset();
     if (prev.cols !== game.grid.cols || prev.rows !== game.grid.rows) relayout();
@@ -106,13 +116,18 @@ function boot(): void {
     state = 'over';
     input.release();
     game.manualRise = false;
-    const record = game.score > best;
+    const value = game.recordValue;
+    const record = value > best;
     if (record) {
-      best = game.score;
-      saveBest(best);
+      best = value;
+      saveBest(best, mode);
     }
-    over.score.textContent = `Score : ${game.score}`;
-    over.record.textContent = record ? 'Nouveau record !' : `Record : ${best}`;
+    const rosaces = game.mode.record === 'rosaces';
+    over.title.textContent = game.timeUp ? 'Temps écoulé !' : 'Partie terminée';
+    over.score.textContent = rosaces
+      ? `${game.rosaceCount} rosace${game.rosaceCount > 1 ? 's' : ''} · ${game.score} pts`
+      : `Score : ${game.score}`;
+    over.record.textContent = record ? 'Nouveau record !' : `Record : ${best}${rosaces ? ' rosaces' : ''}`;
     // Laisse le temps à la grille de s'assombrir avant l'écran de fin.
     if (config.animations) overTimer = window.setTimeout(() => over.screen.show(), GAME_OVER_FADE_MS + 250);
     else over.screen.show();
@@ -138,8 +153,21 @@ function boot(): void {
     relayout();
   }
 
-  home.best.textContent = best > 0 ? `Record : ${best}` : '';
-  home.screen.show();
+  /** Menu : un bouton par mode, avec son record. */
+  function showHome(): void {
+    home.modes.replaceChildren(
+      ...MODES.map((m, i) => {
+        const rec = loadBest(m.id);
+        const label = rec > 0 ? (m.record === 'rosaces' ? `${rec} 🌸` : `${rec}`) : '';
+        const b = modeButton(m.name, m.tagline(config), label, i === 0);
+        b.addEventListener('click', () => startGame(randomSeed(), m.id));
+        return b;
+      }),
+    );
+    over.screen.hide();
+    howto.hide();
+    home.screen.show();
+  }
   const howto = howToScreen(
     () => startGame(),
     () => {
@@ -147,18 +175,22 @@ function boot(): void {
       home.screen.show();
     },
   );
+  showHome();
   // Thème choisi appliqué dès le démarrage (pas de flash de l'ancien thème).
   const theme0 = themeFor(config.theme);
   renderer.setTheme(theme0);
   applyThemeCss(theme0);
   howto.setTheme(theme0);
-  home.play.addEventListener('click', () => startGame());
   home.howto.addEventListener('click', () => {
     home.screen.hide();
     howto.root.scrollTop = 0;
     howto.show();
   });
-  over.screen.onTap(() => startGame());
+  over.replay.addEventListener('click', () => startGame());
+  over.menu.addEventListener('click', () => {
+    state = 'home';
+    showHome();
+  });
   pause.onTap(() => {
     if (isLandscape()) return;
     pause.hide();
@@ -226,9 +258,11 @@ function boot(): void {
     if (!config.animations || game.score < shownScore) shownScore = game.score;
     else if (shownScore < game.score) shownScore = Math.min(game.score, shownScore + Math.max(1, Math.ceil((game.score - shownScore) * 0.12)));
     setText(0, hudScore, String(shownScore));
-    setText(1, hudBest, String(Math.max(best, game.score)));
-    setText(2, hudLevel, String(game.level));
-    setText(3, hudTime, formatTime(game.time));
+    setText(1, hudBest, String(Math.max(best, game.recordValue)));
+    setText(2, hudLevel, String(game.mode.record === 'rosaces' ? game.rosaceCount : game.level));
+    const left = game.timeLeft;
+    setText(3, hudTime, formatTime(left === null ? game.elapsed : Math.ceil(left)));
+    document.body.classList.toggle('hurry', left !== null && left <= 10 && state === 'playing');
     const danger = String(game.danger);
     if (hudCache[4] !== danger) {
       hudCache[4] = danger;

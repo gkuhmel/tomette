@@ -100,7 +100,7 @@ body {
   border: 0;
   border-radius: 14px;
   background: var(--terracotta);
-  color: var(--fg);
+  color: #fff;
   font: inherit;
   font-size: 18px;
   font-weight: 700;
@@ -116,6 +116,10 @@ body {
 
 body.warn #hud .hud-item:first-child .v {
   color: var(--accent);
+}
+
+body.hurry #hud .hud-item:last-child .v {
+  color: var(--danger);
 }
 
 body.alert #hud {
@@ -225,6 +229,55 @@ body.alert #hud {
 
 .btn.primary {
   background: var(--terracotta);
+  color: #fff;
+}
+
+.mode-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(100%, 320px);
+  margin-top: 16px;
+}
+
+.mode-btn {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 2px 10px;
+  padding: 12px 16px;
+  border: 2px solid var(--terracotta);
+  border-radius: 16px;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mode-btn.primary {
+  background: var(--terracotta);
+  color: #fff;
+}
+
+.mode-name {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.mode-tag {
+  grid-column: 1;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.mode-rec {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
 }
 
 .home-buttons {

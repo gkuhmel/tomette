@@ -76,6 +76,14 @@ export const PARAM_SECTIONS: ParamSection[] = [
     ],
   },
   {
+    title: 'Modes',
+    params: [
+      { key: 'timeAttackS', label: 'Contre-la-montre', help: 'Durée d\'une partie en mode Contre-la-montre.', unit: 's', min: 30, max: 600, step: 15 },
+      { key: 'mosaicS', label: 'Mosaïque', help: 'Durée d\'une partie en mode Mosaïque.', unit: 's', min: 30, max: 600, step: 15 },
+      { key: 'expressLevel', label: 'Express', help: 'Niveau de départ du mode Express.', min: 2, max: 20, step: 1 },
+    ],
+  },
+  {
     title: 'Apparence',
     params: [
       { key: 'theme', label: 'Thème', help: 'Look du jeu, appliqué immédiatement.', min: 0, max: 2, step: 1, options: ['Terre cuite', 'Pastel clair', 'Pastel sombre'] },

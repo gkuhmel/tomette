@@ -2,7 +2,7 @@ import type { Game } from '../core/game';
 import { cellCenter } from '../core/hex';
 import { Layout } from './layout';
 import { Effects } from './effects';
-import { GOLD, hexPath, roundHexPath, SpriteCache } from './sprites';
+import { GOLD, hexPath, SpriteCache } from './sprites';
 import { Theme, themeFor } from './theme';
 
 interface Popup {
@@ -81,25 +81,22 @@ export class Renderer {
     this.previewId = first.id;
   }
 
-  private renderBoardBg(L: Layout, cols: number, rows: number): HTMLCanvasElement {
+  /** Fond du plateau : uniquement la ligne de limite de hauteur, en haut. */
+  private renderBoardBg(L: Layout, _cols: number, _rows: number): HTMLCanvasElement {
     const c = document.createElement('canvas');
     c.width = Math.ceil(L.boardW * L.dpr) + 2;
     c.height = Math.ceil(L.boardH * L.dpr) + 2;
     const ctx = c.getContext('2d')!;
     ctx.scale(L.dpr, L.dpr);
-    for (let x = 0; x < cols; x++) {
-      for (let y = 0; y < rows; y++) {
-        const p = cellCenter(x, y, L.R);
-        const th = this.theme;
-        if (th.style === 'flat') roundHexPath(ctx, p.x, p.y, L.R * 0.91, L.R * 0.2);
-        else hexPath(ctx, p.x, p.y, L.R * 0.94);
-        ctx.fillStyle = (x + y) % 2 ? th.slotA : th.slotB;
-        ctx.fill();
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = th.slotStroke;
-        ctx.stroke();
-      }
-    }
+    ctx.strokeStyle = this.theme.css['--muted'];
+    ctx.globalAlpha = 0.55;
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.setLineDash([6, 6]);
+    ctx.beginPath();
+    ctx.moveTo(2, 1);
+    ctx.lineTo(L.boardW - 2, 1);
+    ctx.stroke();
     return c;
   }
 
@@ -161,14 +158,16 @@ export class Renderer {
       const cols = game.dangerColumns();
       const warnRows = Math.min(g.rows, Math.round(cfg.warnRows));
       const a = danger === 2 ? 0.22 : 0.1 + 0.06 * Math.sin(now * 0.004);
-      ctx.fillStyle = `rgba(${danger === 2 ? th.alert : th.warn}, ${a})`;
+      // Bande dégradée sous la ligne de limite, au-dessus des colonnes menacées.
+      const rgb = danger === 2 ? th.alert : th.warn;
+      const grad = ctx.createLinearGradient(0, y0, 0, y0 + warnRows * h);
+      grad.addColorStop(0, `rgba(${rgb}, ${a * 2.2})`);
+      grad.addColorStop(1, `rgba(${rgb}, 0)`);
+      ctx.fillStyle = grad;
       for (let c = 0; c < g.cols; c++) {
         if (!cols[c]) continue;
-        for (let r = 0; r < warnRows; r++) {
-          const p = cellCenter(c, r, R);
-          hexPath(ctx, x0 + p.x, y0 + p.y, R * 0.94);
-          ctx.fill();
-        }
+        const p = cellCenter(c, 0, R);
+        ctx.fillRect(x0 + p.x - R * 0.78, y0, R * 1.56, warnRows * h);
       }
     }
 

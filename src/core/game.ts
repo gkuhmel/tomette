@@ -7,6 +7,7 @@ import { findMatches } from './match';
 import { findRosaces, Rosace } from './rosace';
 import { activatePreview, fillInitial, generatePreview, levelAt, secondsPerRow } from './rise';
 import { Rng } from './rng';
+import { Mode, modeById, ModeId } from './modes';
 
 /** Pas de la logique (60 Hz). */
 export const STEP_MS = 1000 / 60;
@@ -36,8 +37,15 @@ export class Game {
 
   /** Montée en cours, en fraction de case [0, 1). */
   riseOffset = 0;
-  /** Temps de jeu (s). */
+  /** Temps qui fixe le niveau (s) ; démarre plus loin en mode Express. */
   time = 0;
+  /** Temps écoulé depuis le début de la partie (s). */
+  elapsed = 0;
+  /** Rosaces réalisées pendant la partie. */
+  rosaceCount = 0;
+  /** Partie finie parce que le temps du mode est écoulé (et non par la pile). */
+  timeUp = false;
+  readonly mode: Mode;
   score = 0;
   /** Rang de la chaîne en cours (1 = pas de chaîne). */
   chain = 1;
@@ -53,8 +61,10 @@ export class Game {
 
   private rng: Rng;
 
-  constructor(cfg: Config, seed: number, options: { empty?: boolean } = {}) {
+  constructor(cfg: Config, seed: number, options: { empty?: boolean; mode?: ModeId } = {}) {
     this.cfg = cfg;
+    this.mode = modeById(options.mode ?? 'endless');
+    this.time = (this.mode.startLevel(cfg) - 1) * cfg.levelDurationS;
     this.seed = seed >>> 0;
     this.rng = new Rng(this.seed);
     const cols = clampInt(cfg.columns, 3, 15);
@@ -134,6 +144,17 @@ export class Game {
     return true;
   }
 
+  /** Temps restant pour les modes chronométrés (s), null sinon. */
+  get timeLeft(): number | null {
+    const limit = this.mode.timeLimitS(this.cfg);
+    return limit > 0 ? Math.max(0, limit - this.elapsed) : null;
+  }
+
+  /** Valeur comparée au record du mode. */
+  get recordValue(): number {
+    return this.mode.record === 'rosaces' ? this.rosaceCount : this.score;
+  }
+
   /** Fait monter la pile d'une rangée immédiatement (debug / tests). */
   forceRise(): boolean {
     if (this.grid.topRowOccupied()) return false;
@@ -149,6 +170,14 @@ export class Game {
     const g = this.grid;
     const dtS = dtMs / 1000;
     this.time += dtS;
+    this.elapsed += dtS;
+    const limit = this.mode.timeLimitS(cfg);
+    if (limit > 0 && this.elapsed >= limit) {
+      this.elapsed = limit;
+      this.timeUp = true;
+      this.over = true;
+      return;
+    }
 
     // 1. Fin des échanges et des clears.
     const removed: Cell[] = [];
@@ -209,6 +238,7 @@ export class Game {
       t.timer = cfg.clearDurationMs;
     }
     for (const k of rosaces) g.get(k.center.c, k.center.r)!.special = true;
+    this.rosaceCount += rosaces.length;
 
     const size = cells.length;
     const points = pointsFor(cfg, this.chain, size) + rosaces.length * cfg.rosaceBonus * this.chain;

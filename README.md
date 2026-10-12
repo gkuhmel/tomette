@@ -19,6 +19,9 @@ npm run build    # vérification des types + build statique dans dist/
 
 ## Jouer
 
+Modes : Classique (sans fin), Contre-la-montre (2 min), Mosaïque (un max de
+rosaces en 3 min), Express (départ au niveau 8). Un record par mode.
+
 - Poser le doigt sur une tuile puis glisser vers un voisin **latéral**
   (haut-gauche, bas-gauche, haut-droite, bas-droite) : les tuiles s'échangent.
   On peut enchaîner plusieurs échanges dans le même glissé. Jamais en vertical.

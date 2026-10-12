@@ -87,3 +87,29 @@ describe('montée de la pile (§8.5)', () => {
     expect(game.grid.get(0, 11)).not.toBeNull();
   });
 });
+
+describe('modes', () => {
+  it('Contre-la-montre : fin au bout du temps, sans défaite', () => {
+    const game = new Game(cfg({ timeAttackS: 2 }), 3, { mode: 'timeAttack' });
+    for (let i = 0; i < 119; i++) game.tick();
+    expect(game.over).toBe(false);
+    expect(game.timeLeft).toBeGreaterThan(0);
+    for (let i = 0; i < 2; i++) game.tick();
+    expect(game.over).toBe(true);
+    expect(game.timeUp).toBe(true);
+    expect(game.timeLeft).toBe(0);
+  });
+
+  it('Express : départ au niveau choisi, temps écoulé à 0', () => {
+    const game = new Game(cfg({ expressLevel: 8 }), 3, { mode: 'express' });
+    expect(game.level).toBe(8);
+    expect(game.elapsed).toBe(0);
+    expect(game.timeLeft).toBeNull();
+  });
+
+  it('Mosaïque : le record compte les rosaces', () => {
+    const game = new Game(cfg(), 3, { mode: 'mosaic', empty: true });
+    expect(game.mode.record).toBe('rosaces');
+    expect(game.recordValue).toBe(0);
+  });
+});

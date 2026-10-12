@@ -30,28 +30,46 @@ export class Screen {
   }
 }
 
-export function homeScreen(): { screen: Screen; best: HTMLElement; play: HTMLElement; howto: HTMLElement } {
-  const best = el('p', { class: 'best' });
-  const play = el('button', { type: 'button', class: 'btn primary' }, ['Jouer']);
+export function homeScreen(): { screen: Screen; modes: HTMLElement; howto: HTMLElement } {
+  const modes = el('div', { class: 'mode-list' });
   const howto = el('button', { type: 'button', class: 'btn' }, ['Comment jouer']);
   const screen = new Screen('screen-home', [
     el('h1', {}, ['Tomettes']),
-    best,
-    el('div', { class: 'home-buttons' }, [play, howto]),
+    modes,
+    el('div', { class: 'home-buttons' }, [howto]),
   ]);
-  return { screen, best, play, howto };
+  return { screen, modes, howto };
 }
 
-export function gameOverScreen(): { screen: Screen; score: HTMLElement; record: HTMLElement } {
+/** Bouton de mode : nom, sous-titre et record. */
+export function modeButton(name: string, tagline: string, record: string, primary: boolean): HTMLButtonElement {
+  return el('button', { type: 'button', class: `mode-btn${primary ? ' primary' : ''}` }, [
+    el('span', { class: 'mode-name' }, [name]),
+    el('span', { class: 'mode-tag' }, [tagline]),
+    el('span', { class: 'mode-rec' }, [record]),
+  ]);
+}
+
+export function gameOverScreen(): {
+  screen: Screen;
+  title: HTMLElement;
+  score: HTMLElement;
+  record: HTMLElement;
+  replay: HTMLElement;
+  menu: HTMLElement;
+} {
+  const title = el('h2', {}, ['Partie terminée']);
   const score = el('p', { class: 'score' });
   const record = el('p', { class: 'best' });
+  const replay = el('button', { type: 'button', class: 'btn primary' }, ['Rejouer']);
+  const menu = el('button', { type: 'button', class: 'btn' }, ['Menu']);
   const screen = new Screen('screen-over', [
-    el('h2', {}, ['Partie terminée']),
+    title,
     score,
     record,
-    el('p', { class: 'cta' }, ['Rejouer']),
+    el('div', { class: 'home-buttons' }, [replay, menu]),
   ]);
-  return { screen, score, record };
+  return { screen, title, score, record, replay, menu };
 }
 
 export function pauseScreen(): Screen {
