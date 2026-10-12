@@ -5,6 +5,7 @@ import { randomSeed } from './core/rng';
 import { BoardInput } from './input/board-input';
 import { computeLayout, Layout } from './render/layout';
 import { Renderer } from './render/renderer';
+import { applyThemeCss, themeFor } from './render/theme';
 import { attachLongPress, DebugPanel, loadSavedConfig } from './ui/debug';
 import { el, formatTime } from './ui/dom';
 import { isDevMode, isPhone } from './ui/guard';
@@ -212,10 +213,11 @@ function boot(): void {
     setText(1, hudBest, String(Math.max(best, game.score)));
     setText(2, hudLevel, String(game.level));
     setText(3, hudTime, formatTime(game.time));
-    const alert = game.alert ? '1' : '';
-    if (hudCache[4] !== alert) {
-      hudCache[4] = alert;
-      document.body.classList.toggle('alert', game.alert);
+    const danger = String(game.danger);
+    if (hudCache[4] !== danger) {
+      hudCache[4] = danger;
+      document.body.classList.toggle('warn', game.danger === 1);
+      document.body.classList.toggle('alert', game.danger === 2);
     }
   }
 
@@ -242,6 +244,11 @@ function boot(): void {
       acc = 0;
     }
 
+    const theme = themeFor(config.theme);
+    if (renderer.setTheme(theme)) {
+      applyThemeCss(theme);
+      howto.setTheme(theme);
+    }
     renderer.consumeEvents(game, now);
     renderer.draw(game, input.heldId, now);
     updateHud();
@@ -254,3 +261,12 @@ function boot(): void {
 }
 
 boot();
+
+// Hors ligne : service worker (build de production uniquement).
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {
+      /* hors ligne indisponible : le jeu marche quand même */
+    });
+  });
+}

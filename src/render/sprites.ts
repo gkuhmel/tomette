@@ -1,6 +1,4 @@
-/** Couleurs des tomettes émaillées et glyphes associés (accessibilité). */
-export const TILE_COLORS = ['#c4402c', '#2d68b0', '#dfb032', '#3a8a4a', '#7a4aa0', '#249c9c'];
-const GLYPH_COLOR = 'rgba(255, 248, 232, 0.92)';
+import { Theme, THEMES } from './theme';
 
 export type Variant = 'normal' | 'dim' | 'flash';
 
@@ -8,6 +6,23 @@ export type Variant = 'normal' | 'dim' | 'flash';
 export const GOLD = 99;
 
 /** Trace un hexagone flat-top centré en (x, y). */
+/** Hexagone flat-top aux coins arrondis. */
+export function roundHexPath(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, k: number): void {
+  const pts = Array.from({ length: 6 }, (_, i) => {
+    const a = (Math.PI / 3) * i;
+    return [x + r * Math.cos(a), y + r * Math.sin(a)];
+  });
+  ctx.beginPath();
+  const mid = (i: number) => [(pts[i][0] + pts[(i + 1) % 6][0]) / 2, (pts[i][1] + pts[(i + 1) % 6][1]) / 2];
+  const m0 = mid(5);
+  ctx.moveTo(m0[0], m0[1]);
+  for (let i = 0; i < 6; i++) {
+    const m = mid(i);
+    ctx.arcTo(pts[i][0], pts[i][1], m[0], m[1], k);
+  }
+  ctx.closePath();
+}
+
 export function hexPath(ctx: CanvasRenderingContext2D, x: number, y: number, r: number): void {
   ctx.beginPath();
   for (let i = 0; i < 6; i++) {
@@ -26,9 +41,9 @@ function shade(hex: string, k: number): string {
   return `rgb(${f((n >> 16) & 255)}, ${f((n >> 8) & 255)}, ${f(n & 255)})`;
 }
 
-function drawGlyph(ctx: CanvasRenderingContext2D, kind: number, x: number, y: number, s: number): void {
-  ctx.fillStyle = GLYPH_COLOR;
-  ctx.strokeStyle = GLYPH_COLOR;
+function drawGlyph(ctx: CanvasRenderingContext2D, kind: number, x: number, y: number, s: number, color: string): void {
+  ctx.fillStyle = color;
+  ctx.strokeStyle = color;
   ctx.lineWidth = s * 0.28;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
@@ -81,8 +96,8 @@ function drawGlyph(ctx: CanvasRenderingContext2D, kind: number, x: number, y: nu
 }
 
 /** Rosace à 6 pétales (glyphe de la tomette d'or). */
-function drawRosette(ctx: CanvasRenderingContext2D, x: number, y: number, s: number): void {
-  ctx.fillStyle = '#d0951a';
+function drawRosette(ctx: CanvasRenderingContext2D, x: number, y: number, s: number, petals: string, heart: string): void {
+  ctx.fillStyle = petals;
   for (let i = 0; i < 6; i++) {
     const a = (Math.PI / 3) * i + Math.PI / 6;
     ctx.beginPath();
@@ -91,7 +106,7 @@ function drawRosette(ctx: CanvasRenderingContext2D, x: number, y: number, s: num
   }
   ctx.beginPath();
   ctx.arc(x, y, s * 0.22, 0, Math.PI * 2);
-  ctx.fillStyle = '#b5543a';
+  ctx.fillStyle = heart;
   ctx.fill();
 }
 
@@ -100,14 +115,21 @@ export class SpriteCache {
   private cache = new Map<string, HTMLCanvasElement>();
   private R = 0;
   private dpr = 1;
+  private theme: Theme = THEMES[0];
   /** Demi-taille du sprite en px CSS. */
   half = 0;
+
+  setTheme(theme: Theme): void {
+    if (theme === this.theme) return;
+    this.theme = theme;
+    this.cache.clear();
+  }
 
   setSize(R: number, dpr: number): void {
     if (R === this.R && dpr === this.dpr) return;
     this.R = R;
     this.dpr = dpr;
-    this.half = R + 2;
+    this.half = R * 1.08 + 2;
     this.cache.clear();
   }
 
@@ -132,36 +154,62 @@ export class SpriteCache {
     const cx = this.half;
     const cy = this.half;
     const r = R * 0.94;
+    const th = this.theme;
     const gold = color === GOLD;
-    const base = gold ? '#efe2bf' : TILE_COLORS[color % TILE_COLORS.length];
+    const base = gold ? th.gold.base : th.tiles[color % th.tiles.length];
+    const flat = th.style === 'flat';
+    const path = (rr: number) => (flat ? roundHexPath(ctx, cx, cy, rr, R * 0.2) : hexPath(ctx, cx, cy, rr));
 
-    // Émail : dégradé radial clair au centre.
-    const grad = ctx.createRadialGradient(cx - r * 0.25, cy - r * 0.3, r * 0.1, cx, cy, r);
-    grad.addColorStop(0, shade(base, 0.28));
-    grad.addColorStop(0.7, base);
-    grad.addColorStop(1, shade(base, -0.25));
-    hexPath(ctx, cx, cy, r);
-    ctx.fillStyle = grad;
-    ctx.fill();
-    // Liseré.
-    ctx.lineWidth = Math.max(1, R * 0.08);
-    ctx.strokeStyle = gold ? '#c08a1e' : shade(base, -0.45);
-    ctx.stroke();
-    hexPath(ctx, cx, cy, r * 0.84);
-    ctx.lineWidth = Math.max(1, R * 0.04);
-    ctx.strokeStyle = 'rgba(255,255,255,0.22)';
-    ctx.stroke();
-
-    if (gold) drawRosette(ctx, cx, cy, R * 0.62);
-    else drawGlyph(ctx, color, cx, cy, R * 0.42);
-
-    if (variant === 'dim') {
-      hexPath(ctx, cx, cy, r + 1);
-      ctx.fillStyle = 'rgba(20, 10, 5, 0.6)';
+    if (flat) {
+      // Aplat arrondi, ombre douce et léger reflet en haut.
+      path(r * 0.97);
+      ctx.save();
+      ctx.shadowColor = 'rgba(40, 30, 20, 0.22)';
+      ctx.shadowBlur = R * 0.12 * this.dpr;
+      ctx.shadowOffsetY = R * 0.06 * this.dpr;
+      ctx.fillStyle = base;
       ctx.fill();
-    } else if (variant === 'flash') {
-      hexPath(ctx, cx, cy, r + 1);
-      ctx.fillStyle = 'rgba(255, 252, 240, 0.7)';
+      ctx.restore();
+      if (gold) {
+        ctx.lineWidth = Math.max(1.5, R * 0.08);
+        ctx.strokeStyle = th.gold.border;
+        ctx.stroke();
+      }
+      ctx.save();
+      path(r * 0.97);
+      ctx.clip();
+      const hl = ctx.createLinearGradient(0, cy - r, 0, cy + r);
+      hl.addColorStop(0, 'rgba(255,255,255,0.28)');
+      hl.addColorStop(0.5, 'rgba(255,255,255,0.04)');
+      hl.addColorStop(1, 'rgba(0,0,0,0.06)');
+      ctx.fillStyle = hl;
+      ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+      ctx.restore();
+    } else {
+      // Émail : dégradé radial clair au centre.
+      const grad = ctx.createRadialGradient(cx - r * 0.25, cy - r * 0.3, r * 0.1, cx, cy, r);
+      grad.addColorStop(0, shade(base, 0.28));
+      grad.addColorStop(0.7, base);
+      grad.addColorStop(1, shade(base, -0.25));
+      hexPath(ctx, cx, cy, r);
+      ctx.fillStyle = grad;
+      ctx.fill();
+      // Liseré.
+      ctx.lineWidth = Math.max(1, R * 0.08);
+      ctx.strokeStyle = gold ? th.gold.border : shade(base, -0.45);
+      ctx.stroke();
+      hexPath(ctx, cx, cy, r * 0.84);
+      ctx.lineWidth = Math.max(1, R * 0.04);
+      ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+      ctx.stroke();
+    }
+
+    if (gold) drawRosette(ctx, cx, cy, R * 0.62, th.gold.petals, th.gold.heart);
+    else drawGlyph(ctx, color, cx, cy, R * 0.42, th.glyph);
+
+    if (variant === 'dim' || variant === 'flash') {
+      path(r + 1);
+      ctx.fillStyle = variant === 'dim' ? th.dimOverlay : th.flashOverlay;
       ctx.fill();
     }
     return canvas;

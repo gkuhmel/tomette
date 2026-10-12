@@ -16,7 +16,7 @@ describe('génération (§8.6)', () => {
       // 4 rangées remplies par le bas.
       let count = 0;
       g.forEach(() => count++);
-      expect(count).toBe(7 * 4);
+      expect(count).toBe(g.cols * 4);
       expect(g.get(0, 7)).toBeNull();
       // Activer 5 rangées d'aperçu.
       for (let i = 0; i < 5; i++) {

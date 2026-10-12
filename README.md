@@ -30,12 +30,18 @@ npm run build    # vérification des types + build statique dans dist/
   Désactivable dans le panneau de debug (`rosace` = 0).
 - Bouton « Monter » : accélère la pile (et annule le stop time).
 
+## Hors ligne
+
+Le site est une application web installable : dans Safari, Partager →
+« Sur l'écran d'accueil ». Elle s'ouvre en plein écran et fonctionne sans
+réseau (service worker généré au build, voir `vite.config.ts`).
+
 ## Organisation
 
 - `src/config.ts` : tous les paramètres réglables.
 - `src/core/` : logique pure et déterministe (hex, grille, alignements,
   gravité, chaînes, montée, RNG, orchestration à 60 Hz).
-- `src/render/` : rendu Canvas 2D (sprites pré-rendus par couleur).
+- `src/render/` : rendu Canvas 2D (sprites pré-rendus par couleur, thèmes).
 - `src/input/` : geste glisser-tenir (Pointer Events).
 - `src/ui/` : écrans, panneau de debug, localStorage.
 

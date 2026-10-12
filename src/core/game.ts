@@ -73,6 +73,25 @@ export class Game {
     return secondsPerRow(this.cfg, this.level);
   }
 
+  /** Colonnes dont une tuile posée entre dans la zone d'attention (rangées du haut). */
+  dangerColumns(): boolean[] {
+    const out = new Array<boolean>(this.grid.cols).fill(false);
+    const rows = Math.min(this.grid.rows, Math.max(0, Math.round(this.cfg.warnRows)));
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < this.grid.cols; c++) {
+        const t = this.grid.get(c, r);
+        if (t && t.state !== 'falling' && t.state !== 'hovering') out[c] = true;
+      }
+    }
+    return out;
+  }
+
+  /** 0 = calme, 1 = attention (pile proche du haut), 2 = alerte (délai de grâce). */
+  get danger(): 0 | 1 | 2 {
+    if (this.alert) return 2;
+    return this.dangerColumns().some(Boolean) ? 1 : 0;
+  }
+
   get clearing(): boolean {
     return this.grid.some((t) => t.state === 'clearing');
   }

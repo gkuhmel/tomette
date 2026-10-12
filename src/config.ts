@@ -3,7 +3,7 @@
  * par le panneau de debug ; la logique le relit à chaque tick.
  */
 export const defaultConfig = {
-  columns: 7,
+  columns: 8,
   rows: 12,
   colors: 6,
   initialRows: 4,
@@ -15,7 +15,9 @@ export const defaultConfig = {
   chainPauseBaseS: 1,
   chainPausePerLinkS: 0.5,
   comboPausePerExtraTileS: 0.3,
-  graceS: 2,
+  graceS: 3,
+  /** Zone d'attention : nombre de rangées du haut surveillées (0 = désactivée). */
+  warnRows: 3,
   swapDurationMs: 100,
   hoverMs: 120,
   fallCellsPerSecond: 20,
@@ -28,6 +30,8 @@ export const defaultConfig = {
   rosaceMin: 5,
   rosaceBonus: 500,
   rosacePauseS: 3,
+  /** Thème graphique : 0 = terre cuite, 1 = pastel clair, 2 = pastel sombre. */
+  theme: 0,
 };
 
 export type Config = typeof defaultConfig;

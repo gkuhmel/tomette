@@ -1,6 +1,7 @@
 import { config, ConfigKey, defaultConfig, structuralKeys } from '../config';
 import type { Game } from '../core/game';
 import { el } from './dom';
+import { PARAM_SECTIONS, ParamMeta } from './params';
 import { load, remove, save } from './storage';
 
 const CONFIG_KEY = 'tomettes.config';
@@ -39,28 +40,15 @@ export interface DebugHooks {
 export class DebugPanel {
   readonly root: HTMLDivElement;
   private stats: HTMLPreElement;
-  private inputs = new Map<ConfigKey, HTMLInputElement>();
+  private syncers: (() => void)[] = [];
   private timer = 0;
 
   constructor(private hooks: DebugHooks) {
     this.stats = el('pre', { class: 'debug-stats' });
     const fields = el('div', { class: 'debug-fields' });
-    for (const key of Object.keys(defaultConfig) as ConfigKey[]) {
-      const input = el('input', {
-        type: 'number',
-        inputmode: 'decimal',
-        step: 'any',
-        value: String(config[key]),
-      });
-      input.addEventListener('input', () => {
-        const v = parseFloat(input.value.replace(',', '.'));
-        if (!Number.isFinite(v)) return;
-        config[key] = v;
-        persist();
-      });
-      this.inputs.set(key, input);
-      const label = structuralKeys.includes(key) ? `${key} ↻` : key;
-      fields.append(el('label', {}, [el('span', {}, [label]), input]));
+    for (const section of PARAM_SECTIONS) {
+      fields.append(el('h4', { class: 'debug-section' }, [section.title]));
+      for (const meta of section.params) fields.append(this.paramRow(meta));
     }
 
     const level = el('input', { type: 'number', inputmode: 'numeric', value: '5', min: '1' });
@@ -105,6 +93,64 @@ export class DebugPanel {
     document.body.append(this.root);
   }
 
+  /** Une ligne de réglage : libellé, explication, curseur (ou choix) et champ numérique. */
+  private paramRow(meta: ParamMeta): HTMLElement {
+    const key = meta.key;
+    const dot = el('span', { class: 'debug-dot', title: 'Modifié' });
+    const title = structuralKeys.includes(key) ? `${meta.label} ↻` : meta.label;
+    const head = el('div', { class: 'debug-param-head' }, [
+      el('span', { class: 'debug-param-label' }, [title]),
+      dot,
+      el('code', {}, [key]),
+    ]);
+    const help = el('p', { class: 'debug-help' }, [meta.help + (meta.unit ? ` (${meta.unit})` : '')]);
+    const set = (v: number) => {
+      if (!Number.isFinite(v)) return;
+      config[key] = v;
+      persist();
+      sync();
+    };
+
+    let controls: HTMLElement;
+    let sync: () => void;
+    if (meta.options) {
+      const select = el(
+        'select',
+        {},
+        meta.options.map((label, i) => el('option', { value: String(i) }, [label])),
+      );
+      select.addEventListener('change', () => set(Number(select.value)));
+      controls = select;
+      sync = () => {
+        select.value = String(config[key]);
+        dot.hidden = config[key] === defaultConfig[key];
+      };
+    } else if (meta.toggle) {
+      const box = el('input', { type: 'checkbox' });
+      box.addEventListener('change', () => set(box.checked ? 1 : 0));
+      controls = el('label', { class: 'debug-toggle' }, [box, 'activée']);
+      sync = () => {
+        box.checked = config[key] !== 0;
+        dot.hidden = config[key] === defaultConfig[key];
+      };
+    } else {
+      const attrs = { min: String(meta.min), max: String(meta.max), step: String(meta.step) };
+      const range = el('input', { type: 'range', ...attrs });
+      const num = el('input', { type: 'number', inputmode: 'decimal', step: 'any' });
+      range.addEventListener('input', () => set(parseFloat(range.value)));
+      num.addEventListener('change', () => set(parseFloat(num.value.replace(',', '.'))));
+      controls = el('div', { class: 'debug-controls' }, [range, num]);
+      sync = () => {
+        range.value = String(config[key]);
+        if (document.activeElement !== num) num.value = String(config[key]);
+        dot.hidden = config[key] === defaultConfig[key];
+      };
+    }
+    sync();
+    this.syncers.push(sync);
+    return el('div', { class: 'debug-param' }, [head, help, controls]);
+  }
+
   get isOpen(): boolean {
     return !this.root.hidden;
   }
@@ -127,7 +173,7 @@ export class DebugPanel {
   }
 
   private syncInputs(): void {
-    for (const [key, input] of this.inputs) input.value = String(config[key]);
+    for (const sync of this.syncers) sync();
   }
 
   private refresh(): void {

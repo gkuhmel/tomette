@@ -1,5 +1,6 @@
 import { Cell, cellCenter, cellHeight } from '../core/hex';
 import { GOLD, SpriteCache, Variant } from '../render/sprites';
+import { Theme, THEMES } from '../render/theme';
 import { el } from './dom';
 import { Screen } from './screens';
 
@@ -30,7 +31,7 @@ interface Scene {
 }
 
 const DEFAULT_R = 20;
-const CREAM = '#fff4d6';
+let theme: Theme = THEMES[0];
 const RED = '#ff6a55';
 
 function arrow(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number, color: string): void {
@@ -86,7 +87,7 @@ function drawScene(scene: Scene, dpr: number): HTMLCanvasElement {
     }
     ctx.closePath();
     ctx.lineWidth = 3;
-    ctx.strokeStyle = CREAM;
+    ctx.strokeStyle = theme.held;
     ctx.stroke();
   }
   const towards = (a: Cell, b: Cell, k: number) => {
@@ -96,7 +97,7 @@ function drawScene(scene: Scene, dpr: number): HTMLCanvasElement {
   };
   for (const [a, b] of scene.arrows ?? []) {
     const s = towards(a, b, 0.85);
-    arrow(ctx, s.x1, s.y1, s.x2, s.y2, CREAM);
+    arrow(ctx, s.x1, s.y1, s.x2, s.y2, theme.held);
   }
   for (const [a, b] of scene.forbidden ?? []) {
     const s = towards(a, b, 0.85);
@@ -114,11 +115,11 @@ function drawScene(scene: Scene, dpr: number): HTMLCanvasElement {
   for (const [a, b] of scene.falls ?? []) {
     const p = at(a.c, a.r);
     const q = at(b.c, b.r);
-    arrow(ctx, p.x + R * 0.95, p.y, q.x + R * 0.95, q.y, CREAM);
+    arrow(ctx, p.x + R * 0.95, p.y, q.x + R * 0.95, q.y, theme.held);
   }
   if (scene.riseArrow) {
     const x = w - pad - extra / 2;
-    arrow(ctx, x, h - pad - 10, x, pad + 10, CREAM);
+    arrow(ctx, x, h - pad - 10, x, pad + 10, theme.held);
   }
   for (const l of scene.labels ?? []) {
     const p = at(l.c, l.r);
@@ -126,8 +127,8 @@ function drawScene(scene: Scene, dpr: number): HTMLCanvasElement {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.lineWidth = 4;
-    ctx.strokeStyle = '#2a1a14';
-    ctx.fillStyle = '#ffe9a8';
+    ctx.strokeStyle = theme.popupStroke;
+    ctx.fillStyle = theme.popupFill;
     ctx.strokeText(l.text, p.x, p.y);
     ctx.fillText(l.text, p.x, p.y);
   }
@@ -140,6 +141,7 @@ function spritesFor(R: number, dpr: number): SpriteCache {
   if (!s) {
     s = new SpriteCache();
     s.setSize(R, dpr);
+    s.setTheme(theme);
     spriteCaches.set(R, s);
   }
   return s;
@@ -315,7 +317,7 @@ const goldUse: Scene = {
 
 // --- Écran -----------------------------------------------------------------
 
-export function howToScreen(onPlay: () => void, onBack: () => void): Screen {
+export function howToScreen(onPlay: () => void, onBack: () => void): Screen & { setTheme(t: Theme): void } {
   const dpr = Math.min(3, window.devicePixelRatio || 1);
   const fig = (...scenes: (Scene | string)[]) =>
     el(
@@ -331,7 +333,7 @@ export function howToScreen(onPlay: () => void, onBack: () => void): Screen {
   play.addEventListener('click', onPlay);
   back.addEventListener('click', onBack);
 
-  const screen = new Screen('screen-howto', [
+  const build = () => [
     el('div', { class: 'howto' }, [
       el('h2', {}, ['Comment jouer']),
       section(
@@ -377,6 +379,14 @@ export function howToScreen(onPlay: () => void, onBack: () => void): Screen {
       ),
       el('div', { class: 'howto-buttons' }, [back, play]),
     ]),
-  ]);
-  return screen;
+  ];
+  const screen = new Screen('screen-howto', build());
+  return Object.assign(screen, {
+    setTheme(t: Theme) {
+      if (t === theme) return;
+      theme = t;
+      spriteCaches.clear();
+      screen.root.replaceChildren(...build());
+    },
+  });
 }

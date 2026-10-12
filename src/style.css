@@ -4,6 +4,11 @@
   --muted: #c9ae95;
   --accent: #e8a24a;
   --terracotta: #b5543a;
+  --button-shadow: #7d3523;
+  --button-active: #d0694c;
+  --overlay: rgba(42, 26, 20, 0.88);
+  --card: #36221a;
+  --danger: #ff8a7a;
   color-scheme: dark;
 }
 
@@ -100,17 +105,21 @@ body {
   font-size: 18px;
   font-weight: 700;
   touch-action: none;
-  box-shadow: 0 3px 0 #7d3523;
+  box-shadow: 0 3px 0 var(--button-shadow);
 }
 
 #raise.active {
-  background: #d0694c;
+  background: var(--button-active);
   transform: translateY(2px);
-  box-shadow: 0 1px 0 #7d3523;
+  box-shadow: 0 1px 0 var(--button-shadow);
+}
+
+body.warn #hud .hud-item:first-child .v {
+  color: var(--accent);
 }
 
 body.alert #hud {
-  color: #ff8a7a;
+  color: var(--danger);
 }
 
 /* --- Écrans ----------------------------------------------------------- */
@@ -126,7 +135,7 @@ body.alert #hud {
   gap: 8px;
   padding: 24px;
   text-align: center;
-  background: rgba(42, 26, 20, 0.88);
+  background: var(--overlay);
   touch-action: none;
 }
 
@@ -279,7 +288,7 @@ body.alert #hud {
   gap: 10px;
   padding: 10px;
   border-radius: 14px;
-  background: #36221a;
+  background: var(--card);
 }
 
 .howto-arrow {
@@ -334,6 +343,7 @@ body.alert #hud {
   padding: calc(10px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right))
     calc(16px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));
   background: rgba(16, 10, 8, 0.94);
+  color: #fbeedd;
   font-size: 14px;
   user-select: text;
   -webkit-user-select: text;
@@ -378,42 +388,104 @@ body.alert #hud {
   padding: 8px 12px;
   border: 0;
   border-radius: 8px;
-  background: var(--terracotta);
-  color: var(--fg);
+  background: #b5543a;
+  color: #fbeedd;
   font: inherit;
 }
 
 .debug-fields {
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 4px;
 }
 
-.debug-fields label {
+.debug-section {
+  margin: 14px 0 2px;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #e8a24a;
+}
+
+.debug-param {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #241812;
+}
+
+.debug-param-head {
   display: flex;
-  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+
+.debug-param-label {
+  font-weight: 700;
+}
+
+.debug-param-head code {
+  margin-left: auto;
+  font-size: 11px;
+  color: #9a836f;
+}
+
+.debug-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e8a24a;
+}
+
+.debug-dot[hidden] {
+  display: none;
+}
+
+.debug-help {
+  margin: 2px 0 6px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: #c9ae95;
+}
+
+.debug-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.debug-controls input[type='range'] {
+  flex: 1;
+  min-width: 0;
+  accent-color: #e8a24a;
+}
+
+.debug-toggle {
+  display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.debug-fields span {
-  font-family: ui-monospace, Menlo, monospace;
-  font-size: 12px;
-  overflow-wrap: anywhere;
-}
-
-#debug-panel input {
-  width: 96px;
+#debug-panel select {
   padding: 6px;
   border: 1px solid #5a3a2c;
   border-radius: 6px;
   background: #1c120e;
-  color: var(--fg);
+  color: #fbeedd;
+  font: 16px -apple-system, system-ui, sans-serif;
+}
+
+#debug-panel input[type='number'] {
+  width: 84px;
+  padding: 6px;
+  border: 1px solid #5a3a2c;
+  border-radius: 6px;
+  background: #1c120e;
+  color: #fbeedd;
   /* 16px : évite le zoom automatique de Safari au focus. */
   font: 16px ui-monospace, Menlo, monospace;
 }
 
 .debug-note {
-  color: var(--muted);
+  color: #c9ae95;
   font-size: 12px;
 }

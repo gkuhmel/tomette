@@ -36,3 +36,21 @@ describe('alerte et défaite (§8.9)', () => {
     expect(game.over).toBe(true);
   });
 });
+
+describe('zone d\'attention', () => {
+  it('calme, attention puis alerte', () => {
+    const game = emptyGame({ warnRows: 3, baseSecondsPerRow: 1e9, minSecondsPerRow: 1e9 });
+    for (let r = 4; r < 12; r++) game.grid.place(0, r, r % 2);
+    expect(game.danger).toBe(0);
+    game.grid.place(0, 3, 2);
+    expect(game.danger).toBe(0);
+    game.grid.place(0, 2, 3);
+    expect(game.danger).toBe(1);
+    expect(game.dangerColumns()[0]).toBe(true);
+    expect(game.dangerColumns()[1]).toBe(false);
+    game.grid.place(0, 1, 2);
+    game.grid.place(0, 0, 3);
+    game.tick();
+    expect(game.danger).toBe(2);
+  });
+});

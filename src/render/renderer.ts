@@ -1,7 +1,8 @@
 import type { Game } from '../core/game';
 import { cellCenter } from '../core/hex';
 import { Layout } from './layout';
-import { GOLD, hexPath, SpriteCache } from './sprites';
+import { GOLD, hexPath, roundHexPath, SpriteCache } from './sprites';
+import { Theme, themeFor } from './theme';
 
 interface Popup {
   text: string;
@@ -15,7 +16,6 @@ const POPUP_MS = 1100;
 /** Durée du fondu d'une nouvelle rangée d'aperçu, et du passage aperçu → jouable. */
 const PREVIEW_FADE_MS = 450;
 const ACTIVATE_FADE_MS = 250;
-const BG = '#2a1a14';
 
 export class Renderer {
   private ctx: CanvasRenderingContext2D;
@@ -23,6 +23,9 @@ export class Renderer {
   private boardBg: HTMLCanvasElement | null = null;
   private layout: Layout | null = null;
   private popups: Popup[] = [];
+  private theme: Theme = themeFor(0);
+  private cols = 0;
+  private rows = 0;
   private previewId = -1;
   private previewBorn = 0;
   private activatedIds = new Set<number>();
@@ -32,8 +35,19 @@ export class Renderer {
     this.ctx = canvas.getContext('2d', { alpha: false })!;
   }
 
+  /** Change de thème (sprites et plateau redessinés). Renvoie true si le thème a changé. */
+  setTheme(theme: Theme): boolean {
+    if (theme === this.theme) return false;
+    this.theme = theme;
+    this.sprites.setTheme(theme);
+    if (this.layout) this.boardBg = this.renderBoardBg(this.layout, this.cols, this.rows);
+    return true;
+  }
+
   resize(layout: Layout, cols: number, rows: number): void {
     this.layout = layout;
+    this.cols = cols;
+    this.rows = rows;
     this.canvas.width = Math.round(layout.cssW * layout.dpr);
     this.canvas.height = Math.round(layout.cssH * layout.dpr);
     this.sprites.setSize(layout.R, layout.dpr);
@@ -73,11 +87,13 @@ export class Renderer {
     for (let x = 0; x < cols; x++) {
       for (let y = 0; y < rows; y++) {
         const p = cellCenter(x, y, L.R);
-        hexPath(ctx, p.x, p.y, L.R * 0.94);
-        ctx.fillStyle = (x + y) % 2 ? '#3a251c' : '#36221a';
+        const th = this.theme;
+        if (th.style === 'flat') roundHexPath(ctx, p.x, p.y, L.R * 0.91, L.R * 0.2);
+        else hexPath(ctx, p.x, p.y, L.R * 0.94);
+        ctx.fillStyle = (x + y) % 2 ? th.slotA : th.slotB;
         ctx.fill();
         ctx.lineWidth = 1;
-        ctx.strokeStyle = '#4a3024';
+        ctx.strokeStyle = th.slotStroke;
         ctx.stroke();
       }
     }
@@ -124,10 +140,28 @@ export class Renderer {
     const cfg = game.cfg;
     const g = game.grid;
 
+    const th = this.theme;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.fillStyle = BG;
+    ctx.fillStyle = th.bg;
     ctx.fillRect(0, 0, L.cssW, L.cssH);
     ctx.drawImage(this.boardBg, x0, y0, this.boardBg.width / dpr, this.boardBg.height / dpr);
+
+    // Zone d'attention : haut des colonnes menacées teinté.
+    const danger = game.danger;
+    if (danger >= 1) {
+      const cols = game.dangerColumns();
+      const warnRows = Math.min(g.rows, Math.round(cfg.warnRows));
+      const a = danger === 2 ? 0.22 : 0.1 + 0.06 * Math.sin(now * 0.004);
+      ctx.fillStyle = `rgba(${danger === 2 ? th.alert : th.warn}, ${a})`;
+      for (let c = 0; c < g.cols; c++) {
+        if (!cols[c]) continue;
+        for (let r = 0; r < warnRows; r++) {
+          const p = cellCenter(c, r, R);
+          hexPath(ctx, x0 + p.x, y0 + p.y, R * 0.94);
+          ctx.fill();
+        }
+      }
+    }
 
     const rise = game.riseOffset * h;
     const half = this.sprites.half;
@@ -199,7 +233,7 @@ export class Renderer {
           // Halo qui pulse autour de la tomette d'or.
           hexPath(ctx, x, y, R * 0.98);
           ctx.lineWidth = 2;
-          ctx.strokeStyle = `rgba(255, 236, 170, ${0.35 + 0.35 * Math.sin(now * 0.006 + t.id)})`;
+          ctx.strokeStyle = `rgba(255, 220, 120, ${0.35 + 0.35 * Math.sin(now * 0.006 + t.id)})`;
           ctx.stroke();
         }
       }
@@ -208,16 +242,27 @@ export class Renderer {
     if (held) {
       hexPath(ctx, held.x, held.y, R * 1.06);
       ctx.lineWidth = Math.max(2, R * 0.1);
-      ctx.strokeStyle = 'rgba(255, 244, 214, 0.95)';
+      ctx.strokeStyle = th.held;
       ctx.stroke();
     }
 
-    // Bord rouge en alerte.
-    if (game.alert) {
+    // Bord orange (attention) ou rouge (alerte) + jauge de grâce.
+    if (danger === 1) {
+      const pulse = 0.35 + 0.25 * Math.sin(now * 0.004);
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = `rgba(${th.warn}, ${pulse})`;
+      ctx.strokeRect(x0 - 3, y0 - 3, L.boardW + 6, L.boardH + h + 6);
+    } else if (danger === 2) {
       const pulse = 0.55 + 0.45 * Math.sin(now * 0.02);
       ctx.lineWidth = 4;
-      ctx.strokeStyle = `rgba(230, 40, 30, ${pulse})`;
+      ctx.strokeStyle = `rgba(${th.alert}, ${pulse})`;
       ctx.strokeRect(x0 - 3, y0 - 3, L.boardW + 6, L.boardH + h + 6);
+      const k = cfg.graceS > 0 ? Math.max(0, Math.min(1, game.graceLeft / cfg.graceS)) : 0;
+      const gy = y0 - 13;
+      ctx.fillStyle = `rgba(${th.alert}, 0.18)`;
+      ctx.fillRect(x0, gy, L.boardW, 6);
+      ctx.fillStyle = `rgba(${k > 0.4 ? th.warn : th.alert}, 0.95)`;
+      ctx.fillRect(x0 + (L.boardW * (1 - k)) / 2, gy, L.boardW * k, 6);
     }
 
     this.drawPopups(now);
@@ -236,14 +281,14 @@ export class Renderer {
       const big = Math.round(L.R * 1.1);
       ctx.font = `800 ${big}px -apple-system, system-ui, sans-serif`;
       ctx.lineWidth = Math.max(3, L.R * 0.16);
-      ctx.strokeStyle = '#2a1a14';
-      ctx.fillStyle = '#ffe9a8';
+      ctx.strokeStyle = this.theme.popupStroke;
+      ctx.fillStyle = this.theme.popupFill;
       ctx.strokeText(p.text, p.x, y);
       ctx.fillText(p.text, p.x, y);
       ctx.font = `700 ${Math.round(L.R * 0.45)}px -apple-system, system-ui, sans-serif`;
       ctx.lineWidth = 3;
       ctx.strokeText(p.sub, p.x, y + big * 0.7);
-      ctx.fillStyle = '#fff6e0';
+      ctx.fillStyle = this.theme.popupSub;
       ctx.fillText(p.sub, p.x, y + big * 0.7);
     }
     ctx.globalAlpha = 1;
