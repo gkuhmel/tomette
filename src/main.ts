@@ -4,6 +4,7 @@ import { Game, STEP_MS } from './core/game';
 import { randomSeed } from './core/rng';
 import { BoardInput } from './input/board-input';
 import { computeLayout, Layout } from './render/layout';
+import { GAME_OVER_FADE_MS } from './render/effects';
 import { Renderer } from './render/renderer';
 import { applyThemeCss, themeFor } from './render/theme';
 import { attachLongPress, DebugPanel, loadSavedConfig } from './ui/debug';
@@ -83,7 +84,12 @@ function boot(): void {
     renderer.resize(layout, game.grid.cols, game.grid.rows);
   }
 
+  let overTimer = 0;
+  let shownScore = 0;
+
   function startGame(seed: number = randomSeed()): void {
+    window.clearTimeout(overTimer);
+    shownScore = 0;
     const prev = game.grid;
     game = new Game(config, seed);
     input.release();
@@ -107,7 +113,9 @@ function boot(): void {
     }
     over.score.textContent = `Score : ${game.score}`;
     over.record.textContent = record ? 'Nouveau record !' : `Record : ${best}`;
-    over.screen.show();
+    // Laisse le temps à la grille de s'assombrir avant l'écran de fin.
+    if (config.animations) overTimer = window.setTimeout(() => over.screen.show(), GAME_OVER_FADE_MS + 250);
+    else over.screen.show();
   }
 
   function pauseGame(): void {
@@ -139,6 +147,11 @@ function boot(): void {
       home.screen.show();
     },
   );
+  // Thème choisi appliqué dès le démarrage (pas de flash de l'ancien thème).
+  const theme0 = themeFor(config.theme);
+  renderer.setTheme(theme0);
+  applyThemeCss(theme0);
+  howto.setTheme(theme0);
   home.play.addEventListener('click', () => startGame());
   home.howto.addEventListener('click', () => {
     home.screen.hide();
@@ -209,7 +222,10 @@ function boot(): void {
     }
   };
   function updateHud(): void {
-    setText(0, hudScore, String(game.score));
+    // Score qui défile jusqu'à sa valeur.
+    if (!config.animations || game.score < shownScore) shownScore = game.score;
+    else if (shownScore < game.score) shownScore = Math.min(game.score, shownScore + Math.max(1, Math.ceil((game.score - shownScore) * 0.12)));
+    setText(0, hudScore, String(shownScore));
     setText(1, hudBest, String(Math.max(best, game.score)));
     setText(2, hudLevel, String(game.level));
     setText(3, hudTime, formatTime(game.time));

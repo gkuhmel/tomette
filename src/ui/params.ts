@@ -79,6 +79,8 @@ export const PARAM_SECTIONS: ParamSection[] = [
     title: 'Apparence',
     params: [
       { key: 'theme', label: 'Thème', help: 'Look du jeu, appliqué immédiatement.', min: 0, max: 2, step: 1, options: ['Terre cuite', 'Pastel clair', 'Pastel sombre'] },
+      { key: 'animations', label: 'Effets visuels', help: 'Éclats aux disparitions, écrasement à l\'atterrissage, pétales de rosace, bandeau de niveau, score qui défile.', min: 0, max: 1, step: 1, toggle: true },
+      { key: 'screenShake', label: 'Tremblement d\'écran', help: 'Petit tremblement sur les chaînes ×3 et plus, les rosaces et les gros combos.', min: 0, max: 1, step: 1, toggle: true },
     ],
   },
 ];

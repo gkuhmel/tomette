@@ -31,7 +31,11 @@ export const defaultConfig = {
   rosaceBonus: 500,
   rosacePauseS: 3,
   /** Thème graphique : 0 = terre cuite, 1 = pastel clair, 2 = pastel sombre. */
-  theme: 0,
+  theme: 1,
+  /** Effets visuels (éclats, écrasement, bandeau de niveau…) : 1 = activés. */
+  animations: 1,
+  /** Tremblement d'écran sur les grosses chaînes : 1 = activé. */
+  screenShake: 1,
 };
 
 export type Config = typeof defaultConfig;

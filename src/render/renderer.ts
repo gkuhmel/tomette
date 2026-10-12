@@ -1,6 +1,7 @@
 import type { Game } from '../core/game';
 import { cellCenter } from '../core/hex';
 import { Layout } from './layout';
+import { Effects } from './effects';
 import { GOLD, hexPath, roundHexPath, SpriteCache } from './sprites';
 import { Theme, themeFor } from './theme';
 
@@ -23,6 +24,7 @@ export class Renderer {
   private boardBg: HTMLCanvasElement | null = null;
   private layout: Layout | null = null;
   private popups: Popup[] = [];
+  readonly effects = new Effects();
   private theme: Theme = themeFor(0);
   private cols = 0;
   private rows = 0;
@@ -56,6 +58,7 @@ export class Renderer {
 
   reset(): void {
     this.popups = [];
+    this.effects.reset();
     this.previewId = -1;
     this.activatedIds.clear();
   }
@@ -108,7 +111,6 @@ export class Renderer {
       return;
     }
     for (const e of game.events) {
-      if (e.chain < 2 && e.size < 4 && !e.rosaces && !e.gold) continue;
       let x = 0;
       let y = 0;
       for (const { c, r } of e.cells) {
@@ -118,6 +120,8 @@ export class Renderer {
       }
       x = x / e.cells.length + L.x0;
       y = y / e.cells.length + L.y0 - game.riseOffset * L.h;
+      this.effects.onClear(x, y, e.chain, e.size, e.rosaces, e.gold, L.R, this.theme, now);
+      if (e.chain < 2 && e.size < 4 && !e.rosaces && !e.gold) continue;
       this.popups.push({
         text: e.rosaces ? 'Rosace !' : e.gold ? 'Or !' : e.chain >= 2 ? `×${e.chain}` : `${e.size}`,
         sub: e.rosaces
@@ -144,6 +148,11 @@ export class Renderer {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.fillStyle = th.bg;
     ctx.fillRect(0, 0, L.cssW, L.cssH);
+    this.effects.enabled = cfg.animations !== 0;
+    this.effects.shakeEnabled = cfg.screenShake !== 0;
+    this.effects.observe(game, L, th, now);
+    const sh = this.effects.shakeOffset(now);
+    ctx.setTransform(dpr, 0, 0, dpr, sh.x * dpr, sh.y * dpr);
     ctx.drawImage(this.boardBg, x0, y0, this.boardBg.width / dpr, this.boardBg.height / dpr);
 
     // Zone d'attention : haut des colonnes menacées teinté.
@@ -221,7 +230,15 @@ export class Renderer {
           const sz = size * 1.1;
           ctx.drawImage(this.sprites.get(color, 'normal'), x - sz / 2, y - sz / 2, sz, sz);
         } else {
-          ctx.drawImage(this.sprites.get(color, 'normal'), x - half, y - half, size, size);
+          const sq = this.effects.squash(t.id, now);
+          if (sq) {
+            // Écrasé à l'atterrissage, posé sur sa base.
+            const w = size * sq.sx;
+            const hh = size * sq.sy;
+            ctx.drawImage(this.sprites.get(color, 'normal'), x - w / 2, y + half - hh, w, hh);
+          } else {
+            ctx.drawImage(this.sprites.get(color, 'normal'), x - half, y - half, size, size);
+          }
         }
         if (activating > 0 && this.activatedIds.has(t.id)) {
           // La rangée qui devient jouable s'éclaire progressivement.
@@ -265,10 +282,11 @@ export class Renderer {
       ctx.fillRect(x0 + (L.boardW * (1 - k)) / 2, gy, L.boardW * k, 6);
     }
 
-    this.drawPopups(now);
+    this.effects.draw(ctx, L, th, now, g.rows);
+    this.drawPopups(now, cfg.animations !== 0);
   }
 
-  private drawPopups(now: number): void {
+  private drawPopups(now: number, bounce: boolean): void {
     const ctx = this.ctx;
     const L = this.layout!;
     this.popups = this.popups.filter((p) => now - p.born < POPUP_MS);
@@ -278,6 +296,12 @@ export class Renderer {
       const k = (now - p.born) / POPUP_MS;
       const y = p.y - k * L.R * 1.2;
       ctx.globalAlpha = k < 0.7 ? 1 : 1 - (k - 0.7) / 0.3;
+      // Apparition avec rebond.
+      const s = !bounce ? 1 : k < 0.1 ? 0.5 + 0.7 * (k / 0.1) : k < 0.2 ? 1.2 - 0.2 * ((k - 0.1) / 0.1) : 1;
+      ctx.save();
+      ctx.translate(p.x, y);
+      ctx.scale(s, s);
+      ctx.translate(-p.x, -y);
       const big = Math.round(L.R * 1.1);
       ctx.font = `800 ${big}px -apple-system, system-ui, sans-serif`;
       ctx.lineWidth = Math.max(3, L.R * 0.16);
@@ -290,6 +314,7 @@ export class Renderer {
       ctx.strokeText(p.sub, p.x, y + big * 0.7);
       ctx.fillStyle = this.theme.popupSub;
       ctx.fillText(p.sub, p.x, y + big * 0.7);
+      ctx.restore();
     }
     ctx.globalAlpha = 1;
   }
