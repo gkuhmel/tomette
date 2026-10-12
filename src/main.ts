@@ -8,6 +8,7 @@ import { Renderer } from './render/renderer';
 import { attachLongPress, DebugPanel, loadSavedConfig } from './ui/debug';
 import { el, formatTime } from './ui/dom';
 import { isDevMode, isPhone } from './ui/guard';
+import { howToScreen } from './ui/howto';
 import { gameOverScreen, homeScreen, pauseScreen, rotateScreen } from './ui/screens';
 import { loadBest, saveBest } from './ui/storage';
 
@@ -89,6 +90,7 @@ function boot(): void {
     renderer.reset();
     if (prev.cols !== game.grid.cols || prev.rows !== game.grid.rows) relayout();
     home.screen.hide();
+    howto.hide();
     over.screen.hide();
     pause.hide();
     state = 'playing';
@@ -130,7 +132,19 @@ function boot(): void {
 
   home.best.textContent = best > 0 ? `Record : ${best}` : '';
   home.screen.show();
-  home.screen.onTap(() => startGame());
+  const howto = howToScreen(
+    () => startGame(),
+    () => {
+      howto.hide();
+      home.screen.show();
+    },
+  );
+  home.play.addEventListener('click', () => startGame());
+  home.howto.addEventListener('click', () => {
+    home.screen.hide();
+    howto.root.scrollTop = 0;
+    howto.show();
+  });
   over.screen.onTap(() => startGame());
   pause.onTap(() => {
     if (isLandscape()) return;
@@ -160,7 +174,7 @@ function boot(): void {
     if (e.code !== 'Space' || debugOpen) return;
     e.preventDefault();
     if (state === 'playing') setRise(true);
-    else if (!e.repeat && (state === 'home' || state === 'over')) startGame();
+    else if (!e.repeat && (state === 'home' || state === 'over') && !howto.visible) startGame();
   });
   window.addEventListener('keyup', (e) => {
     if (e.code === 'Space') setRise(false);
@@ -181,7 +195,7 @@ function boot(): void {
   document.addEventListener(
     'touchmove',
     (e) => {
-      if (!(e.target instanceof Element && e.target.closest('#debug-panel'))) e.preventDefault();
+      if (!(e.target instanceof Element && e.target.closest('#debug-panel, #screen-howto'))) e.preventDefault();
     },
     { passive: false },
   );

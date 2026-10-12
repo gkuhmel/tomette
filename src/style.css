@@ -197,6 +197,106 @@ body.alert #hud {
   }
 }
 
+/* --- Boutons, accueil, comment jouer ---------------------------------- */
+
+.btn {
+  min-width: 200px;
+  padding: 12px 22px;
+  border: 2px solid var(--terracotta);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn.primary {
+  background: var(--terracotta);
+}
+
+.home-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+#screen-howto {
+  display: block;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  background: var(--bg);
+  padding: calc(16px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));
+}
+
+#screen-howto[hidden] {
+  display: none;
+}
+
+.howto {
+  max-width: 440px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.howto h2 {
+  text-align: center;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.howto section {
+  margin-top: 18px;
+}
+
+.howto h3 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.howto h3:empty {
+  display: none;
+}
+
+.screen .howto p {
+  margin: 8px 0 0;
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--fg);
+}
+
+.howto-figs {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 14px;
+  background: #36221a;
+}
+
+.howto-arrow {
+  font-size: 26px;
+  color: var(--muted);
+}
+
+.howto-buttons {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 28px 0 8px;
+}
+
+.howto-buttons .btn {
+  min-width: 140px;
+}
+
 /* --- Debug ------------------------------------------------------------ */
 
 #debug-corner {

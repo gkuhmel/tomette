@@ -30,14 +30,16 @@ export class Screen {
   }
 }
 
-export function homeScreen(): { screen: Screen; best: HTMLElement } {
+export function homeScreen(): { screen: Screen; best: HTMLElement; play: HTMLElement; howto: HTMLElement } {
   const best = el('p', { class: 'best' });
+  const play = el('button', { type: 'button', class: 'btn primary' }, ['Jouer']);
+  const howto = el('button', { type: 'button', class: 'btn' }, ['Comment jouer']);
   const screen = new Screen('screen-home', [
     el('h1', {}, ['Tomettes']),
     best,
-    el('p', { class: 'cta' }, ['Touche pour jouer']),
+    el('div', { class: 'home-buttons' }, [play, howto]),
   ]);
-  return { screen, best };
+  return { screen, best, play, howto };
 }
 
 export function gameOverScreen(): { screen: Screen; score: HTMLElement; record: HTMLElement } {
