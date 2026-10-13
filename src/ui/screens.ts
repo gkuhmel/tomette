@@ -30,16 +30,17 @@ export class Screen {
   }
 }
 
-export function homeScreen(): { screen: Screen; modes: HTMLElement; howto: HTMLElement; settings: HTMLElement } {
+export function homeScreen(): { screen: Screen; modes: HTMLElement; howto: HTMLElement; settings: HTMLElement; progress: HTMLElement } {
   const modes = el('div', { class: 'mode-list' });
   const howto = el('button', { type: 'button', class: 'btn' }, ['Comment jouer']);
   const settings = el('button', { type: 'button', class: 'btn' }, ['Réglages']);
+  const progress = el('button', { type: 'button', class: 'btn' }, ['Succès']);
   const screen = new Screen('screen-home', [
     el('h1', {}, ['Tomettes']),
     modes,
-    el('div', { class: 'home-row' }, [howto, settings]),
+    el('div', { class: 'home-row' }, [howto, progress, settings]),
   ]);
-  return { screen, modes, howto, settings };
+  return { screen, modes, howto, settings, progress };
 }
 
 /** Bouton de mode : nom, sous-titre et record. */
@@ -56,21 +57,24 @@ export function gameOverScreen(): {
   title: HTMLElement;
   score: HTMLElement;
   record: HTMLElement;
+  unlocked: HTMLElement;
   replay: HTMLElement;
   menu: HTMLElement;
 } {
   const title = el('h2', {}, ['Partie terminée']);
   const score = el('p', { class: 'score' });
   const record = el('p', { class: 'best' });
+  const unlocked = el('div', { class: 'over-ach' });
   const replay = el('button', { type: 'button', class: 'btn primary' }, ['Rejouer']);
   const menu = el('button', { type: 'button', class: 'btn' }, ['Menu']);
   const screen = new Screen('screen-over', [
     title,
     score,
     record,
+    unlocked,
     el('div', { class: 'home-buttons' }, [replay, menu]),
   ]);
-  return { screen, title, score, record, replay, menu };
+  return { screen, title, score, record, unlocked, replay, menu };
 }
 
 export function pauseScreen(): {

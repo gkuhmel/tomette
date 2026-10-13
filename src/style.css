@@ -389,6 +389,8 @@ body.alert #hud {
 
 .home-row {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 10px;
   margin-top: 20px;
 }
@@ -399,7 +401,9 @@ body.alert #hud {
   font-size: 16px;
 }
 
-#screen-settings {
+#screen-settings,
+#screen-progress {
+  background: var(--bg);
   overflow-y: auto;
   touch-action: pan-y;
 }
@@ -516,6 +520,134 @@ body.alert #hud {
   width: 12px;
   height: 12px;
   border-radius: 50%;
+}
+
+#screen-progress {
+  justify-content: flex-start;
+  padding-top: calc(24px + env(safe-area-inset-top));
+}
+
+.progress-count {
+  text-align: center;
+  color: var(--muted);
+}
+
+.ach-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.ach {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--card);
+  opacity: 0.55;
+}
+
+.ach.on {
+  opacity: 1;
+}
+
+.ach span:last-child,
+.stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.ach small,
+.stat small {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.ach-icon {
+  font-size: 22px;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.stat {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--card);
+}
+
+.stat strong {
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
+.over-ach {
+  margin-top: 8px;
+}
+
+.over-ach p {
+  font-size: 16px;
+  margin: 2px 0;
+}
+
+.over-ach-title {
+  color: var(--muted);
+  font-size: 13px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+#toast {
+  position: fixed;
+  top: calc(10px + env(safe-area-inset-top));
+  left: 50%;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - 32px);
+  padding: 10px 16px;
+  border-radius: 16px;
+  background: var(--fg);
+  color: var(--bg);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  transform: translateX(-50%);
+  animation: toast-in 0.3s ease-out;
+  pointer-events: none;
+}
+
+#toast[hidden] {
+  display: none;
+}
+
+#toast.out {
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+#toast span:last-child {
+  display: flex;
+  flex-direction: column;
+}
+
+#toast small {
+  opacity: 0.75;
+}
+
+.toast-icon {
+  font-size: 22px;
+}
+
+@keyframes toast-in {
+  from {
+    transform: translate(-50%, -20px);
+    opacity: 0;
+  }
 }
 
 #debug-gear {

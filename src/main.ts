@@ -14,6 +14,7 @@ import { el, formatTime } from './ui/dom';
 import { isDevMode, isPhone } from './ui/guard';
 import { howToScreen } from './ui/howto';
 import { settingsScreen } from './ui/settings';
+import { Progress, progressScreen } from './ui/progress';
 import { gameOverScreen, homeScreen, modeButton, pauseScreen, rotateScreen } from './ui/screens';
 import { loadBest, saveBest } from './ui/storage';
 
@@ -66,6 +67,7 @@ function boot(): void {
 
   const renderer = new Renderer(canvas);
   const sound = new Sound();
+  const progress = new Progress();
   const syncSound = () => {
     sound.sfxOn = config.sound !== 0;
     sound.musicOn = config.music !== 0;
@@ -147,6 +149,11 @@ function boot(): void {
       ? `${game.rosaceCount} rosace${game.rosaceCount > 1 ? 's' : ''} · ${game.score} pts`
       : `Score : ${game.score}`;
     over.record.textContent = record ? 'Nouveau record !' : `Record : ${best}${rosaces ? ' rosaces' : ''}`;
+    const fresh = progress.finish(game);
+    over.unlocked.replaceChildren(
+      ...(fresh.length ? [el('p', { class: 'over-ach-title' }, ['Nouveaux succès'])] : []),
+      ...fresh.map((a) => el('p', {}, [`🏆 ${a.name}`])),
+    );
     // Laisse le temps à la grille de s'assombrir avant l'écran de fin.
     if (config.animations) overTimer = window.setTimeout(() => over.screen.show(), GAME_OVER_FADE_MS + 250);
     else over.screen.show();
@@ -246,6 +253,16 @@ function boot(): void {
     showHome();
   });
   home.settings.addEventListener('click', () => openSettings('home'));
+  const progressView = progressScreen(progress, () => {
+    progressView.hide();
+    home.screen.show();
+  });
+  home.progress.addEventListener('click', () => {
+    progressView.refresh();
+    progressView.root.scrollTop = 0;
+    home.screen.hide();
+    progressView.show();
+  });
   pauseBtn.addEventListener('click', () => {
     sound.ui();
     pauseGame();
@@ -302,7 +319,7 @@ function boot(): void {
   document.addEventListener(
     'touchmove',
     (e) => {
-      if (!(e.target instanceof Element && e.target.closest('#debug-panel, #screen-howto, #screen-settings'))) e.preventDefault();
+      if (!(e.target instanceof Element && e.target.closest('#debug-panel, #screen-howto, #screen-settings, #screen-progress'))) e.preventDefault();
     },
     { passive: false },
   );
@@ -360,6 +377,7 @@ function boot(): void {
   }
 
   // --- Boucle à pas fixe ---------------------------------------------------
+  let liveCheck = 0;
   let last = performance.now();
   let acc = 0;
   function frame(now: number): void {
@@ -369,6 +387,7 @@ function boot(): void {
 
     if (state === 'playing' && !debugOpen) {
       acc += dt;
+      if (++liveCheck % 30 === 0) progress.checkLive(game);
       while (acc >= STEP_MS) {
         input.update();
         game.tick(STEP_MS);
