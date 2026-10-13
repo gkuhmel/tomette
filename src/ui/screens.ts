@@ -1,7 +1,7 @@
 import { el } from './dom';
 import { logoSvg } from './home-bg';
 
-/** Écran plein (accueil, game over, pause, garde, orientation). */
+/** Écran plein (accueil, fin de partie, pause, réglages, orientation…). */
 export class Screen {
   readonly root: HTMLDivElement;
 
@@ -23,12 +23,6 @@ export class Screen {
     return !this.root.hidden;
   }
 
-  onTap(fn: () => void): void {
-    this.root.addEventListener('pointerup', (e) => {
-      e.preventDefault();
-      fn();
-    });
-  }
 }
 
 export function homeScreen(): { screen: Screen; modes: HTMLElement; howto: HTMLElement; settings: HTMLElement; progress: HTMLElement } {

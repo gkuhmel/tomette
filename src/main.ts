@@ -92,10 +92,12 @@ function boot(): void {
     },
   });
   attachLongPress(corner, 1000, () => debug.open());
-  // Phase d'élaboration : bouton de debug toujours visible, à côté de « Monter ».
-  const gear = el('button', { id: 'debug-gear', type: 'button', 'aria-label': 'Debug' }, ['⚙']);
-  gear.addEventListener('click', () => (debug.isOpen ? debug.close() : debug.open()));
-  footer.append(gear);
+  // Bouton de debug visible seulement avec ?dev=1 (sinon : appui long en haut à gauche).
+  if (dev) {
+    const gear = el('button', { id: 'debug-gear', type: 'button', 'aria-label': 'Debug' }, ['⚙']);
+    gear.addEventListener('click', () => (debug.isOpen ? debug.close() : debug.open()));
+    footer.append(gear);
+  }
 
   function relayout(): void {
     const w = stage.clientWidth;

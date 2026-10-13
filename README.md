@@ -1,66 +1,77 @@
 # Tomettes
 
-Puzzle navigateur sur grille hexagonale (tomettes provençales) : on échange des
-tuiles voisines pour former des alignements de 3+, dans une pile qui monte.
-Prototype v0, mode endless, pour iPhone / Safari.
+Puzzle d'action sur grille hexagonale (tomettes provençales) : on échange des
+tuiles voisines en biais pour former des alignements de 3 ou plus, pendant que
+la pile monte. Jouable sur iPhone (Safari, installable sur l'écran d'accueil)
+et sur ordinateur.
 
 ## Lancer
 
 ```sh
 npm install
 npm run dev      # serveur de dev (accessible sur le réseau local)
-npm test         # tests Vitest de src/core
+npm test         # tests Vitest
 npm run build    # vérification des types + build statique dans dist/
 ```
 
-- Fonctionne sur iPhone (Safari) et sur ordinateur (Chrome, etc.).
-- Sur ordinateur : glisser à la souris, Espace maintenue pour faire monter la pile.
-- Panneau de debug : bouton ⚙ à côté de « Monter » (ou appui long 1 s en haut à gauche).
+Déploiement : Netlify lit `netlify.toml` (build `npm run build`, dossier `dist`).
 
 ## Jouer
 
-Modes : Classique (sans fin), Contre-la-montre (2 min), Mosaïque (un max de
-rosaces en 3 min), Express (départ au niveau 8). Un record par mode.
+- **Échanger** : glisser une tuile vers une voisine en biais (jamais vers le
+  haut ou le bas), au doigt ou à la souris ; plusieurs échanges d'un même geste.
+- **Aligner** : 3 tuiles ou plus de même couleur, verticalement ou en diagonale.
+- **Combos et chaînes** : plus de 3 tuiles d'un coup, ou de nouveaux
+  alignements formés par les chutes (×2, ×3…) → points et pause de la pile.
+- **Rosace** : au moins 5 des 6 voisines d'une tuile de la même autre couleur.
+  L'anneau disparaît et le centre devient une **tomette d'or** ; l'échanger avec
+  une voisine fait disparaître toute la couleur de cette voisine.
+- **Tuiles spéciales** : fêlée (ne s'aligne pas, réparée par un alignement
+  voisin), scellée (non déplaçable, libérée par un alignement voisin), joker
+  (toutes les couleurs).
+- **La pile monte** : maintenir « Monter » (ou Espace) pour accélérer. Zone
+  d'attention orange près du haut, puis alerte rouge avec jauge de grâce.
+- **Pause** : bouton ❚❚, Échap ou P.
 
-- Poser le doigt sur une tuile puis glisser vers un voisin **latéral**
-  (haut-gauche, bas-gauche, haut-droite, bas-droite) : les tuiles s'échangent.
-  On peut enchaîner plusieurs échanges dans le même glissé. Jamais en vertical.
-- Alignements de 3+ sur les 3 axes (vertical et deux diagonales).
-- Rosace : au moins 5 des 6 voisines d'une tuile sont d'une même autre couleur
-  (`rosaceMin`, 5 par défaut ; possible contre un bord).
-  L'anneau disparaît (bonus + pause) et le centre devient une tomette d'or ;
-  l'échanger avec une voisine fait disparaître toute la couleur de cette voisine.
-  Désactivable dans le panneau de debug (`rosace` = 0).
-- Tuiles spéciales dans les nouvelles rangées : fêlée (ne s'aligne pas,
-  réparée par un alignement voisin), scellée (non déplaçable, libérée par un
-  alignement voisin), joker (toutes les couleurs). Fréquences réglables.
-- Bouton « Monter » : accélère la pile (et annule le stop time).
+Modes : Classique (sans fin), Contre-la-montre (2 min), Mosaïque (un max de
+rosaces en 3 min), Express (départ au niveau 8). Un record par mode, 22 succès,
+statistiques, tutoriel guidé au premier lancement.
+
+## Réglages
+
+- **Joueur** (accueil ou pause → Réglages) : effets sonores, musique, effets
+  visuels, tremblement, thème (Pastel clair, Pastel sombre, Terre cuite).
+- **Développement** : panneau de debug avec tous les paramètres expliqués,
+  appliqués en direct et mémorisés. Ouverture : appui long (1 s) en haut à
+  gauche, ou bouton ⚙ avec `?dev=1` dans l'adresse. « Exporter » copie la
+  configuration en JSON.
 
 ## Hors ligne
 
-Le site est une application web installable : dans Safari, Partager →
-« Sur l'écran d'accueil ». Elle s'ouvre en plein écran et fonctionne sans
-réseau (service worker généré au build, voir `vite.config.ts`).
+Application web installable : dans Safari, Partager → « Sur l'écran
+d'accueil ». Elle s'ouvre en plein écran et fonctionne sans réseau (service
+worker généré au build, voir `vite.config.ts`). Le record de l'application
+installée est séparé de celui de Safari.
 
 ## Organisation
 
 - `src/config.ts` : tous les paramètres réglables.
-- `src/core/` : logique pure et déterministe (hex, grille, alignements,
-  gravité, chaînes, montée, RNG, orchestration à 60 Hz).
-- `src/render/` : rendu Canvas 2D (sprites pré-rendus par couleur, thèmes).
+- `src/core/` : logique pure et déterministe, testée (hex, grille, alignements,
+  gravité, chaînes, rosace, montée, modes, succès, tutoriel, boucle à 60 Hz).
+- `src/render/` : rendu Canvas 2D (sprites pré-rendus, thèmes, effets).
+- `src/audio/` : sons et musique générés (Web Audio, aucun fichier).
 - `src/input/` : geste glisser-tenir (Pointer Events).
-- `src/ui/` : écrans, panneau de debug, localStorage.
+- `src/ui/` : écrans, réglages, succès, aide, panneau de debug, stockage local.
+- `tests/` : tests Vitest de `src/core`.
 
 ## Choix d'implémentation à noter
 
-- Une tuile posée sur une tuile en hover/chute n'est pas « soutenue » : les
-  piles tombent d'un bloc.
-- Un échange est aussi refusé si l'une des tuiles est déjà en `swapping` ; en
-  glissé, il est retenté à chaque tick, donc un glissé rapide s'enchaîne dès
-  la fin de l'animation précédente.
-- Une tuile `hovering` peut être échangée.
+- Une tuile posée sur une tuile en suspension ou en chute n'est pas soutenue :
+  les piles tombent d'un bloc.
+- Un échange est refusé si l'une des tuiles est déjà en cours d'échange ; en
+  glissé, il est retenté à chaque tick.
 - L'alerte se déclenche quand la montée devrait reprendre alors que la rangée
-  du haut est occupée. Un clear l'annule ; si la rangée est toujours occupée
-  quand la montée reprend, une nouvelle alerte (grâce complète) démarre.
-- La rangée d'aperçu est générée sans alignement avec la grille actuelle, puis
-  revérifiée à son activation (la grille a pu changer entre-temps).
+  du haut est occupée. Un alignement l'annule ; si la rangée est toujours
+  occupée à la reprise, une nouvelle alerte (grâce complète) démarre.
+- Les nouvelles rangées ne créent jamais d'alignement ni de rosace d'elles-mêmes
+  (vérifié à la génération puis à l'activation, jokers compris).
