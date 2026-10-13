@@ -1,4 +1,5 @@
 import { el } from './dom';
+import { logoSvg } from './home-bg';
 
 /** Écran plein (accueil, game over, pause, garde, orientation). */
 export class Screen {
@@ -35,7 +36,10 @@ export function homeScreen(): { screen: Screen; modes: HTMLElement; howto: HTMLE
   const howto = el('button', { type: 'button', class: 'btn' }, ['Comment jouer']);
   const settings = el('button', { type: 'button', class: 'btn' }, ['Réglages']);
   const progress = el('button', { type: 'button', class: 'btn' }, ['Succès']);
+  const logo = el('div', { class: 'logo-wrap' });
+  logo.innerHTML = logoSvg(112);
   const screen = new Screen('screen-home', [
+    logo,
     el('h1', {}, ['Tomettes']),
     modes,
     el('div', { class: 'home-row' }, [howto, progress, settings]),

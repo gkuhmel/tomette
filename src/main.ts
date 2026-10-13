@@ -15,6 +15,7 @@ import { el, formatTime } from './ui/dom';
 import { isDevMode, isPhone } from './ui/guard';
 import { howToScreen } from './ui/howto';
 import { settingsScreen } from './ui/settings';
+import { HomeBackground } from './ui/home-bg';
 import { Progress, progressScreen } from './ui/progress';
 import { gameOverScreen, homeScreen, modeButton, pauseScreen, rotateScreen } from './ui/screens';
 import { load, loadBest, save, saveBest } from './ui/storage';
@@ -184,6 +185,13 @@ function boot(): void {
     relayout();
   }
 
+  const homeBg = new HomeBackground(home.screen.root);
+  // Le fond animé ne tourne que lorsque l'accueil est visible.
+  new MutationObserver(() => (home.screen.visible ? homeBg.start() : homeBg.stop())).observe(home.screen.root, {
+    attributes: true,
+    attributeFilter: ['hidden'],
+  });
+
   /** Menu : un bouton par mode, avec son record. */
   function showHome(): void {
     home.modes.replaceChildren(
@@ -205,6 +213,7 @@ function boot(): void {
     pause.screen.hide();
     sound.stopMusic();
     home.screen.show();
+    homeBg.start();
   }
 
   // Réglages : ouverts depuis l'accueil ou la pause, on revient au même endroit.

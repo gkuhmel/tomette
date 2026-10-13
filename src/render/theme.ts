@@ -128,6 +128,7 @@ export function themeFor(index: number): Theme {
 export function applyThemeCss(theme: Theme): void {
   const root = document.documentElement.style;
   for (const [k, v] of Object.entries(theme.css)) root.setProperty(k, v);
+  theme.tiles.forEach((c, i) => root.setProperty(`--t${i}`, c));
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme.bg);
   document.documentElement.style.colorScheme = theme.style === 'flat' && theme.bg.startsWith('#f') ? 'light' : 'dark';
 }
