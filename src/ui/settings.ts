@@ -1,16 +1,17 @@
 import { config, ConfigKey } from '../config';
 import { THEMES } from '../render/theme';
 import { setConfigValue } from './debug';
+import { Key, lang, LANGS, langName, setLang, t } from '../i18n';
 import { el } from './dom';
 import { Screen } from './screens';
 
 /** Écran Réglages du joueur (son, musique, thème, effets). */
 export function settingsScreen(onBack: () => void, onChange: () => void): Screen & { refresh(): void } {
-  const toggles: [ConfigKey, string, string][] = [
-    ['sound', 'Effets sonores', 'Échanges, alignements, chaînes…'],
-    ['music', 'Musique', 'Petite mélodie douce pendant la partie.'],
-    ['animations', 'Effets visuels', 'Éclats, pétales, bandeau de niveau. À couper pour réduire les animations.'],
-    ['screenShake', 'Tremblement d\'écran', 'Sur les grosses chaînes et les rosaces.'],
+  const toggles: [ConfigKey, Key, Key][] = [
+    ['sound', 'set.sound', 'set.soundHelp'],
+    ['music', 'set.music', 'set.musicHelp'],
+    ['animations', 'set.effects', 'set.effectsHelp'],
+    ['screenShake', 'set.shake', 'set.shakeHelp'],
   ];
   const syncers: (() => void)[] = [];
 
@@ -22,17 +23,17 @@ export function settingsScreen(onBack: () => void, onChange: () => void): Screen
     });
     syncers.push(() => (box.checked = config[key] !== 0));
     return el('label', { class: 'setting' }, [
-      el('span', { class: 'setting-text' }, [el('strong', {}, [label]), el('small', {}, [help])]),
+      el('span', { class: 'setting-text' }, [el('strong', {}, [t(label)]), el('small', {}, [t(help)])]),
       box,
     ]);
   });
 
-  const themeButtons = THEMES.map((t, i) => {
+  const themeButtons = THEMES.map((th, i) => {
     const b = el('button', { type: 'button', class: 'theme-btn' }, [
-      el('span', { class: 'theme-swatch', style: `background:${t.bg};border-color:${t.tiles[0]}` }, [
-        ...t.tiles.slice(0, 3).map((c) => el('i', { style: `background:${c}` })),
+      el('span', { class: 'theme-swatch', style: `background:${th.bg};border-color:${th.tiles[0]}` }, [
+        ...th.tiles.slice(0, 3).map((c) => el('i', { style: `background:${c}` })),
       ]),
-      t.name,
+      t(`theme.${i}` as Key),
     ]);
     b.addEventListener('click', () => {
       setConfigValue('theme', i);
@@ -43,15 +44,28 @@ export function settingsScreen(onBack: () => void, onChange: () => void): Screen
     return b;
   });
 
-  const back = el('button', { type: 'button', class: 'btn primary' }, ['Retour']);
+  // Langue : appliquée en rechargeant l'interface.
+  const langButtons = LANGS.map((l) => {
+    const b = el('button', { type: 'button', class: `lang-btn${l === lang ? ' selected' : ''}`, lang: l }, [langName(l)]);
+    b.addEventListener('click', () => {
+      if (l === lang) return;
+      setLang(l);
+      location.reload();
+    });
+    return b;
+  });
+
+  const back = el('button', { type: 'button', class: 'btn primary' }, [t('common.back')]);
   back.addEventListener('click', onBack);
 
   const screen = new Screen('screen-settings', [
     el('div', { class: 'panel' }, [
-      el('h2', {}, ['Réglages']),
+      el('h2', {}, [t('common.settings')]),
       ...rows,
-      el('h3', {}, ['Thème']),
+      el('h3', {}, [t('set.theme')]),
       el('div', { class: 'theme-list' }, themeButtons),
+      el('h3', {}, [t('set.language')]),
+      el('div', { class: 'lang-list' }, langButtons),
       el('div', { class: 'home-buttons' }, [back]),
     ]),
   ]);

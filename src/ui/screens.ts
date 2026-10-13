@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import { el } from './dom';
 import { logoSvg } from './home-bg';
 
@@ -27,9 +28,9 @@ export class Screen {
 
 export function homeScreen(): { screen: Screen; modes: HTMLElement; howto: HTMLElement; settings: HTMLElement; progress: HTMLElement } {
   const modes = el('div', { class: 'mode-list' });
-  const howto = el('button', { type: 'button', class: 'btn' }, ['Comment jouer']);
-  const settings = el('button', { type: 'button', class: 'btn' }, ['Réglages']);
-  const progress = el('button', { type: 'button', class: 'btn' }, ['Succès']);
+  const howto = el('button', { type: 'button', class: 'btn' }, [t('common.howto')]);
+  const settings = el('button', { type: 'button', class: 'btn' }, [t('common.settings')]);
+  const progress = el('button', { type: 'button', class: 'btn' }, [t('common.achievements')]);
   const logo = el('div', { class: 'logo-wrap' });
   logo.innerHTML = logoSvg(112);
   const screen = new Screen('screen-home', [
@@ -59,12 +60,12 @@ export function gameOverScreen(): {
   replay: HTMLElement;
   menu: HTMLElement;
 } {
-  const title = el('h2', {}, ['Partie terminée']);
+  const title = el('h2', {}, [t('over.title')]);
   const score = el('p', { class: 'score' });
   const record = el('p', { class: 'best' });
   const unlocked = el('div', { class: 'over-ach' });
-  const replay = el('button', { type: 'button', class: 'btn primary' }, ['Rejouer']);
-  const menu = el('button', { type: 'button', class: 'btn' }, ['Menu']);
+  const replay = el('button', { type: 'button', class: 'btn primary' }, [t('common.replay')]);
+  const menu = el('button', { type: 'button', class: 'btn' }, [t('common.menu')]);
   const screen = new Screen('screen-over', [
     title,
     score,
@@ -82,17 +83,17 @@ export function pauseScreen(): {
   settings: HTMLElement;
   menu: HTMLElement;
 } {
-  const resume = el('button', { type: 'button', class: 'btn primary' }, ['Reprendre']);
-  const restart = el('button', { type: 'button', class: 'btn' }, ['Recommencer']);
-  const settings = el('button', { type: 'button', class: 'btn' }, ['Réglages']);
-  const menu = el('button', { type: 'button', class: 'btn' }, ['Menu']);
+  const resume = el('button', { type: 'button', class: 'btn primary' }, [t('common.resume')]);
+  const restart = el('button', { type: 'button', class: 'btn' }, [t('common.restart')]);
+  const settings = el('button', { type: 'button', class: 'btn' }, [t('common.settings')]);
+  const menu = el('button', { type: 'button', class: 'btn' }, [t('common.menu')]);
   const screen = new Screen('screen-pause', [
-    el('h2', {}, ['Pause']),
+    el('h2', {}, [t('common.pause')]),
     el('div', { class: 'home-buttons' }, [resume, restart, settings, menu]),
   ]);
   return { screen, resume, restart, settings, menu };
 }
 
 export function rotateScreen(): Screen {
-  return new Screen('screen-rotate', [el('p', { class: 'rotate-icon' }, ['📱']), el('p', {}, ['Tourne ton téléphone'])]);
+  return new Screen('screen-rotate', [el('p', { class: 'rotate-icon' }, ['📱']), el('p', {}, [t('common.rotate')])]);
 }

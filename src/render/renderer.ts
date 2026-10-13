@@ -1,6 +1,7 @@
 import type { Game } from '../core/game';
 import { cellCenter } from '../core/hex';
 import { Layout } from './layout';
+import { t } from '../i18n';
 import { Effects } from './effects';
 import { GOLD, hexPath, JOKER, SpriteCache } from './sprites';
 import { Theme, themeFor } from './theme';
@@ -123,11 +124,11 @@ export class Renderer {
       this.effects.onClear(x, y, e.chain, e.size, e.rosaces, e.gold, L.R, this.theme, now);
       if (e.chain < 2 && e.size < 4 && !e.rosaces && !e.gold) continue;
       this.popups.push({
-        text: e.rosaces ? 'Rosace !' : e.gold ? 'Or !' : e.chain >= 2 ? `×${e.chain}` : `${e.size}`,
+        text: e.rosaces ? t('pop.rosace') : e.gold ? t('pop.gold') : e.chain >= 2 ? `×${e.chain}` : `${e.size}`,
         sub: e.rosaces
-          ? e.chain >= 2 ? `chaîne ×${e.chain}` : `+${e.points}`
-          : e.gold ? `${e.size - 1} tuiles`
-          : e.chain >= 2 && e.size >= 4 ? `combo ${e.size}` : e.chain >= 2 ? 'chaîne' : 'combo',
+          ? e.chain >= 2 ? t('pop.chainN', { n: e.chain }) : `+${e.points}`
+          : e.gold ? t('pop.goldTiles', { n: e.size - 1 })
+          : e.chain >= 2 && e.size >= 4 ? t('pop.comboN', { n: e.size }) : e.chain >= 2 ? t('pop.chain') : t('pop.combo'),
         x,
         y,
         born: now,

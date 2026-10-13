@@ -53,9 +53,8 @@ export function withGame(t: Totals, g: Snapshot, finished: boolean): Totals {
 }
 
 export interface Achievement {
+  /** Nom et description : clés ach.<id>.name / ach.<id>.desc. */
   id: string;
-  name: string;
-  desc: string;
   /** `t` inclut déjà la partie `g` (en cours ou finie). */
   check: (t: Totals, g: Snapshot | null) => boolean;
 }
@@ -63,28 +62,28 @@ export interface Achievement {
 const inMode = (g: Snapshot | null, mode: ModeId) => g !== null && g.mode === mode;
 
 export const ACHIEVEMENTS: Achievement[] = [
-  { id: 'first', name: 'Premier pas', desc: 'Terminer une première partie.', check: (t) => t.games >= 1 },
-  { id: 'chain2', name: 'En chaîne', desc: 'Faire une chaîne ×2.', check: (t) => t.bestChain >= 2 },
-  { id: 'chain3', name: 'Réaction en chaîne', desc: 'Faire une chaîne ×3.', check: (t) => t.bestChain >= 3 },
-  { id: 'chain4', name: 'Cascade', desc: 'Faire une chaîne ×4.', check: (t) => t.bestChain >= 4 },
-  { id: 'chain5', name: 'Avalanche', desc: 'Faire une chaîne ×5.', check: (t) => t.bestChain >= 5 },
-  { id: 'combo5', name: 'Grand ménage', desc: 'Faire disparaître 5 tuiles d\'un coup.', check: (t) => t.bestCombo >= 5 },
-  { id: 'combo7', name: 'Coup de balai', desc: 'Faire disparaître 7 tuiles d\'un coup.', check: (t) => t.bestCombo >= 7 },
-  { id: 'rosace1', name: 'Première rosace', desc: 'Réaliser une rosace.', check: (t) => t.rosaces >= 1 },
-  { id: 'rosace5', name: 'Mosaïste', desc: '5 rosaces dans une même partie.', check: (t) => t.bestRosaces >= 5 },
-  { id: 'rosace25', name: 'Maître carreleur', desc: '25 rosaces au total.', check: (t) => t.rosaces >= 25 },
-  { id: 'gold', name: 'Pépite', desc: 'Utiliser une tomette d\'or.', check: (t) => t.gold >= 1 },
-  { id: 'repair10', name: 'Restaurateur', desc: 'Réparer ou libérer 10 tuiles.', check: (t) => t.repairs >= 10 },
-  { id: 'save', name: 'Sang-froid', desc: 'Faire un alignement pendant l\'alerte.', check: (t) => t.alertSaves >= 1 },
-  { id: 'score5k', name: 'Bien parti', desc: '5 000 points dans une partie.', check: (_t, g) => !!g && g.score >= 5000 },
-  { id: 'score20k', name: 'Belle série', desc: '20 000 points dans une partie.', check: (_t, g) => !!g && g.score >= 20000 },
-  { id: 'score50k', name: 'Virtuose', desc: '50 000 points dans une partie.', check: (_t, g) => !!g && g.score >= 50000 },
-  { id: 'level10', name: 'À toute vitesse', desc: 'Atteindre le niveau 10.', check: (t) => t.bestLevel >= 10 },
-  { id: 'survive5', name: 'Endurant', desc: 'Tenir 5 minutes en Classique.', check: (_t, g) => inMode(g, 'endless') && g!.elapsed >= 300 },
-  { id: 'express3', name: 'Train express', desc: 'Tenir 3 minutes en Express.', check: (_t, g) => inMode(g, 'express') && g!.elapsed >= 180 },
-  { id: 'chrono3k', name: 'Chrono maîtrisé', desc: '3 000 points en Contre-la-montre.', check: (_t, g) => inMode(g, 'timeAttack') && g!.score >= 3000 },
-  { id: 'games25', name: 'Habitué', desc: 'Jouer 25 parties.', check: (t) => t.games >= 25 },
-  { id: 'games100', name: 'Passionné', desc: 'Jouer 100 parties.', check: (t) => t.games >= 100 },
+  { id: 'first', check: (t) => t.games >= 1 },
+  { id: 'chain2', check: (t) => t.bestChain >= 2 },
+  { id: 'chain3', check: (t) => t.bestChain >= 3 },
+  { id: 'chain4', check: (t) => t.bestChain >= 4 },
+  { id: 'chain5', check: (t) => t.bestChain >= 5 },
+  { id: 'combo5', check: (t) => t.bestCombo >= 5 },
+  { id: 'combo7', check: (t) => t.bestCombo >= 7 },
+  { id: 'rosace1', check: (t) => t.rosaces >= 1 },
+  { id: 'rosace5', check: (t) => t.bestRosaces >= 5 },
+  { id: 'rosace25', check: (t) => t.rosaces >= 25 },
+  { id: 'gold', check: (t) => t.gold >= 1 },
+  { id: 'repair10', check: (t) => t.repairs >= 10 },
+  { id: 'save', check: (t) => t.alertSaves >= 1 },
+  { id: 'score5k', check: (_t, g) => !!g && g.score >= 5000 },
+  { id: 'score20k', check: (_t, g) => !!g && g.score >= 20000 },
+  { id: 'score50k', check: (_t, g) => !!g && g.score >= 50000 },
+  { id: 'level10', check: (t) => t.bestLevel >= 10 },
+  { id: 'survive5', check: (_t, g) => inMode(g, 'endless') && g!.elapsed >= 300 },
+  { id: 'express3', check: (_t, g) => inMode(g, 'express') && g!.elapsed >= 180 },
+  { id: 'chrono3k', check: (_t, g) => inMode(g, 'timeAttack') && g!.score >= 3000 },
+  { id: 'games25', check: (t) => t.games >= 25 },
+  { id: 'games100', check: (t) => t.games >= 100 },
 ];
 
 /** Succès nouvellement obtenus. */

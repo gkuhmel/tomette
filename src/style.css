@@ -521,6 +521,28 @@ body.alert #hud {
   border-color: var(--terracotta);
 }
 
+.lang-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.lang-btn {
+  padding: 10px 6px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--fg);
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.lang-btn.selected {
+  border-color: var(--terracotta);
+  font-weight: 700;
+}
+
 .theme-swatch {
   display: flex;
   gap: 3px;
@@ -535,7 +557,8 @@ body.alert #hud {
   border-radius: 50%;
 }
 
-#screen-progress {
+#screen-progress,
+#screen-settings {
   justify-content: flex-start;
   padding-top: calc(24px + env(safe-area-inset-top));
 }

@@ -1,6 +1,8 @@
 import { Cell, cellCenter, cellHeight } from '../core/hex';
 import { GOLD, JOKER, SpriteCache, Variant } from '../render/sprites';
 import { Theme, THEMES } from '../render/theme';
+import { config } from '../config';
+import { Key, t } from '../i18n';
 import { el } from './dom';
 import { Screen } from './screens';
 
@@ -342,7 +344,7 @@ const jokerScene: Scene = {
 // --- Écran -----------------------------------------------------------------
 
 export function howToScreen(onPlay: () => void, onBack: () => void, onTutorial: () => void): Screen & { setTheme(t: Theme): void } {
-  const tuto = el('button', { type: 'button', class: 'btn' }, ['▶ Lancer le tutoriel']);
+  const tuto = el('button', { type: 'button', class: 'btn' }, [t('howto.launchTuto')]);
   tuto.addEventListener('click', onTutorial);
   const dpr = Math.min(3, window.devicePixelRatio || 1);
   const fig = (...scenes: (Scene | string)[]) =>
@@ -351,75 +353,43 @@ export function howToScreen(onPlay: () => void, onBack: () => void, onTutorial: 
       { class: 'howto-figs' },
       scenes.map((s) => (typeof s === 'string' ? el('span', { class: 'howto-arrow' }, [s]) : drawScene(s, dpr))),
     );
-  const section = (title: string, figure: HTMLElement, ...text: string[]) =>
-    el('section', {}, [el('h3', {}, [title]), figure, ...text.map((t) => el('p', {}, [t]))]);
+  const section = (title: Key | '', figure: HTMLElement | null, ...text: string[]) =>
+    el('section', {}, [
+      el('h3', {}, [title ? t(title) : '']),
+      ...(figure ? [figure] : []),
+      ...text.map((p) => el('p', {}, [p])),
+    ]);
+  const tx = (...keys: Key[]) => keys.map((k) => t(k));
 
-  const play = el('button', { type: 'button', class: 'btn primary' }, ['Jouer']);
-  const back = el('button', { type: 'button', class: 'btn' }, ['Retour']);
+  const play = el('button', { type: 'button', class: 'btn primary' }, [t('common.play')]);
+  const back = el('button', { type: 'button', class: 'btn' }, [t('common.back')]);
   play.addEventListener('click', onPlay);
   back.addEventListener('click', onBack);
 
   const build = () => [
     el('div', { class: 'howto' }, [
-      el('h2', {}, ['Comment jouer']),
+      el('h2', {}, [t('common.howto')]),
       el('div', { class: 'howto-buttons' }, [tuto]),
+      section('howto.s1.title', fig(swapScene), ...tx('howto.s1.p1', 'howto.s1.p2')),
+      section('howto.s2.title', fig(verticalScene, diagAScene, diagBScene), t('howto.s2.p1')),
+      section('', fig(swapToMatchBefore, '→', swapToMatchAfter), t('howto.s2.p2')),
+      section('howto.s3.title', fig(comboScene), t('howto.s3.p1')),
+      section('howto.s4.title', fig(chainBefore, '→', chainAfter), t('howto.s4.p1')),
       section(
-        '1. Échanger',
-        fig(swapScene),
-        'Pose le doigt (ou clique) sur une tuile et glisse vers une voisine en biais : elles s\'échangent.',
-        'Seulement les 4 voisines en diagonale — jamais vers le haut ou le bas. Tu peux enchaîner plusieurs échanges sans lever le doigt.',
-      ),
-      section(
-        '2. Aligner',
-        fig(verticalScene, diagAScene, diagBScene),
-        '3 tuiles ou plus de la même couleur alignées disparaissent : à la verticale ou sur l\'une des deux diagonales.',
-      ),
-      section('', fig(swapToMatchBefore, '→', swapToMatchAfter), 'Un échange bien placé suffit à compléter une ligne.'),
-      section(
-        '3. Combos',
-        fig(comboScene),
-        'Plus de 3 tuiles d\'un coup (même en L ou en Y) : bonus de points, et la pile s\'arrête un instant.',
-      ),
-      section(
-        '4. Chaînes',
-        fig(chainBefore, '→', chainAfter),
-        'Quand des tuiles tombent dans le vide laissé par un alignement et en forment un nouveau, c\'est une chaîne : ×2, ×3… Les points sont multipliés et la pile fait une pause plus longue.',
-      ),
-      section(
-        '5. La pile monte',
+        'howto.s5.title',
         fig(riseScene),
-        'Une nouvelle rangée (assombrie) arrive par le bas, de plus en plus vite.',
-        'Maintiens « Monter » (ou la touche Espace) pour accélérer.',
-        'Si une tuile touche le haut, le cadre devient rouge : tu as 2 secondes pour faire un alignement, sinon c\'est perdu.',
+        ...tx('howto.s5.p1', 'howto.s5.p2'),
+        t('howto.s5.p3', { n: config.graceS }),
       ),
+      section('howto.s6.title', fig(rosaceBefore, '→', rosaceAfter), ...tx('howto.s6.p1', 'howto.s6.p2', 'howto.s6.p3')),
+      section('', fig(goldUse), t('howto.s6.p4')),
+      section('howto.s7.title', fig(specialsScene), ...tx('howto.s7.p1', 'howto.s7.p2', 'howto.s7.p3')),
+      section('', fig(jokerScene), t('howto.s7.p4')),
       section(
-        '6. La rosace',
-        fig(rosaceBefore, '→', rosaceAfter),
-        'Entoure une tuile d\'au moins 5 tuiles d\'une même autre couleur : c\'est une rosace ! L\'anneau disparaît (gros bonus, longue pause de la pile) et la tuile du centre devient une tomette d\'or.',
-        'La 6e voisine peut être d\'une autre couleur, vide ou hors de la grille : une rosace se construit aussi contre le bas ou un côté.',
-        'Astuce : les tuiles de l\'anneau ne forment jamais de ligne entre elles, mais une tuile de la même couleur juste au-dessus ou en dessous d\'une paire de côté fait une ligne de 3 et casse ta rosace. Pose souvent la dernière tuile en la faisant tomber sur le centre.',
+        'howto.s8.title',
+        null,
+        ...tx('howto.s8.p1', 'howto.s8.p2', 'howto.s8.p3', 'howto.s8.p4', 'howto.s8.p5', 'howto.s8.p6'),
       ),
-      section(
-        '',
-        fig(goldUse),
-        'Échange la tomette d\'or avec une voisine : toutes les tuiles de cette couleur disparaissent de la grille. Garde-la pour te sortir d\'une situation difficile !',
-      ),
-      section(
-        '7. Tuiles spéciales',
-        fig(specialsScene),
-        'Fêlée (à gauche) : elle ne s\'aligne pas. Fais un alignement juste à côté pour la réparer, elle redevient normale.',
-        'Scellée (au milieu) : impossible de la déplacer, mais elle peut s\'aligner. Un alignement juste à côté la libère.',
-        'Joker (à droite) : il compte comme n\'importe quelle couleur.',
-      ),
-      section('', fig(jokerScene), 'Deux violettes + un joker = un alignement.'),
-      el('section', {}, [
-        el('h3', {}, ['8. Les modes']),
-        el('p', {}, ['Classique : sans fin, la pile accélère avec le temps.']),
-        el('p', {}, ['Contre-la-montre : le meilleur score possible avant la fin du chrono.']),
-        el('p', {}, ['Mosaïque : un maximum de rosaces avant la fin du chrono.']),
-        el('p', {}, ['Express : une partie classique qui démarre directement à grande vitesse.']),
-        el('p', {}, ['Dans les modes chronométrés, si la pile touche le haut, la partie s\'arrête aussi.']),
-      ]),
       el('div', { class: 'howto-buttons' }, [back, play]),
     ]),
   ];

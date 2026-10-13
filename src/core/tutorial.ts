@@ -4,8 +4,8 @@ import type { Cell } from './hex';
 
 /** Une étape du tutoriel : grille préparée, geste conseillé et condition de réussite. */
 export interface TutorialStep {
-  title: string;
-  text: string;
+  /** Textes : clés tuto.<id>.title / tuto.<id>.text. */
+  id: 'swap' | 'diagonal' | 'chain' | 'rise';
   build: (cfg: Config) => Game;
   /** Tuile à déplacer et case de destination conseillées. */
   hint?: { from: Cell; to: Cell };
@@ -51,8 +51,7 @@ function put(g: Game, c: number, r: number, color: number): void {
 
 export const TUTORIAL_STEPS: TutorialStep[] = [
   {
-    title: 'Échanger',
-    text: 'Pose le doigt sur la tuile entourée et glisse-la vers la case indiquée : 3 tuiles de même couleur alignées disparaissent.',
+    id: 'swap',
     build: (cfg) => {
       const g = base(cfg, [10, 11]);
       put(g, 3, 10, A);
@@ -64,8 +63,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     done: (_g, ev) => ev.length > 0,
   },
   {
-    title: 'En diagonale',
-    text: 'On n\'échange qu\'en biais, jamais vers le haut ou le bas. Les alignements comptent aussi en diagonale : essaie !',
+    id: 'diagonal',
     build: (cfg) => {
       const g = base(cfg, [10, 11]);
       put(g, 0, 10, B);
@@ -77,8 +75,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     done: (_g, ev) => ev.length > 0,
   },
   {
-    title: 'Les chaînes',
-    text: 'Quand des tuiles tombent et forment un nouvel alignement, c\'est une chaîne : plus de points et la pile s\'arrête un moment. Glisse la tuile et regarde.',
+    id: 'chain',
     build: (cfg) => {
       const g = base(cfg, [10, 11]);
       put(g, 3, 11, B);
@@ -94,8 +91,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     done: (_g, ev) => ev.some((e) => e.chain >= 2),
   },
   {
-    title: 'La pile monte',
-    text: 'Pendant la partie, de nouvelles rangées arrivent par le bas. Maintiens « Monter » (ou la touche Espace) pour accélérer.',
+    id: 'rise',
     build: (cfg) => base(cfg, [9, 10, 11]),
     hintRise: true,
     done: (g) => g.rowsRisen >= 1,

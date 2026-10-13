@@ -6,7 +6,7 @@ import { TUTORIAL_STEPS } from '../src/core/tutorial';
 
 describe('tutoriel', () => {
   TUTORIAL_STEPS.forEach((step, i) => {
-    it(`étape ${i + 1} (${step.title}) : grille stable, réussie avec le geste conseillé`, () => {
+    it(`étape ${i + 1} (${step.id}) : grille stable, réussie avec le geste conseillé`, () => {
       const game = step.build({ ...defaultConfig });
       expect(findMatches(game.grid)).toHaveLength(0);
       // Rien ne se passe tout seul.

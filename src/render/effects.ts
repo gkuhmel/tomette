@@ -1,4 +1,5 @@
 import type { Game } from '../core/game';
+import { t } from '../i18n';
 import { cellCenter } from '../core/hex';
 import type { Layout } from './layout';
 import type { Theme } from './theme';
@@ -101,7 +102,7 @@ export class Effects {
     for (const [id, at] of this.landed) if (now - at > LAND_MS) this.landed.delete(id);
 
     const level = game.level;
-    if (this.lastLevel && level > this.lastLevel && this.enabled) this.banner = { text: `Niveau ${level}`, born: now };
+    if (this.lastLevel && level > this.lastLevel && this.enabled) this.banner = { text: t('banner.level', { n: level }), born: now };
     this.lastLevel = level;
     if (game.over && !this.overAt) this.overAt = now;
   }

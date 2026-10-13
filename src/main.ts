@@ -13,6 +13,8 @@ import { applyThemeCss, themeFor } from './render/theme';
 import { attachLongPress, DebugPanel, loadSavedConfig } from './ui/debug';
 import { el, formatTime } from './ui/dom';
 import { isDevMode, isPhone } from './ui/guard';
+import { lang, t } from './i18n';
+import { achName, modeName, modeTag, tutoText as tutoText_, tutoTitle as tutoTitle_ } from './ui/text';
 import { howToScreen } from './ui/howto';
 import { settingsScreen } from './ui/settings';
 import { HomeBackground } from './ui/home-bg';
@@ -34,20 +36,21 @@ function boot(): void {
   const hudBest = el('span', { class: 'v' });
   const hudLevel = el('span', { class: 'v' });
   const hudTime = el('span', { class: 'v' });
-  const hudLevelLabel = el('span', { class: 'k' }, ['Niveau']);
-  const hudTimeLabel = el('span', { class: 'k' }, ['Temps']);
+  document.documentElement.lang = lang;
+  const hudLevelLabel = el('span', { class: 'k' }, [t('hud.level')]);
+  const hudTimeLabel = el('span', { class: 'k' }, [t('hud.time')]);
   const hudItem = (label: string | HTMLElement, v: HTMLElement) =>
     el('div', { class: 'hud-item' }, [typeof label === 'string' ? el('span', { class: 'k' }, [label]) : label, v]);
   const hud = el('header', { id: 'hud' }, [
-    hudItem('Score', hudScore),
-    hudItem('Record', hudBest),
+    hudItem(t('hud.score'), hudScore),
+    hudItem(t('hud.record'), hudBest),
     hudItem(hudLevelLabel, hudLevel),
     hudItem(hudTimeLabel, hudTime),
   ]);
   const canvas = el('canvas', { id: 'board' });
   const stage = el('main', { id: 'stage' }, [canvas]);
-  const raise = el('button', { id: 'raise', type: 'button' }, ['▲ Monter']);
-  const pauseBtn = el('button', { id: 'pause-btn', type: 'button', 'aria-label': 'Pause' }, ['❚❚']);
+  const raise = el('button', { id: 'raise', type: 'button' }, [t('common.raise')]);
+  const pauseBtn = el('button', { id: 'pause-btn', type: 'button', 'aria-label': t('common.pause') }, ['❚❚']);
   const footer = el('footer', { id: 'controls' }, [pauseBtn, raise]);
   const app = el('div', { id: 'app' }, [hud, stage, footer]);
   const corner = el('div', { id: 'debug-corner' });
@@ -117,8 +120,8 @@ function boot(): void {
     mode = m;
     best = loadBest(mode);
     const info = modeById(mode);
-    hudLevelLabel.textContent = info.record === 'rosaces' ? 'Rosaces' : 'Niveau';
-    hudTimeLabel.textContent = info.timeLimitS(config) > 0 ? 'Reste' : 'Temps';
+    hudLevelLabel.textContent = info.record === 'rosaces' ? t('hud.rosaces') : t('hud.level');
+    hudTimeLabel.textContent = info.timeLimitS(config) > 0 ? t('hud.left') : t('hud.time');
     const prev = game.grid;
     game = new Game(config, seed, { mode });
     input.release();
@@ -151,15 +154,15 @@ function boot(): void {
       saveBest(best, mode);
     }
     const rosaces = game.mode.record === 'rosaces';
-    over.title.textContent = game.timeUp ? 'Temps écoulé !' : 'Partie terminée';
+    over.title.textContent = game.timeUp ? t('over.timeUp') : t('over.title');
     over.score.textContent = rosaces
-      ? `${game.rosaceCount} rosace${game.rosaceCount > 1 ? 's' : ''} · ${game.score} pts`
-      : `Score : ${game.score}`;
-    over.record.textContent = record ? 'Nouveau record !' : `Record : ${best}${rosaces ? ' rosaces' : ''}`;
+      ? t(game.rosaceCount === 1 ? 'over.rosaces_one' : 'over.rosaces_other', { r: game.rosaceCount, s: game.score })
+      : t('over.score', { n: game.score });
+    over.record.textContent = record ? t('over.newRecord') : t(rosaces ? 'over.recordRosaces' : 'over.record', { n: best });
     const fresh = progress.finish(game);
     over.unlocked.replaceChildren(
-      ...(fresh.length ? [el('p', { class: 'over-ach-title' }, ['Nouveaux succès'])] : []),
-      ...fresh.map((a) => el('p', {}, [`🏆 ${a.name}`])),
+      ...(fresh.length ? [el('p', { class: 'over-ach-title' }, [t('over.newAch')])] : []),
+      ...fresh.map((a) => el('p', {}, [`🏆 ${achName(a.id)}`])),
     );
     // Laisse le temps à la grille de s'assombrir avant l'écran de fin.
     if (config.animations) overTimer = window.setTimeout(() => over.screen.show(), GAME_OVER_FADE_MS + 250);
@@ -200,7 +203,7 @@ function boot(): void {
       ...MODES.map((m, i) => {
         const rec = loadBest(m.id);
         const label = rec > 0 ? (m.record === 'rosaces' ? `${rec} 🌸` : `${rec}`) : '';
-        const b = modeButton(m.name, m.tagline(config), label, i === 0);
+        const b = modeButton(modeName(m.id), modeTag(m, config), label, i === 0);
         b.addEventListener('click', () => {
           // Première fois : le tutoriel d'abord, puis le mode choisi.
           if (load(TUTORIAL_KEY)) startGame(randomSeed(), m.id);
@@ -374,8 +377,8 @@ function boot(): void {
   const TUTORIAL_KEY = 'tomettes.tutorial';
   const tutoTitle = el('strong');
   const tutoText = el('p');
-  const tutoRetry = el('button', { type: 'button', class: 'tuto-link' }, ['Recommencer l\'étape']);
-  const tutoSkip = el('button', { type: 'button', class: 'tuto-link' }, ['Passer']);
+  const tutoRetry = el('button', { type: 'button', class: 'tuto-link' }, [t('tuto.retry')]);
+  const tutoSkip = el('button', { type: 'button', class: 'tuto-link' }, [t('tuto.skip')]);
   const tutoActions = el('div', { class: 'tuto-actions' }, [tutoRetry, tutoSkip]);
   const tuto = el('div', { id: 'tuto' }, [tutoTitle, tutoText, tutoActions]);
   tuto.hidden = true;
@@ -391,8 +394,8 @@ function boot(): void {
     howto.hide();
     over.screen.hide();
     pause.screen.hide();
-    hudLevelLabel.textContent = 'Niveau';
-    hudTimeLabel.textContent = 'Temps';
+    hudLevelLabel.textContent = t('hud.level');
+    hudTimeLabel.textContent = t('hud.time');
     state = 'tutorial';
     loadTutorialStep();
     sound.startMusic();
@@ -408,8 +411,8 @@ function boot(): void {
     renderer.hint = step.hint ?? null;
     raise.classList.toggle('pulse', !!step.hintRise);
     tutoDoneAt = 0;
-    tutoTitle.textContent = `${tutoStep + 1}/${TUTORIAL_STEPS.length} · ${step.title}`;
-    tutoText.textContent = step.text;
+    tutoTitle.textContent = t('tuto.step', { i: tutoStep + 1, n: TUTORIAL_STEPS.length, title: tutoTitle_(step.id) });
+    tutoText.textContent = tutoText_(step.id);
     tutoActions.replaceChildren(tutoRetry, tutoSkip);
     tuto.hidden = false;
   }
@@ -428,7 +431,7 @@ function boot(): void {
       tutoDoneAt = performance.now();
       renderer.hint = null;
       raise.classList.remove('pulse');
-      tutoText.textContent = 'Bravo !';
+      tutoText.textContent = t('tuto.bravo');
     }
   }
 
@@ -438,8 +441,8 @@ function boot(): void {
     raise.classList.remove('pulse');
     setRise(false);
     state = 'paused';
-    const play = el('button', { type: 'button', class: 'btn primary' }, ['Jouer']);
-    const menu = el('button', { type: 'button', class: 'btn' }, ['Menu']);
+    const play = el('button', { type: 'button', class: 'btn primary' }, [t('common.play')]);
+    const menu = el('button', { type: 'button', class: 'btn' }, [t('common.menu')]);
     play.addEventListener('click', () => {
       tuto.hidden = true;
       startGame(randomSeed(), tutoThen ?? 'endless');
@@ -449,8 +452,8 @@ function boot(): void {
       state = 'home';
       showHome();
     });
-    tutoTitle.textContent = 'C\'est parti !';
-    tutoText.textContent = 'Tu connais l\'essentiel. Pour aller plus loin (rosaces, tomette d\'or, tuiles spéciales), regarde « Comment jouer ».';
+    tutoTitle.textContent = t('tuto.doneTitle');
+    tutoText.textContent = t('tuto.doneText');
     tutoActions.replaceChildren(play, menu);
   }
 
