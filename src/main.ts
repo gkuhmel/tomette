@@ -1,5 +1,6 @@
 import './style.css';
 import { Sound } from './audio/sound';
+import { bucket, initTelemetry, track } from './telemetry';
 import { config } from './config';
 import { ClearEvent, Game, STEP_MS } from './core/game';
 import { TUTORIAL_STEPS } from './core/tutorial';
@@ -30,6 +31,7 @@ const dev = isDevMode();
 const phone = isPhone();
 
 function boot(): void {
+  initTelemetry();
   if (dev) document.body.classList.add('dev');
   loadSavedConfig();
 
@@ -141,6 +143,7 @@ function boot(): void {
     state = 'playing';
     lastLevel = game.level;
     sound.startMusic();
+    track('game_start', { mode, difficulty, lang });
   }
 
   function endGame(): void {
@@ -163,6 +166,14 @@ function boot(): void {
       : t('over.score', { n: game.score });
     over.record.textContent = record ? t('over.newRecord') : t(rosaces ? 'over.recordRosaces' : 'over.record', { n: best });
     const fresh = progress.finish(game);
+    track('game_end', {
+      mode,
+      difficulty,
+      timeUp: game.timeUp,
+      score: bucket(game.score, [500, 2000, 5000, 10000, 20000, 50000]),
+      minutes: bucket(game.elapsed / 60, [1, 2, 3, 5, 10]),
+    });
+    for (const a of fresh) track('achievement', { id: a.id });
     over.unlocked.replaceChildren(
       ...(fresh.length ? [el('p', { class: 'over-ach-title' }, [t('over.newAch')])] : []),
       ...fresh.map((a) => el('p', {}, [`🏆 ${achName(a.id)}`])),
@@ -459,6 +470,7 @@ function boot(): void {
   }
 
   function finishTutorial(): void {
+    track('tutorial_done', { step: tutoStep });
     save(TUTORIAL_KEY, '1');
     renderer.hint = null;
     raise.classList.remove('pulse');

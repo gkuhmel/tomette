@@ -34,17 +34,37 @@ Déploiement : Netlify lit `netlify.toml` (build `npm run build`, dossier `dist`
 - **Pause** : bouton ❚❚, Échap ou P.
 
 Modes : Classique (sans fin), Contre-la-montre (2 min), Mosaïque (un max de
-rosaces en 3 min), Express (départ au niveau 8). Un record par mode, 22 succès,
-statistiques, tutoriel guidé au premier lancement.
+rosaces en 3 min), Express (départ au niveau 8). Difficultés Détente / Normal /
+Expert, un record par mode et par difficulté, 22 succès, statistiques, tutoriel
+guidé au premier lancement. Langues : français, anglais, espagnol, allemand,
+italien, chinois (`src/i18n/`).
 
 ## Réglages
 
 - **Joueur** (accueil ou pause → Réglages) : effets sonores, musique, effets
-  visuels, tremblement, thème (Pastel clair, Pastel sombre, Terre cuite).
+  visuels, tremblement, thème (Pastel clair, Pastel sombre, Terre cuite),
+  langue, réinitialisation de la progression, À propos (version,
+  confidentialité ; page autonome `privacy.html`).
 - **Développement** : panneau de debug avec tous les paramètres expliqués,
   appliqués en direct et mémorisés. Ouverture : appui long (1 s) en haut à
   gauche, ou bouton ⚙ avec `?dev=1` dans l'adresse. « Exporter » copie la
   configuration en JSON.
+
+## Variables d'environnement (Netlify → Site configuration → Environment variables)
+
+Toutes optionnelles ; sans elles, aucun service tiers n'est chargé.
+
+| Variable | Rôle |
+|---|---|
+| `VITE_UMAMI_ID` | Mesure d'audience Umami sans cookie (identifiant du site) |
+| `VITE_UMAMI_SRC` | Adresse du script Umami (par défaut `https://cloud.umami.is/script.js`) |
+| `VITE_SENTRY_DSN` | Remontée d'erreurs Sentry (DSN du projet) |
+| `VITE_CONTACT_EMAIL` | Adresse de contact affichée dans « À propos » |
+
+Évènements envoyés à Umami : `game_start` (mode, difficulté, langue),
+`game_end` (mode, difficulté, score et durée par tranches), `achievement`,
+`tutorial_done`. Aucune donnée personnelle. Après ajout d'une variable,
+relancer un déploiement.
 
 ## Hors ligne
 
