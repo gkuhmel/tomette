@@ -7,7 +7,7 @@ import { resetProgress } from './storage';
 import { Screen } from './screens';
 
 /** Écran Réglages du joueur (son, musique, thème, effets). */
-export function settingsScreen(onBack: () => void, onChange: () => void): Screen & { refresh(): void } {
+export function settingsScreen(onBack: () => void, onChange: () => void, onAbout: () => void): Screen & { refresh(): void } {
   const toggles: [ConfigKey, Key, Key][] = [
     ['sound', 'set.sound', 'set.soundHelp'],
     ['music', 'set.music', 'set.musicHelp'],
@@ -64,6 +64,9 @@ export function settingsScreen(onBack: () => void, onChange: () => void): Screen
     location.reload();
   });
 
+  const about = el('button', { type: 'button', class: 'btn' }, [t('common.about')]);
+  about.addEventListener('click', onAbout);
+
   const back = el('button', { type: 'button', class: 'btn primary' }, [t('common.back')]);
   back.addEventListener('click', onBack);
 
@@ -76,7 +79,7 @@ export function settingsScreen(onBack: () => void, onChange: () => void): Screen
       el('h3', {}, [t('set.language')]),
       el('div', { class: 'lang-list' }, langButtons),
       el('h3', {}, [t('set.progress')]),
-      el('div', { class: 'home-buttons' }, [reset]),
+      el('div', { class: 'home-buttons' }, [reset, about]),
       el('div', { class: 'home-buttons' }, [back]),
     ]),
   ]);

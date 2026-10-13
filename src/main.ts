@@ -18,6 +18,7 @@ import { Key, lang, t } from './i18n';
 import { achName, modeName, modeTag, tutoText as tutoText_, tutoTitle as tutoTitle_ } from './ui/text';
 import { howToScreen } from './ui/howto';
 import { settingsScreen } from './ui/settings';
+import { aboutScreen } from './ui/about';
 import { HomeBackground } from './ui/home-bg';
 import { Progress, progressScreen } from './ui/progress';
 import { gameOverScreen, homeScreen, modeButton, pauseScreen, rotateScreen } from './ui/screens';
@@ -243,7 +244,16 @@ function boot(): void {
       else home.screen.show();
     },
     () => syncSound(),
+    () => {
+      settings.hide();
+      about.root.scrollTop = 0;
+      about.show();
+    },
   );
+  const about = aboutScreen(() => {
+    about.hide();
+    settings.show();
+  });
   function openSettings(from: 'home' | 'pause'): void {
     settingsFrom = from;
     settings.refresh();
@@ -355,7 +365,7 @@ function boot(): void {
   document.addEventListener(
     'touchmove',
     (e) => {
-      if (!(e.target instanceof Element && e.target.closest('#debug-panel, #screen-howto, #screen-settings, #screen-progress'))) e.preventDefault();
+      if (!(e.target instanceof Element && e.target.closest('#debug-panel, #screen-howto, #screen-settings, #screen-progress, #screen-about'))) e.preventDefault();
     },
     { passive: false },
   );

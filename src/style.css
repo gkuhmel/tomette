@@ -447,7 +447,8 @@ body.alert #hud {
 }
 
 #screen-settings,
-#screen-progress {
+#screen-progress,
+#screen-about {
   background: var(--bg);
   overflow-y: auto;
   touch-action: pan-y;
@@ -590,9 +591,36 @@ body.alert #hud {
 }
 
 #screen-progress,
-#screen-settings {
+#screen-settings,
+#screen-about {
   justify-content: flex-start;
   padding-top: calc(24px + env(safe-area-inset-top));
+}
+
+.about {
+  text-align: center;
+}
+
+.about p {
+  margin: 8px 0;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.about h3 {
+  text-align: left;
+}
+
+.about h3 ~ p {
+  text-align: left;
+}
+
+.about-tagline {
+  font-size: 17px !important;
+}
+
+.about-version {
+  color: var(--muted);
 }
 
 .progress-count {

@@ -1,4 +1,7 @@
+import { readFileSync } from 'node:fs';
 import { defineConfig, type Plugin } from 'vitest/config';
+
+const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { version: string };
 
 /**
  * Génère `sw.js` au build : service worker qui met en cache tous les fichiers
@@ -17,6 +20,8 @@ function offline(): Plugin {
         './icons/icon-192.png',
         './icons/icon-512.png',
         './icons/icon-maskable-512.png',
+        './icons/favicon-64.png',
+        './privacy.html',
       ];
       const version = Date.now().toString(36);
       const source = `// Généré au build — ne pas modifier.
@@ -53,6 +58,9 @@ self.addEventListener('fetch', (e) => {
 
 export default defineConfig({
   base: './',
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
   plugins: [offline()],
   build: { target: 'safari15' },
   test: { include: ['tests/**/*.test.ts'] },
