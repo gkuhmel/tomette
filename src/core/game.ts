@@ -56,6 +56,8 @@ export class Game {
   time = 0;
   /** Temps écoulé depuis le début de la partie (s). */
   elapsed = 0;
+  /** Rangées montées depuis le début. */
+  rowsRisen = 0;
   /** Rosaces réalisées pendant la partie. */
   rosaceCount = 0;
   /** Partie finie parce que le temps du mode est écoulé (et non par la pile). */
@@ -186,6 +188,7 @@ export class Game {
     activatePreview(this.grid, this.preview, this.rng, this.colors);
     this.preview = generatePreview(this.grid, this.rng, this.colors, this.kindChances());
     this.riseOffset = 0;
+    this.rowsRisen++;
     return true;
   }
 

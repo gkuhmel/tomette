@@ -650,6 +650,76 @@ body.alert #hud {
   }
 }
 
+#tuto {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  z-index: 3;
+  width: min(calc(100% - 32px), 360px);
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: var(--fg);
+  color: var(--bg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  transform: translateX(-50%);
+}
+
+#tuto[hidden] {
+  display: none;
+}
+
+#tuto strong {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+#tuto p {
+  margin: 6px 0 8px;
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.tuto-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.tuto-actions .btn {
+  min-width: 0;
+  padding: 8px 18px;
+  font-size: 16px;
+  color: var(--bg);
+}
+
+.tuto-actions .btn.primary {
+  color: #fff;
+}
+
+.tuto-link {
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  text-decoration: underline;
+  opacity: 0.75;
+  cursor: pointer;
+}
+
+#raise.pulse {
+  animation: raise-pulse 1s ease-in-out infinite;
+}
+
+@keyframes raise-pulse {
+  50% {
+    transform: scale(1.04);
+    box-shadow: 0 0 0 6px rgba(224, 122, 95, 0.35);
+  }
+}
+
 #debug-gear {
   flex: none;
   width: 52px;

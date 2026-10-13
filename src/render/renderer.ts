@@ -25,6 +25,8 @@ export class Renderer {
   private layout: Layout | null = null;
   private popups: Popup[] = [];
   readonly effects = new Effects();
+  /** Indication du tutoriel : tuile à déplacer et destination. */
+  hint: { from: { c: number; r: number }; to: { c: number; r: number } } | null = null;
   private theme: Theme = themeFor(0);
   private cols = 0;
   private rows = 0;
@@ -294,8 +296,43 @@ export class Renderer {
       ctx.fillRect(x0 + (L.boardW * (1 - k)) / 2, gy, L.boardW * k, 6);
     }
 
+    if (this.hint) this.drawHint(now, rise);
     this.effects.draw(ctx, L, th, now, g.rows);
     this.drawPopups(now, cfg.animations !== 0);
+  }
+
+  private drawHint(now: number, rise: number): void {
+    const L = this.layout!;
+    const ctx = this.ctx;
+    const { from, to } = this.hint!;
+    const a = cellCenter(from.c, from.r, L.R);
+    const b = cellCenter(to.c, to.r, L.R);
+    const ax = L.x0 + a.x;
+    const ay = L.y0 + a.y - rise;
+    const bx = L.x0 + b.x;
+    const by = L.y0 + b.y - rise;
+    const pulse = 0.5 + 0.5 * Math.sin(now * 0.008);
+    ctx.save();
+    ctx.strokeStyle = this.theme.held;
+    ctx.lineWidth = 3 + pulse * 2;
+    hexPath(ctx, ax, ay, L.R * (1.02 + pulse * 0.08));
+    ctx.stroke();
+    ctx.setLineDash([5, 5]);
+    ctx.lineWidth = 2;
+    hexPath(ctx, bx, by, L.R * 0.95);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // Flèche qui glisse de la tuile vers la destination.
+    const k = (now % 1200) / 1200;
+    const t = Math.min(1, k * 1.4);
+    const cx = ax + (bx - ax) * t;
+    const cy = ay + (by - ay) * t;
+    ctx.globalAlpha = k < 0.75 ? 1 : 1 - (k - 0.75) / 0.25;
+    ctx.fillStyle = this.theme.held;
+    ctx.beginPath();
+    ctx.arc(cx, cy, L.R * 0.28, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
   }
 
   private drawPopups(now: number, bounce: boolean): void {

@@ -341,7 +341,9 @@ const jokerScene: Scene = {
 
 // --- Écran -----------------------------------------------------------------
 
-export function howToScreen(onPlay: () => void, onBack: () => void): Screen & { setTheme(t: Theme): void } {
+export function howToScreen(onPlay: () => void, onBack: () => void, onTutorial: () => void): Screen & { setTheme(t: Theme): void } {
+  const tuto = el('button', { type: 'button', class: 'btn' }, ['▶ Lancer le tutoriel']);
+  tuto.addEventListener('click', onTutorial);
   const dpr = Math.min(3, window.devicePixelRatio || 1);
   const fig = (...scenes: (Scene | string)[]) =>
     el(
@@ -360,6 +362,7 @@ export function howToScreen(onPlay: () => void, onBack: () => void): Screen & { 
   const build = () => [
     el('div', { class: 'howto' }, [
       el('h2', {}, ['Comment jouer']),
+      el('div', { class: 'howto-buttons' }, [tuto]),
       section(
         '1. Échanger',
         fig(swapScene),

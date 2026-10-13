@@ -1,7 +1,8 @@
 import './style.css';
 import { Sound } from './audio/sound';
 import { config } from './config';
-import { Game, STEP_MS } from './core/game';
+import { ClearEvent, Game, STEP_MS } from './core/game';
+import { TUTORIAL_STEPS } from './core/tutorial';
 import { MODES, modeById, ModeId } from './core/modes';
 import { randomSeed } from './core/rng';
 import { BoardInput } from './input/board-input';
@@ -16,9 +17,9 @@ import { howToScreen } from './ui/howto';
 import { settingsScreen } from './ui/settings';
 import { Progress, progressScreen } from './ui/progress';
 import { gameOverScreen, homeScreen, modeButton, pauseScreen, rotateScreen } from './ui/screens';
-import { loadBest, saveBest } from './ui/storage';
+import { load, loadBest, save, saveBest } from './ui/storage';
 
-type State = 'home' | 'playing' | 'paused' | 'over';
+type State = 'home' | 'playing' | 'paused' | 'over' | 'tutorial';
 
 const dev = isDevMode();
 const phone = isPhone();
@@ -77,7 +78,7 @@ function boot(): void {
   for (const ev of ['pointerdown', 'keydown'] as const) {
     document.addEventListener(ev, () => sound.unlock(), { capture: true });
   }
-  const input = new BoardInput(canvas, () => (state === 'playing' ? game : null), () => layout);
+  const input = new BoardInput(canvas, () => (state === 'playing' || state === 'tutorial' ? game : null), () => layout);
 
   const debug = new DebugPanel({
     getGame: () => game,
@@ -125,6 +126,9 @@ function boot(): void {
     settings.hide();
     over.screen.hide();
     pause.screen.hide();
+    tuto.hidden = true;
+    renderer.hint = null;
+    raise.classList.remove('pulse');
     state = 'playing';
     lastLevel = game.level;
     sound.startMusic();
@@ -187,7 +191,11 @@ function boot(): void {
         const rec = loadBest(m.id);
         const label = rec > 0 ? (m.record === 'rosaces' ? `${rec} 🌸` : `${rec}`) : '';
         const b = modeButton(m.name, m.tagline(config), label, i === 0);
-        b.addEventListener('click', () => startGame(randomSeed(), m.id));
+        b.addEventListener('click', () => {
+          // Première fois : le tutoriel d'abord, puis le mode choisi.
+          if (load(TUTORIAL_KEY)) startGame(randomSeed(), m.id);
+          else startTutorial(m.id);
+        });
         return b;
       }),
     );
@@ -222,6 +230,7 @@ function boot(): void {
       howto.hide();
       home.screen.show();
     },
+    () => startTutorial(null),
   );
   showHome();
   // Thème choisi appliqué dès le démarrage (pas de flash de l'ancien thème).
@@ -240,7 +249,7 @@ function boot(): void {
     showHome();
   });
   function resumeGame(): void {
-    if (isLandscape() || state !== 'paused') return;
+    if (isLandscape() || state !== 'paused' || !pause.screen.visible) return;
     pause.screen.hide();
     state = 'playing';
     sound.startMusic();
@@ -270,7 +279,7 @@ function boot(): void {
 
   // --- Accélération manuelle ---------------------------------------------
   const setRise = (on: boolean) => {
-    game.manualRise = on && state === 'playing';
+    game.manualRise = on && (state === 'playing' || state === 'tutorial');
     raise.classList.toggle('active', game.manualRise);
   };
   raise.addEventListener('pointerdown', (e) => {
@@ -294,7 +303,7 @@ function boot(): void {
     }
     if (e.code !== 'Space' || debugOpen) return;
     e.preventDefault();
-    if (state === 'playing') setRise(true);
+    if (state === 'playing' || state === 'tutorial') setRise(true);
     else if (!e.repeat && (state === 'home' || state === 'over') && !howto.visible && !settings.visible) startGame();
   });
   window.addEventListener('keyup', (e) => {
@@ -350,6 +359,93 @@ function boot(): void {
     }
   }
 
+  // --- Tutoriel --------------------------------------------------------------
+  const TUTORIAL_KEY = 'tomettes.tutorial';
+  const tutoTitle = el('strong');
+  const tutoText = el('p');
+  const tutoRetry = el('button', { type: 'button', class: 'tuto-link' }, ['Recommencer l\'étape']);
+  const tutoSkip = el('button', { type: 'button', class: 'tuto-link' }, ['Passer']);
+  const tutoActions = el('div', { class: 'tuto-actions' }, [tutoRetry, tutoSkip]);
+  const tuto = el('div', { id: 'tuto' }, [tutoTitle, tutoText, tutoActions]);
+  tuto.hidden = true;
+  stage.append(tuto);
+  let tutoStep = 0;
+  let tutoDoneAt = 0;
+  let tutoThen: ModeId | null = null;
+
+  function startTutorial(then: ModeId | null): void {
+    tutoThen = then;
+    tutoStep = 0;
+    home.screen.hide();
+    howto.hide();
+    over.screen.hide();
+    pause.screen.hide();
+    hudLevelLabel.textContent = 'Niveau';
+    hudTimeLabel.textContent = 'Temps';
+    state = 'tutorial';
+    loadTutorialStep();
+    sound.startMusic();
+  }
+
+  function loadTutorialStep(): void {
+    const step = TUTORIAL_STEPS[tutoStep];
+    const prev = game.grid;
+    game = step.build(config);
+    input.release();
+    renderer.reset();
+    if (prev.cols !== game.grid.cols || prev.rows !== game.grid.rows) relayout();
+    renderer.hint = step.hint ?? null;
+    raise.classList.toggle('pulse', !!step.hintRise);
+    tutoDoneAt = 0;
+    tutoTitle.textContent = `${tutoStep + 1}/${TUTORIAL_STEPS.length} · ${step.title}`;
+    tutoText.textContent = step.text;
+    tutoActions.replaceChildren(tutoRetry, tutoSkip);
+    tuto.hidden = false;
+  }
+
+  function checkTutorial(): void {
+    const step = TUTORIAL_STEPS[tutoStep];
+    if (tutoDoneAt) {
+      if (performance.now() - tutoDoneAt > 1500) {
+        tutoStep++;
+        if (tutoStep < TUTORIAL_STEPS.length) loadTutorialStep();
+        else finishTutorial();
+      }
+      return;
+    }
+    if (step.done(game, game.events.filter((e): e is ClearEvent => e.kind === 'clear'))) {
+      tutoDoneAt = performance.now();
+      renderer.hint = null;
+      raise.classList.remove('pulse');
+      tutoText.textContent = 'Bravo !';
+    }
+  }
+
+  function finishTutorial(): void {
+    save(TUTORIAL_KEY, '1');
+    renderer.hint = null;
+    raise.classList.remove('pulse');
+    setRise(false);
+    state = 'paused';
+    const play = el('button', { type: 'button', class: 'btn primary' }, ['Jouer']);
+    const menu = el('button', { type: 'button', class: 'btn' }, ['Menu']);
+    play.addEventListener('click', () => {
+      tuto.hidden = true;
+      startGame(randomSeed(), tutoThen ?? 'endless');
+    });
+    menu.addEventListener('click', () => {
+      tuto.hidden = true;
+      state = 'home';
+      showHome();
+    });
+    tutoTitle.textContent = 'C\'est parti !';
+    tutoText.textContent = 'Tu connais l\'essentiel. Pour aller plus loin (rosaces, tomette d\'or, tuiles spéciales), regarde « Comment jouer ».';
+    tutoActions.replaceChildren(play, menu);
+  }
+
+  tutoRetry.addEventListener('click', () => loadTutorialStep());
+  tutoSkip.addEventListener('click', () => finishTutorial());
+
   // --- Son -----------------------------------------------------------------
   let lastLevel = 1;
   let lastAlertBeep = 0;
@@ -385,15 +481,16 @@ function boot(): void {
     last = now;
     if (dt > 0) fps = fps * 0.95 + (1000 / dt) * 0.05;
 
-    if (state === 'playing' && !debugOpen) {
+    if ((state === 'playing' || state === 'tutorial') && !debugOpen) {
       acc += dt;
-      if (++liveCheck % 30 === 0) progress.checkLive(game);
+      if (state === 'playing' && ++liveCheck % 30 === 0) progress.checkLive(game);
       while (acc >= STEP_MS) {
         input.update();
         game.tick(STEP_MS);
         acc -= STEP_MS;
         if (game.over) {
-          endGame();
+          if (state === 'tutorial') loadTutorialStep();
+          else endGame();
           break;
         }
       }
@@ -406,6 +503,7 @@ function boot(): void {
       applyThemeCss(theme);
       howto.setTheme(theme);
     }
+    if (state === 'tutorial') checkTutorial();
     playSounds(now);
     renderer.consumeEvents(game, now);
     renderer.draw(game, input.heldId, now);
