@@ -1,4 +1,5 @@
 import './style.css';
+import { Sound } from './audio/sound';
 import { config } from './config';
 import { Game, STEP_MS } from './core/game';
 import { MODES, modeById, ModeId } from './core/modes';
@@ -12,6 +13,7 @@ import { attachLongPress, DebugPanel, loadSavedConfig } from './ui/debug';
 import { el, formatTime } from './ui/dom';
 import { isDevMode, isPhone } from './ui/guard';
 import { howToScreen } from './ui/howto';
+import { settingsScreen } from './ui/settings';
 import { gameOverScreen, homeScreen, modeButton, pauseScreen, rotateScreen } from './ui/screens';
 import { loadBest, saveBest } from './ui/storage';
 
@@ -42,7 +44,8 @@ function boot(): void {
   const canvas = el('canvas', { id: 'board' });
   const stage = el('main', { id: 'stage' }, [canvas]);
   const raise = el('button', { id: 'raise', type: 'button' }, ['▲ Monter']);
-  const footer = el('footer', { id: 'controls' }, [raise]);
+  const pauseBtn = el('button', { id: 'pause-btn', type: 'button', 'aria-label': 'Pause' }, ['❚❚']);
+  const footer = el('footer', { id: 'controls' }, [pauseBtn, raise]);
   const app = el('div', { id: 'app' }, [hud, stage, footer]);
   const corner = el('div', { id: 'debug-corner' });
   document.body.append(app, corner);
@@ -62,6 +65,16 @@ function boot(): void {
   let debugOpen = false;
 
   const renderer = new Renderer(canvas);
+  const sound = new Sound();
+  const syncSound = () => {
+    sound.sfxOn = config.sound !== 0;
+    sound.musicOn = config.music !== 0;
+  };
+  syncSound();
+  // Safari n'autorise le son qu'après un geste : on déverrouille au premier contact.
+  for (const ev of ['pointerdown', 'keydown'] as const) {
+    document.addEventListener(ev, () => sound.unlock(), { capture: true });
+  }
   const input = new BoardInput(canvas, () => (state === 'playing' ? game : null), () => layout);
 
   const debug = new DebugPanel({
@@ -107,13 +120,19 @@ function boot(): void {
     if (prev.cols !== game.grid.cols || prev.rows !== game.grid.rows) relayout();
     home.screen.hide();
     howto.hide();
+    settings.hide();
     over.screen.hide();
-    pause.hide();
+    pause.screen.hide();
     state = 'playing';
+    lastLevel = game.level;
+    sound.startMusic();
   }
 
   function endGame(): void {
     state = 'over';
+    sound.stopMusic();
+    if (game.timeUp) sound.level();
+    else sound.gameOver();
     input.release();
     game.manualRise = false;
     const value = game.recordValue;
@@ -138,7 +157,8 @@ function boot(): void {
     state = 'paused';
     input.release();
     game.manualRise = false;
-    pause.show();
+    sound.stopMusic();
+    pause.screen.show();
   }
 
   const isLandscape = () => phone && window.matchMedia('(orientation: landscape)').matches;
@@ -166,7 +186,28 @@ function boot(): void {
     );
     over.screen.hide();
     howto.hide();
+    settings.hide();
+    pause.screen.hide();
+    sound.stopMusic();
     home.screen.show();
+  }
+
+  // Réglages : ouverts depuis l'accueil ou la pause, on revient au même endroit.
+  let settingsFrom: 'home' | 'pause' = 'home';
+  const settings = settingsScreen(
+    () => {
+      settings.hide();
+      if (settingsFrom === 'pause') pause.screen.show();
+      else home.screen.show();
+    },
+    () => syncSound(),
+  );
+  function openSettings(from: 'home' | 'pause'): void {
+    settingsFrom = from;
+    settings.refresh();
+    home.screen.hide();
+    pause.screen.hide();
+    settings.show();
   }
   const howto = howToScreen(
     () => startGame(),
@@ -191,10 +232,23 @@ function boot(): void {
     state = 'home';
     showHome();
   });
-  pause.onTap(() => {
-    if (isLandscape()) return;
-    pause.hide();
+  function resumeGame(): void {
+    if (isLandscape() || state !== 'paused') return;
+    pause.screen.hide();
     state = 'playing';
+    sound.startMusic();
+  }
+  pause.resume.addEventListener('click', resumeGame);
+  pause.restart.addEventListener('click', () => startGame());
+  pause.settings.addEventListener('click', () => openSettings('pause'));
+  pause.menu.addEventListener('click', () => {
+    state = 'home';
+    showHome();
+  });
+  home.settings.addEventListener('click', () => openSettings('home'));
+  pauseBtn.addEventListener('click', () => {
+    sound.ui();
+    pauseGame();
   });
 
   // --- Accélération manuelle ---------------------------------------------
@@ -216,10 +270,15 @@ function boot(): void {
   }
   // Clavier (ordinateur) : Espace maintenue = accélération.
   window.addEventListener('keydown', (e) => {
+    if (e.code === 'Escape' || e.code === 'KeyP') {
+      if (state === 'playing') pauseGame();
+      else if (state === 'paused' && !settings.visible) resumeGame();
+      return;
+    }
     if (e.code !== 'Space' || debugOpen) return;
     e.preventDefault();
     if (state === 'playing') setRise(true);
-    else if (!e.repeat && (state === 'home' || state === 'over') && !howto.visible) startGame();
+    else if (!e.repeat && (state === 'home' || state === 'over') && !howto.visible && !settings.visible) startGame();
   });
   window.addEventListener('keyup', (e) => {
     if (e.code === 'Space') setRise(false);
@@ -228,7 +287,10 @@ function boot(): void {
 
   // --- Plateforme ---------------------------------------------------------
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) pauseGame();
+    if (document.hidden) {
+      pauseGame();
+      sound.suspend();
+    } else sound.resume();
   });
   window.addEventListener('pagehide', pauseGame);
   window.addEventListener('resize', updateOrientation);
@@ -240,7 +302,7 @@ function boot(): void {
   document.addEventListener(
     'touchmove',
     (e) => {
-      if (!(e.target instanceof Element && e.target.closest('#debug-panel, #screen-howto'))) e.preventDefault();
+      if (!(e.target instanceof Element && e.target.closest('#debug-panel, #screen-howto, #screen-settings'))) e.preventDefault();
     },
     { passive: false },
   );
@@ -268,6 +330,32 @@ function boot(): void {
       hudCache[4] = danger;
       document.body.classList.toggle('warn', game.danger === 1);
       document.body.classList.toggle('alert', game.danger === 2);
+    }
+  }
+
+  // --- Son -----------------------------------------------------------------
+  let lastLevel = 1;
+  let lastAlertBeep = 0;
+  function playSounds(now: number): void {
+    syncSound();
+    for (const s of game.signals) {
+      if (s === 'swap') sound.swap();
+      else if (s === 'land') sound.land();
+      else sound.repair();
+    }
+    game.signals.length = 0;
+    for (const e of game.events) {
+      if (e.rosaces) sound.rosace();
+      else if (e.gold) sound.gold();
+      else sound.clear(e.chain, e.size);
+    }
+    if (state !== 'playing') return;
+    if (game.level > lastLevel) sound.level();
+    lastLevel = game.level;
+    sound.tempo = 1 + (Math.min(game.level, 15) - 1) * 0.04;
+    if (game.danger === 2 && now - lastAlertBeep > 500) {
+      lastAlertBeep = now;
+      sound.alertTick();
     }
   }
 
@@ -299,6 +387,7 @@ function boot(): void {
       applyThemeCss(theme);
       howto.setTheme(theme);
     }
+    playSounds(now);
     renderer.consumeEvents(game, now);
     renderer.draw(game, input.heldId, now);
     updateHud();

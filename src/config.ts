@@ -40,6 +40,9 @@ export const defaultConfig = {
   mosaicS: 180,
   expressLevel: 8,
   theme: 1,
+  /** Réglages du joueur : effets sonores et musique (1 = activés). */
+  sound: 1,
+  music: 1,
   /** Effets visuels (éclats, écrasement, bandeau de niveau…) : 1 = activés. */
   animations: 1,
   /** Tremblement d'écran sur les grosses chaînes : 1 = activé. */

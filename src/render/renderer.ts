@@ -108,6 +108,7 @@ export class Renderer {
       return;
     }
     for (const e of game.events) {
+      if (e.kind !== 'clear') continue;
       let x = 0;
       let y = 0;
       for (const { c, r } of e.cells) {

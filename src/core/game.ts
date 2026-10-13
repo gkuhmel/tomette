@@ -26,6 +26,21 @@ export interface ClearEvent {
 
 export type GameEvent = ClearEvent;
 
+/** Petits signaux pour le son (échange, atterrissage, réparation). */
+export type Signal = 'swap' | 'land' | 'repair';
+
+/** Bilan de la partie, pour les statistiques et les succès. */
+export interface GameStats {
+  maxChain: number;
+  maxCombo: number;
+  tilesCleared: number;
+  goldUsed: number;
+  repairs: number;
+  /** Alertes rattrapées par un alignement pendant la grâce. */
+  alertSaves: number;
+  maxLevel: number;
+}
+
 const clampInt = (v: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, Math.round(v)));
 
 export class Game {
@@ -58,6 +73,9 @@ export class Game {
   manualRise = false;
   /** Évènements produits depuis la dernière lecture (pour le rendu). */
   events: GameEvent[] = [];
+  /** Signaux sonores depuis la dernière lecture. */
+  signals: Signal[] = [];
+  readonly stats: GameStats = { maxChain: 1, maxCombo: 0, tilesCleared: 0, goldUsed: 0, repairs: 0, alertSaves: 0, maxLevel: 1 };
 
   private rng: Rng;
 
@@ -144,6 +162,7 @@ export class Game {
     }
     g.set(c1, r1, b);
     g.set(c2, r2, a);
+    this.signals.push('swap');
     const dur = this.cfg.swapDurationMs;
     if (a) Object.assign(a, { state: 'swapping', timer: dur, swapDc: c1 - c2, swapDr: r1 - r2 });
     if (b) Object.assign(b, { state: 'swapping', timer: dur, swapDc: c2 - c1, swapDr: r2 - r1 });
@@ -200,7 +219,8 @@ export class Game {
     for (const { c, r } of removed) markChainAbove(g, c, r);
 
     // 2. Gravité.
-    stepGravity(g, cfg, dtMs);
+    if (stepGravity(g, cfg, dtMs).length > 0) this.signals.push('land');
+    if (this.level > this.stats.maxLevel) this.stats.maxLevel = this.level;
 
     // 3. Alignements.
     const matched = findMatches(g);
@@ -249,7 +269,11 @@ export class Game {
       for (const dir of ALL_DIRS) {
         const n = neighbor(c, r, dir);
         const t = g.get(n.c, n.r);
-        if (t && t.state !== 'clearing' && (t.kind === 'cracked' || t.kind === 'sealed')) t.kind = 'normal';
+        if (t && t.state !== 'clearing' && (t.kind === 'cracked' || t.kind === 'sealed')) {
+          t.kind = 'normal';
+          this.stats.repairs++;
+          this.signals.push('repair');
+        }
       }
     }
     this.rosaceCount += rosaces.length;
@@ -259,6 +283,12 @@ export class Game {
     this.score += points;
     const pause = Math.max(stopTimeFor(cfg, this.chain, size), rosaces.length ? cfg.rosacePauseS : 0);
     this.stopTime = Math.max(this.stopTime, pause);
+    const st = this.stats;
+    st.maxChain = Math.max(st.maxChain, this.chain);
+    st.maxCombo = Math.max(st.maxCombo, size);
+    st.tilesCleared += size;
+    if (gold) st.goldUsed++;
+    if (this.alert) st.alertSaves++;
     // Un clear pendant la grâce annule l'alerte.
     this.alert = false;
     this.graceLeft = 0;

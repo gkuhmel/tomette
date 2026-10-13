@@ -30,15 +30,16 @@ export class Screen {
   }
 }
 
-export function homeScreen(): { screen: Screen; modes: HTMLElement; howto: HTMLElement } {
+export function homeScreen(): { screen: Screen; modes: HTMLElement; howto: HTMLElement; settings: HTMLElement } {
   const modes = el('div', { class: 'mode-list' });
   const howto = el('button', { type: 'button', class: 'btn' }, ['Comment jouer']);
+  const settings = el('button', { type: 'button', class: 'btn' }, ['Réglages']);
   const screen = new Screen('screen-home', [
     el('h1', {}, ['Tomettes']),
     modes,
-    el('div', { class: 'home-buttons' }, [howto]),
+    el('div', { class: 'home-row' }, [howto, settings]),
   ]);
-  return { screen, modes, howto };
+  return { screen, modes, howto, settings };
 }
 
 /** Bouton de mode : nom, sous-titre et record. */
@@ -72,8 +73,22 @@ export function gameOverScreen(): {
   return { screen, title, score, record, replay, menu };
 }
 
-export function pauseScreen(): Screen {
-  return new Screen('screen-pause', [el('h2', {}, ['Pause']), el('p', { class: 'cta' }, ['Touche pour reprendre'])]);
+export function pauseScreen(): {
+  screen: Screen;
+  resume: HTMLElement;
+  restart: HTMLElement;
+  settings: HTMLElement;
+  menu: HTMLElement;
+} {
+  const resume = el('button', { type: 'button', class: 'btn primary' }, ['Reprendre']);
+  const restart = el('button', { type: 'button', class: 'btn' }, ['Recommencer']);
+  const settings = el('button', { type: 'button', class: 'btn' }, ['Réglages']);
+  const menu = el('button', { type: 'button', class: 'btn' }, ['Menu']);
+  const screen = new Screen('screen-pause', [
+    el('h2', {}, ['Pause']),
+    el('div', { class: 'home-buttons' }, [resume, restart, settings, menu]),
+  ]);
+  return { screen, resume, restart, settings, menu };
 }
 
 export function rotateScreen(): Screen {

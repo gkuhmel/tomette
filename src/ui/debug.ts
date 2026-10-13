@@ -21,13 +21,19 @@ export function loadSavedConfig(): void {
   }
 }
 
-function persist(): void {
+export function persist(): void {
   const diff: Partial<Record<ConfigKey, number>> = {};
   for (const key of Object.keys(defaultConfig) as ConfigKey[]) {
     if (config[key] !== defaultConfig[key]) diff[key] = config[key];
   }
   if (Object.keys(diff).length) save(CONFIG_KEY, JSON.stringify(diff));
   else remove(CONFIG_KEY);
+}
+
+/** Change un réglage et le mémorise (utilisé aussi par l'écran Réglages du joueur). */
+export function setConfigValue(key: ConfigKey, value: number): void {
+  config[key] = value;
+  persist();
 }
 
 export interface DebugHooks {
