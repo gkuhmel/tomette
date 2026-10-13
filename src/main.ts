@@ -4,6 +4,7 @@ import { config } from './config';
 import { ClearEvent, Game, STEP_MS } from './core/game';
 import { TUTORIAL_STEPS } from './core/tutorial';
 import { MODES, modeById, ModeId } from './core/modes';
+import { DIFFICULTIES, Difficulty, withDifficulty } from './core/difficulty';
 import { randomSeed } from './core/rng';
 import { BoardInput } from './input/board-input';
 import { computeLayout, Layout } from './render/layout';
@@ -13,14 +14,14 @@ import { applyThemeCss, themeFor } from './render/theme';
 import { attachLongPress, DebugPanel, loadSavedConfig } from './ui/debug';
 import { el, formatTime } from './ui/dom';
 import { isDevMode, isPhone } from './ui/guard';
-import { lang, t } from './i18n';
+import { Key, lang, t } from './i18n';
 import { achName, modeName, modeTag, tutoText as tutoText_, tutoTitle as tutoTitle_ } from './ui/text';
 import { howToScreen } from './ui/howto';
 import { settingsScreen } from './ui/settings';
 import { HomeBackground } from './ui/home-bg';
 import { Progress, progressScreen } from './ui/progress';
 import { gameOverScreen, homeScreen, modeButton, pauseScreen, rotateScreen } from './ui/screens';
-import { load, loadBest, save, saveBest } from './ui/storage';
+import { load, loadBest, loadDifficulty, save, saveBest, saveDifficulty } from './ui/storage';
 
 type State = 'home' | 'playing' | 'paused' | 'over' | 'tutorial';
 
@@ -64,7 +65,8 @@ function boot(): void {
   // --- État --------------------------------------------------------------
   let state: State = 'home';
   let mode: ModeId = 'endless';
-  let best = loadBest(mode);
+  let difficulty: Difficulty = loadDifficulty();
+  let best = loadBest(mode, difficulty);
   let game = new Game(config, randomSeed());
   let layout: Layout | null = null;
   let fps = 60;
@@ -118,12 +120,12 @@ function boot(): void {
     window.clearTimeout(overTimer);
     shownScore = 0;
     mode = m;
-    best = loadBest(mode);
+    best = loadBest(mode, difficulty);
     const info = modeById(mode);
     hudLevelLabel.textContent = info.record === 'rosaces' ? t('hud.rosaces') : t('hud.level');
     hudTimeLabel.textContent = info.timeLimitS(config) > 0 ? t('hud.left') : t('hud.time');
     const prev = game.grid;
-    game = new Game(config, seed, { mode });
+    game = new Game(withDifficulty(config, difficulty), seed, { mode });
     input.release();
     renderer.reset();
     if (prev.cols !== game.grid.cols || prev.rows !== game.grid.rows) relayout();
@@ -151,7 +153,7 @@ function boot(): void {
     const record = value > best;
     if (record) {
       best = value;
-      saveBest(best, mode);
+      saveBest(best, mode, difficulty);
     }
     const rosaces = game.mode.record === 'rosaces';
     over.title.textContent = game.timeUp ? t('over.timeUp') : t('over.title');
@@ -199,9 +201,20 @@ function boot(): void {
 
   /** Menu : un bouton par mode, avec son record. */
   function showHome(): void {
+    home.difficulty.replaceChildren(
+      ...DIFFICULTIES.map((d) => {
+        const b = el('button', { type: 'button', class: `diff-btn${d === difficulty ? ' selected' : ''}`, role: 'radio', 'aria-checked': String(d === difficulty) }, [t(`diff.${d}` as Key)]);
+        b.addEventListener('click', () => {
+          difficulty = d;
+          saveDifficulty(d);
+          showHome();
+        });
+        return b;
+      }),
+    );
     home.modes.replaceChildren(
       ...MODES.map((m, i) => {
-        const rec = loadBest(m.id);
+        const rec = loadBest(m.id, difficulty);
         const label = rec > 0 ? (m.record === 'rosaces' ? `${rec} 🌸` : `${rec}`) : '';
         const b = modeButton(modeName(m.id), modeTag(m, config), label, i === 0);
         b.addEventListener('click', () => {

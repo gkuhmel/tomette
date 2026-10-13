@@ -23,14 +23,43 @@ export function remove(key: string): void {
   }
 }
 
-/** Clé du record d'un mode (le mode Classique garde la clé historique). */
-const bestKey = (mode: string) => (mode === 'endless' ? 'tomettes.best' : `tomettes.best.${mode}`);
+/** Clé du record d'un mode et d'une difficulté (Classique / Normal garde la clé historique). */
+function bestKey(mode: string, difficulty: string): string {
+  const base = mode === 'endless' ? 'tomettes.best' : `tomettes.best.${mode}`;
+  return difficulty === 'normal' ? base : `${base}.${difficulty}`;
+}
 
-export function loadBest(mode = 'endless'): number {
-  const v = Number(load(bestKey(mode)));
+export function loadBest(mode = 'endless', difficulty = 'normal'): number {
+  const v = Number(load(bestKey(mode, difficulty)));
   return Number.isFinite(v) && v > 0 ? Math.floor(v) : 0;
 }
 
-export function saveBest(score: number, mode = 'endless'): void {
-  save(bestKey(mode), String(Math.floor(score)));
+export function saveBest(score: number, mode = 'endless', difficulty = 'normal'): void {
+  save(bestKey(mode, difficulty), String(Math.floor(score)));
+}
+
+const DIFFICULTY_KEY = 'tomettes.difficulty';
+
+export function loadDifficulty(): 'easy' | 'normal' | 'hard' {
+  const v = load(DIFFICULTY_KEY);
+  return v === 'easy' || v === 'hard' ? v : 'normal';
+}
+
+export function saveDifficulty(d: string): void {
+  save(DIFFICULTY_KEY, d);
+}
+
+/** Efface records, statistiques, succès et tutoriel (garde réglages, langue, difficulté). */
+export function resetProgress(): void {
+  try {
+    const keep = new Set(['tomettes.config', 'tomettes.lang', DIFFICULTY_KEY]);
+    const keys: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('tomettes.') && !keep.has(k)) keys.push(k);
+    }
+    keys.forEach((k) => localStorage.removeItem(k));
+  } catch {
+    /* ignoré */
+  }
 }

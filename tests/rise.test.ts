@@ -113,3 +113,21 @@ describe('modes', () => {
     expect(game.recordValue).toBe(0);
   });
 });
+
+describe('difficulté', () => {
+  it('Détente plus lente avec moins de couleurs, Expert plus rapide', async () => {
+    const { withDifficulty } = await import('../src/core/difficulty');
+    const base = cfg();
+    const easy = withDifficulty(base, 'easy');
+    const hard = withDifficulty(base, 'hard');
+    expect(withDifficulty(base, 'normal')).toBe(base);
+    expect(easy.colors).toBe(5);
+    expect(easy.baseSecondsPerRow).toBeGreaterThan(base.baseSecondsPerRow);
+    expect(hard.baseSecondsPerRow).toBeLessThan(base.baseSecondsPerRow);
+    expect(hard.graceS).toBeLessThan(base.graceS);
+    // Vue vivante : un changement de la base se répercute.
+    base.baseSecondsPerRow = 20;
+    expect(easy.baseSecondsPerRow).toBeCloseTo(27);
+    expect(new Game(easy, 1).colors).toBe(5);
+  });
+});

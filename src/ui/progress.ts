@@ -1,11 +1,11 @@
 import type { Game } from '../core/game';
 import { MODES } from '../core/modes';
 import { Achievement, ACHIEVEMENTS, emptyTotals, newlyUnlocked, Snapshot, Totals, withGame } from '../core/progress';
-import { t } from '../i18n';
+import { Key, t } from '../i18n';
 import { el, formatTime } from './dom';
 import { achDesc, achName, modeName } from './text';
 import { Screen } from './screens';
-import { load, loadBest, save } from './storage';
+import { load, loadBest, loadDifficulty, save } from './storage';
 
 const TOTALS_KEY = 'tomettes.stats';
 const UNLOCKED_KEY = 'tomettes.achievements';
@@ -94,8 +94,10 @@ export function progressScreen(progress: Progress, onBack: () => void): Screen &
     const tot = progress.totals;
     const stat = (label: string, value: string) => el('div', { class: 'stat' }, [el('strong', {}, [value]), el('small', {}, [label])]);
     const records = MODES.map((m) => {
-      const r = loadBest(m.id);
-      return stat(t('stat.record', { mode: modeName(m.id) }), r ? (m.record === 'rosaces' ? `${r} 🌸` : String(r)) : '—');
+      const d = loadDifficulty();
+      const r = loadBest(m.id, d);
+      const label = t('stat.record', { mode: modeName(m.id) }) + (d === 'normal' ? '' : ` · ${t(`diff.${d}` as Key)}`);
+      return stat(label, r ? (m.record === 'rosaces' ? `${r} 🌸` : String(r)) : '—');
     });
     const done = ACHIEVEMENTS.filter((a) => progress.unlocked.has(a.id)).length;
     body.replaceChildren(

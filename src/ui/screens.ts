@@ -26,20 +26,29 @@ export class Screen {
 
 }
 
-export function homeScreen(): { screen: Screen; modes: HTMLElement; howto: HTMLElement; settings: HTMLElement; progress: HTMLElement } {
+export function homeScreen(): {
+  screen: Screen;
+  difficulty: HTMLElement;
+  modes: HTMLElement;
+  howto: HTMLElement;
+  settings: HTMLElement;
+  progress: HTMLElement;
+} {
+  const difficulty = el('div', { class: 'diff-list', role: 'radiogroup', 'aria-label': t('diff.label') });
   const modes = el('div', { class: 'mode-list' });
   const howto = el('button', { type: 'button', class: 'btn' }, [t('common.howto')]);
   const settings = el('button', { type: 'button', class: 'btn' }, [t('common.settings')]);
   const progress = el('button', { type: 'button', class: 'btn' }, [t('common.achievements')]);
   const logo = el('div', { class: 'logo-wrap' });
-  logo.innerHTML = logoSvg(112);
+  logo.innerHTML = logoSvg(92);
   const screen = new Screen('screen-home', [
     logo,
     el('h1', {}, ['Tomettes']),
+    difficulty,
     modes,
     el('div', { class: 'home-row' }, [howto, progress, settings]),
   ]);
-  return { screen, modes, howto, settings, progress };
+  return { screen, difficulty, modes, howto, settings, progress };
 }
 
 /** Bouton de mode : nom, sous-titre et record. */

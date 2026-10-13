@@ -3,6 +3,7 @@ import { THEMES } from '../render/theme';
 import { setConfigValue } from './debug';
 import { Key, lang, LANGS, langName, setLang, t } from '../i18n';
 import { el } from './dom';
+import { resetProgress } from './storage';
 import { Screen } from './screens';
 
 /** Écran Réglages du joueur (son, musique, thème, effets). */
@@ -55,6 +56,14 @@ export function settingsScreen(onBack: () => void, onChange: () => void): Screen
     return b;
   });
 
+  const reset = el('button', { type: 'button', class: 'btn danger' }, [t('set.reset')]);
+  reset.addEventListener('click', () => {
+    if (!window.confirm(t('set.resetConfirm'))) return;
+    resetProgress();
+    window.alert(t('set.resetDone'));
+    location.reload();
+  });
+
   const back = el('button', { type: 'button', class: 'btn primary' }, [t('common.back')]);
   back.addEventListener('click', onBack);
 
@@ -66,6 +75,8 @@ export function settingsScreen(onBack: () => void, onChange: () => void): Screen
       el('div', { class: 'theme-list' }, themeButtons),
       el('h3', {}, [t('set.language')]),
       el('div', { class: 'lang-list' }, langButtons),
+      el('h3', {}, [t('set.progress')]),
+      el('div', { class: 'home-buttons' }, [reset]),
       el('div', { class: 'home-buttons' }, [back]),
     ]),
   ]);
