@@ -77,6 +77,7 @@ export const de: Dict = {
   'theme.0': 'Terrakotta',
   'theme.1': 'Pastell hell',
   'theme.2': 'Pastell dunkel',
+  'theme.3': 'Fayence',
 
   'prog.unlocked': '{n} / {total} freigeschaltet',
   'prog.stats': 'Statistiken',

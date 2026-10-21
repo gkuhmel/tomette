@@ -118,7 +118,41 @@ const pastelSombre: Theme = {
   },
 };
 
-export const THEMES: Theme[] = [terre, pastelClair, pastelSombre];
+/** Faïence : blanc bleuté et bleu cobalt (direction artistique par défaut). */
+const faience: Theme = {
+  name: 'Faïence',
+  style: 'flat',
+  bg: '#f5f7fb',
+  slotA: '#e6ecf6',
+  slotB: '#e6ecf6',
+  slotStroke: '#d6deeb',
+  tiles: ['#f2766b', '#3466d6', '#f2c94c', '#5cb85c', '#9b7ede', '#2fb5b0'],
+  glyph: 'rgba(255, 255, 255, 0.95)',
+  dimOverlay: 'rgba(245, 247, 251, 0.62)',
+  flashOverlay: 'rgba(255, 255, 255, 0.75)',
+  gold: { base: '#fff8e6', border: '#e0b44c', petals: '#e2a92e', heart: '#f2766b' },
+  popupFill: '#ffffff',
+  popupSub: '#1d2a44',
+  popupStroke: '#2f5fd0',
+  held: 'rgba(29, 42, 68, 0.85)',
+  warn: '240, 150, 60',
+  alert: '220, 60, 60',
+  css: {
+    '--bg': '#f5f7fb',
+    '--fg': '#1d2a44',
+    '--muted': '#6b7a96',
+    '--accent': '#2f5fd0',
+    '--terracotta': '#2f5fd0',
+    '--button-shadow': '#1f44a0',
+    '--button-active': '#4a76e0',
+    '--overlay': 'rgba(245, 247, 251, 0.9)',
+    '--card': '#e6ecf6',
+    '--danger': '#d64545',
+  },
+};
+
+/** L'ordre compte : l'indice est le réglage `theme` mémorisé. */
+export const THEMES: Theme[] = [terre, pastelClair, pastelSombre, faience];
 
 export function themeFor(index: number): Theme {
   return THEMES[Math.max(0, Math.min(THEMES.length - 1, Math.round(index) || 0))];

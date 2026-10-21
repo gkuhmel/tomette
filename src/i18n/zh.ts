@@ -78,6 +78,7 @@ export const zh: Dict = {
   'theme.0': '陶土',
   'theme.1': '浅色马卡龙',
   'theme.2': '深色马卡龙',
+  'theme.3': '青花瓷',
 
   'prog.unlocked': '已解锁 {n} / {total}',
   'prog.stats': '统计',

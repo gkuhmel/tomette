@@ -1,20 +1,20 @@
 :root {
-  --bg: #f7f1e8;
-  --fg: #3d3530;
-  --muted: #8a7d72;
-  --accent: #e07a5f;
-  --terracotta: #e07a5f;
-  --button-shadow: #c2604a;
-  --button-active: #e88c74;
-  --overlay: rgba(247, 241, 232, 0.9);
-  --card: #efe5d8;
-  --danger: #d9534f;
-  --t0: #ee7f72;
-  --t1: #6fa8e0;
-  --t2: #f0c45a;
-  --t3: #7dbb8c;
-  --t4: #a990dc;
-  --t5: #5cc4b8;
+  --bg: #f5f7fb;
+  --fg: #1d2a44;
+  --muted: #6b7a96;
+  --accent: #2f5fd0;
+  --terracotta: #2f5fd0;
+  --button-shadow: #1f44a0;
+  --button-active: #4a76e0;
+  --overlay: rgba(245, 247, 251, 0.9);
+  --card: #e6ecf6;
+  --danger: #d64545;
+  --t0: #f2766b;
+  --t1: #3466d6;
+  --t2: #f2c94c;
+  --t3: #5cb85c;
+  --t4: #9b7ede;
+  --t5: #2fb5b0;
   color-scheme: light;
 }
 
@@ -530,7 +530,8 @@ body.alert #hud {
 }
 
 .theme-list {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
 

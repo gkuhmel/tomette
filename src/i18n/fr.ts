@@ -76,6 +76,7 @@ export const fr = {
   'theme.0': 'Terre cuite',
   'theme.1': 'Pastel clair',
   'theme.2': 'Pastel sombre',
+  'theme.3': 'Faïence',
 
   'prog.unlocked': '{n} / {total} débloqués',
   'prog.stats': 'Statistiques',

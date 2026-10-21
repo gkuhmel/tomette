@@ -39,7 +39,7 @@ export const defaultConfig = {
   timeAttackS: 120,
   mosaicS: 180,
   expressLevel: 8,
-  theme: 1,
+  theme: 3,
   /** Réglages du joueur : effets sonores et musique (1 = activés). */
   sound: 1,
   music: 1,
