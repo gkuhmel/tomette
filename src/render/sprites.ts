@@ -1,4 +1,5 @@
 import { Theme, THEMES } from './theme';
+import { drawGlyph } from './glyphs';
 
 export type Variant = 'normal' | 'dim' | 'flash';
 
@@ -45,59 +46,6 @@ function shade(hex: string, k: number): string {
   return `rgb(${f((n >> 16) & 255)}, ${f((n >> 8) & 255)}, ${f(n & 255)})`;
 }
 
-function drawGlyph(ctx: CanvasRenderingContext2D, kind: number, x: number, y: number, s: number, color: string): void {
-  ctx.fillStyle = color;
-  ctx.strokeStyle = color;
-  ctx.lineWidth = s * 0.28;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.beginPath();
-  switch (kind % 6) {
-    case 0: // pastille
-      ctx.arc(x, y, s * 0.5, 0, Math.PI * 2);
-      ctx.fill();
-      break;
-    case 1: // losange
-      ctx.moveTo(x, y - s * 0.75);
-      ctx.lineTo(x + s * 0.55, y);
-      ctx.lineTo(x, y + s * 0.75);
-      ctx.lineTo(x - s * 0.55, y);
-      ctx.closePath();
-      ctx.fill();
-      break;
-    case 2: // triangle
-      ctx.moveTo(x, y - s * 0.7);
-      ctx.lineTo(x + s * 0.68, y + s * 0.5);
-      ctx.lineTo(x - s * 0.68, y + s * 0.5);
-      ctx.closePath();
-      ctx.fill();
-      break;
-    case 3: // croix
-      ctx.moveTo(x - s * 0.6, y);
-      ctx.lineTo(x + s * 0.6, y);
-      ctx.moveTo(x, y - s * 0.6);
-      ctx.lineTo(x, y + s * 0.6);
-      ctx.stroke();
-      break;
-    case 4: // anneau
-      ctx.lineWidth = s * 0.22;
-      ctx.arc(x, y, s * 0.5, 0, Math.PI * 2);
-      ctx.stroke();
-      break;
-    case 5: // étoile
-      for (let i = 0; i < 10; i++) {
-        const a = -Math.PI / 2 + (Math.PI / 5) * i;
-        const rr = i % 2 === 0 ? s * 0.75 : s * 0.32;
-        const px = x + rr * Math.cos(a);
-        const py = y + rr * Math.sin(a);
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-      }
-      ctx.closePath();
-      ctx.fill();
-      break;
-  }
-}
 
 /** Rosace à 6 pétales (glyphe de la tomette d'or). */
 function drawRosette(ctx: CanvasRenderingContext2D, x: number, y: number, s: number, petals: string, heart: string): void {
@@ -232,9 +180,18 @@ export class SpriteCache {
   /** Demi-taille du sprite en px CSS. */
   half = 0;
 
+  /** Jeu de pictogrammes des tuiles (0 = classique). */
+  glyphs = 0;
+
   setTheme(theme: Theme): void {
     if (theme === this.theme) return;
     this.theme = theme;
+    this.cache.clear();
+  }
+
+  setGlyphs(set: number): void {
+    if (set === this.glyphs) return;
+    this.glyphs = set;
     this.cache.clear();
   }
 
@@ -347,7 +304,7 @@ export class SpriteCache {
     if (mortar) drawMortar(ctx, cx, cy, R, th.mortar.speck, th.mortar.edge, () => path(r * 0.97));
     else if (gold) drawRosette(ctx, cx, cy, R * 0.62, th.gold.petals, th.gold.heart);
     else if (joker) drawJoker(ctx, cx, cy, R, th.tiles);
-    else drawGlyph(ctx, color, cx, cy, R * 0.42, th.glyph);
+    else drawGlyph(ctx, this.glyphs, color, cx, cy, R * 0.42, th.glyph);
 
     if (variant === 'dim' || variant === 'flash') {
       path(r + 1);

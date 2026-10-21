@@ -165,6 +165,7 @@ function spritesFor(R: number, dpr: number): SpriteCache {
     s = new SpriteCache();
     s.setSize(R, dpr);
     s.setTheme(theme);
+    s.setGlyphs(config.glyphs);
     spriteCaches.set(R, s);
   }
   return s;
@@ -380,7 +381,7 @@ const mortarAfter: Scene = {
 
 // --- Écran -----------------------------------------------------------------
 
-export function howToScreen(onPlay: () => void, onBack: () => void, onTutorial: () => void): Screen & { setTheme(t: Theme): void } {
+export function howToScreen(onPlay: () => void, onBack: () => void, onTutorial: () => void): Screen & { setTheme(t: Theme): void; redraw(): void } {
   const tuto = el('button', { type: 'button', class: 'btn' }, [t('howto.launchTuto')]);
   tuto.addEventListener('click', onTutorial);
   const dpr = Math.min(3, window.devicePixelRatio || 1);
@@ -437,6 +438,11 @@ export function howToScreen(onPlay: () => void, onBack: () => void, onTutorial: 
     setTheme(t: Theme) {
       if (t === theme) return;
       theme = t;
+      spriteCaches.clear();
+      screen.root.replaceChildren(...build());
+    },
+    /** Redessine les figures (jeu de pictogrammes changé). */
+    redraw() {
       spriteCaches.clear();
       screen.root.replaceChildren(...build());
     },

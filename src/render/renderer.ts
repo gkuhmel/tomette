@@ -52,6 +52,13 @@ export class Renderer {
     return true;
   }
 
+  /** Change de jeu de pictogrammes. Renvoie true s'il a changé. */
+  setGlyphs(set: number): boolean {
+    if (set === this.sprites.glyphs) return false;
+    this.sprites.setGlyphs(set);
+    return true;
+  }
+
   resize(layout: Layout, cols: number, rows: number): void {
     this.layout = layout;
     this.cols = cols;

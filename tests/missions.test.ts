@@ -104,3 +104,23 @@ describe('XP et niveau', () => {
     expect(levelFromXp(xpForNext(1) + xpForNext(2) + 5)).toEqual({ level: 3, into: 5, need: xpForNext(3) });
   });
 });
+
+describe('déblocages', () => {
+  it('thèmes de base et pictos classiques toujours disponibles ; les autres selon le niveau', async () => {
+    const { isUnlocked, unlocksBetween, UNLOCKS } = await import('../src/core/unlocks');
+    for (const i of [0, 1, 2, 3]) expect(isUnlocked('theme', i, 1)).toBe(true);
+    expect(isUnlocked('glyphs', 0, 1)).toBe(true);
+    expect(isUnlocked('theme', 4, 1)).toBe(false);
+    expect(isUnlocked('theme', 4, 2)).toBe(true);
+    expect(unlocksBetween(1, 3).map((u) => u.level)).toEqual([2, 3]);
+    expect(unlocksBetween(3, 3)).toEqual([]);
+    expect(new Set(UNLOCKS.map((u) => u.level)).size).toBe(UNLOCKS.length);
+  });
+
+  it('chaque déblocage désigne un thème ou un jeu de pictos qui existe', async () => {
+    const { UNLOCKS } = await import('../src/core/unlocks');
+    const { THEMES } = await import('../src/render/theme');
+    const { GLYPH_SET_COUNT } = await import('../src/render/glyphs');
+    for (const u of UNLOCKS) expect(u.index).toBeLessThan(u.kind === 'theme' ? THEMES.length : GLYPH_SET_COUNT);
+  });
+});

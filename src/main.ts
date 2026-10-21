@@ -32,6 +32,7 @@ import { HomeBackground } from './ui/home-bg';
 import { Progress, progressScreen } from './ui/progress';
 import { bar, Missions, missionsScreen, playerLevel } from './ui/missions';
 import { longMission } from './core/missions';
+import { unlocksBetween } from './core/unlocks';
 import { gameOverScreen, homeScreen, pauseScreen, rotateScreen } from './ui/screens';
 import { load, loadBest, loadDifficulty, save, saveBest, saveDifficulty } from './ui/storage';
 
@@ -179,6 +180,9 @@ function boot(): void {
       ...(mr.levelAfter > mr.levelBefore ? [el('p', { class: 'over-level-up' }, [t('over.levelUp', { n: mr.levelAfter })])] : []),
       playerLevel(missions),
       ...(mr.daily.length || mr.long !== null ? [el('p', { class: 'over-ach-title' }, [t('over.missionsDone')])] : []),
+      ...unlocksBetween(mr.levelBefore, mr.levelAfter).map((u) =>
+        el('p', { class: 'over-unlock' }, [t('over.unlocked', { name: t(`${u.kind === 'theme' ? 'theme' : 'glyphs'}.${u.index}` as Key) })]),
+      ),
       ...mr.daily.map((m) => el('p', {}, [`✓ ${missionText(m.id, m.target)}`])),
       ...(mr.long !== null ? [el('p', {}, [`✓ ${longText(longMission(mr.long).id, longMission(mr.long).target)}`])] : []),
     );
@@ -292,6 +296,7 @@ function boot(): void {
       about.root.scrollTop = 0;
       about.show();
     },
+    () => missions.level.level,
   );
   const about = aboutScreen(() => {
     about.hide();
@@ -628,6 +633,7 @@ function boot(): void {
       applyThemeCss(theme);
       howto.setTheme(theme);
     }
+    if (renderer.setGlyphs(Math.round(config.glyphs))) howto.redraw();
     if (state === 'tutorial') checkTutorial();
     playSounds(now);
     renderer.consumeEvents(game, now);

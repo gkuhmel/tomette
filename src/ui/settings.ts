@@ -1,5 +1,8 @@
 import { config, ConfigKey } from '../config';
-import { THEMES } from '../render/theme';
+import { THEMES, themeFor } from '../render/theme';
+import { SpriteCache } from '../render/sprites';
+import { GLYPH_SET_COUNT } from '../render/glyphs';
+import { isUnlocked, requiredLevel } from '../core/unlocks';
 import { setConfigValue } from './debug';
 import { Key, lang, LANGS, langName, setLang, t } from '../i18n';
 import { el } from './dom';
@@ -7,7 +10,12 @@ import { resetProgress } from './storage';
 import { Screen } from './screens';
 
 /** Écran Réglages du joueur (son, musique, thème, effets). */
-export function settingsScreen(onBack: () => void, onChange: () => void, onAbout: () => void): Screen & { refresh(): void } {
+export function settingsScreen(
+  onBack: () => void,
+  onChange: () => void,
+  onAbout: () => void,
+  getLevel: () => number,
+): Screen & { refresh(): void } {
   const toggles: [ConfigKey, Key, Key][] = [
     ['sound', 'set.sound', 'set.soundHelp'],
     ['music', 'set.music', 'set.musicHelp'],
@@ -29,12 +37,24 @@ export function settingsScreen(onBack: () => void, onChange: () => void, onAbout
     ]);
   });
 
+  /** Bouton verrouillé tant que le niveau du joueur est insuffisant. */
+  const lockable = (b: HTMLButtonElement, lock: HTMLElement, kind: 'theme' | 'glyphs', i: number) => {
+    syncers.push(() => {
+      const open = isUnlocked(kind, i, getLevel());
+      b.disabled = !open;
+      b.classList.toggle('locked', !open);
+      lock.textContent = open ? '' : `🔒 ${t('unlock.level', { n: requiredLevel(kind, i) })}`;
+    });
+  };
+
   const themeButtons = THEMES.map((th, i) => {
+    const lock = el('small', { class: 'lock' });
     const b = el('button', { type: 'button', class: 'theme-btn' }, [
       el('span', { class: 'theme-swatch', style: `background:${th.bg};border-color:${th.tiles[0]}` }, [
         ...th.tiles.slice(0, 3).map((c) => el('i', { style: `background:${c}` })),
       ]),
       t(`theme.${i}` as Key),
+      lock,
     ]);
     b.addEventListener('click', () => {
       setConfigValue('theme', i);
@@ -42,6 +62,40 @@ export function settingsScreen(onBack: () => void, onChange: () => void, onAbout
       refresh();
     });
     syncers.push(() => b.classList.toggle('selected', Math.round(config.theme) === i));
+    lockable(b, lock, 'theme', i);
+    return b;
+  });
+
+  // Jeux de pictogrammes : aperçu de quatre tuiles dans le thème courant.
+  const glyphButtons = Array.from({ length: GLYPH_SET_COUNT }, (_, i) => {
+    const preview = el('canvas', { class: 'glyph-preview' });
+    const lock = el('small', { class: 'lock' });
+    const b = el('button', { type: 'button', class: 'theme-btn' }, [preview, t(`glyphs.${i}` as Key), lock]);
+    b.addEventListener('click', () => {
+      setConfigValue('glyphs', i);
+      onChange();
+      refresh();
+    });
+    syncers.push(() => {
+      b.classList.toggle('selected', Math.round(config.glyphs) === i);
+      const dpr = Math.min(3, window.devicePixelRatio || 1);
+      const R = 13;
+      const sprites = new SpriteCache();
+      sprites.setTheme(themeFor(config.theme));
+      sprites.setSize(R, dpr);
+      sprites.setGlyphs(i);
+      const w = 4 * R * 2.1;
+      const h = R * 2.3;
+      preview.width = Math.ceil(w * dpr);
+      preview.height = Math.ceil(h * dpr);
+      preview.style.width = `${w}px`;
+      preview.style.height = `${h}px`;
+      const ctx = preview.getContext('2d')!;
+      ctx.clearRect(0, 0, preview.width, preview.height);
+      ctx.scale(dpr, dpr);
+      for (let k = 0; k < 4; k++) ctx.drawImage(sprites.get(k, 'normal'), k * R * 2.1, h / 2 - sprites.half, sprites.half * 2, sprites.half * 2);
+    });
+    lockable(b, lock, 'glyphs', i);
     return b;
   });
 
@@ -76,6 +130,8 @@ export function settingsScreen(onBack: () => void, onChange: () => void, onAbout
       ...rows,
       el('h3', {}, [t('set.theme')]),
       el('div', { class: 'theme-list' }, themeButtons),
+      el('h3', {}, [t('set.glyphs')]),
+      el('div', { class: 'theme-list' }, glyphButtons),
       el('h3', {}, [t('set.language')]),
       el('div', { class: 'lang-list' }, langButtons),
       el('h3', {}, [t('set.progress')]),

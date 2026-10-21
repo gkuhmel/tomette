@@ -53,6 +53,8 @@ export const defaultConfig = {
   mosaicS: 180,
   expressLevel: 8,
   theme: 3,
+  /** Jeu de pictogrammes des tuiles : 0 = classique, puis Provence, Mer, Jardin, Étoiles. */
+  glyphs: 0,
   /** Réglages du joueur : effets sonores et musique (1 = activés). */
   sound: 1,
   music: 1,
