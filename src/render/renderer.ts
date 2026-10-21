@@ -1,9 +1,9 @@
 import type { Game } from '../core/game';
 import { cellCenter, neighbor } from '../core/hex';
 import { Layout } from './layout';
-import { t } from '../i18n';
+import { Key, t } from '../i18n';
 import { Effects, roundRect } from './effects';
-import { GOLD, hexPath, JOKER, MORTAR, SpriteCache } from './sprites';
+import { GOLD, hexPath, JOKER, MORTAR, SpriteCache, Variant } from './sprites';
 import { Theme, themeFor } from './theme';
 
 interface Popup {
@@ -123,6 +123,7 @@ export class Renderer {
     const L = this.layout;
     if (!L) {
       game.events.length = 0;
+      game.notices.length = 0;
       return;
     }
     for (const e of game.events) {
@@ -150,6 +151,11 @@ export class Renderer {
       });
     }
     game.events.length = 0;
+    // Annonces de duel : au milieu du plateau.
+    for (const n of game.notices) {
+      this.popups.push({ text: t(`pop.${n}` as Key), sub: '', x: L.x0 + L.boardW / 2, y: L.y0 + L.boardH * 0.4, born: now });
+    }
+    game.notices.length = 0;
   }
 
   draw(game: Game, heldId: number | null, now: number): void {
@@ -226,6 +232,8 @@ export class Renderer {
     this.mortarIds = seen;
     for (const [id, at] of this.crumbledAt) if (now - at > 450) this.crumbledAt.delete(id);
 
+    // Nuit tombée (duel) : les tuiles posées perdent leur couleur.
+    const lit: Variant = game.nightLeft > 0 ? 'night' : 'normal';
     let held: { x: number; y: number } | null = null;
     for (let r = 0; r < g.rows; r++) {
       for (let c = 0; c < g.cols; c++) {
@@ -252,7 +260,7 @@ export class Renderer {
           const k = 1 - t.timer / Math.max(1, cfg.clearDurationMs);
           if (k < 0.65) {
             const flash = Math.floor(now / 70) % 2 === 0;
-            ctx.drawImage(this.sprites.get(color, flash ? 'flash' : 'normal'), x - half, y - half, size, size);
+            ctx.drawImage(this.sprites.get(color, flash ? 'flash' : lit), x - half, y - half, size, size);
           } else {
             const s = Math.max(0, 1 - (k - 0.65) / 0.35);
             const sz = size * s;
@@ -264,16 +272,16 @@ export class Renderer {
         if (t.id === heldId) {
           held = { x, y };
           const sz = size * 1.1;
-          ctx.drawImage(this.sprites.get(color, 'normal'), x - sz / 2, y - sz / 2, sz, sz);
+          ctx.drawImage(this.sprites.get(color, lit), x - sz / 2, y - sz / 2, sz, sz);
         } else {
           const sq = this.effects.squash(t.id, now);
           if (sq) {
             // Écrasé à l'atterrissage, posé sur sa base.
             const w = size * sq.sx;
             const hh = size * sq.sy;
-            ctx.drawImage(this.sprites.get(color, 'normal'), x - w / 2, y + half - hh, w, hh);
+            ctx.drawImage(this.sprites.get(color, lit), x - w / 2, y + half - hh, w, hh);
           } else {
-            ctx.drawImage(this.sprites.get(color, 'normal'), x - half, y - half, size, size);
+            ctx.drawImage(this.sprites.get(color, lit), x - half, y - half, size, size);
           }
         }
         const crumbled = this.crumbledAt.get(t.id);

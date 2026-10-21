@@ -549,6 +549,11 @@ body.duel .incoming:not(:empty) {
   margin-top: 3px;
 }
 
+.incoming b {
+  font-size: 11px;
+  line-height: 10px;
+}
+
 .incoming i {
   display: block;
   border-radius: 2px;

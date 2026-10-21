@@ -1,7 +1,8 @@
 import { Theme, THEMES } from './theme';
 import { drawGlyph } from './glyphs';
 
-export type Variant = 'normal' | 'dim' | 'flash';
+/** night : couleurs effacées (malus « Nuit tombée » du duel), seul le pictogramme reste. */
+export type Variant = 'normal' | 'dim' | 'flash' | 'night';
 
 /** « Couleur » de sprite réservée à la tomette d'or. */
 export const GOLD = 99;
@@ -253,7 +254,8 @@ export class SpriteCache {
     const gold = color === GOLD;
     const joker = color === JOKER;
     const mortar = color === MORTAR;
-    const base = mortar ? th.mortar.base : gold || joker ? th.gold.base : th.tiles[color % th.tiles.length];
+    const night = variant === 'night' && !mortar && !gold;
+    const base = night ? th.mortar.speck : mortar ? th.mortar.base : gold || joker ? th.gold.base : th.tiles[color % th.tiles.length];
     const flat = th.style === 'flat';
     const path = (rr: number) => (flat ? roundHexPath(ctx, cx, cy, rr, R * 0.2) : hexPath(ctx, cx, cy, rr));
 

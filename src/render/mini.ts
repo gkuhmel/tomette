@@ -33,12 +33,21 @@ export function drawMini(canvas: HTMLCanvasElement, game: Game, theme: Theme, in
   g.forEach((t, c, r) => {
     const p = cellCenter(c, r, R);
     hexPath(ctx, x0 + p.x, top + p.y - rise + (t.state === 'falling' ? t.fall * h : 0), R * 0.92);
-    ctx.fillStyle = t.kind === 'mortar' ? theme.mortar.base : theme.tiles[t.color % theme.tiles.length];
+    ctx.fillStyle = t.kind === 'mortar' ? theme.mortar.base : game.nightLeft > 0 ? theme.mortar.speck : theme.tiles[t.color % theme.tiles.length];
     ctx.fill();
   });
   // Dalles en approche : petites barres grises au-dessus.
   let x = x0;
   for (const a of incoming.slice(0, 6)) {
+    if (a.kind !== 'slab') {
+      // Malus : petite pastille rouge.
+      ctx.fillStyle = `rgb(${theme.alert})`;
+      ctx.beginPath();
+      ctx.arc(x + 2.5, 2.5, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      x += 7;
+      continue;
+    }
     const w = Math.max(4, (cssW - 2 * x0) * (a.w / g.cols) * 0.45);
     ctx.fillStyle = theme.mortar.base;
     ctx.fillRect(x, 0, w, 4 * a.h);

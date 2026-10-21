@@ -16,13 +16,17 @@ export interface AiProfile {
   blunder: number;
   /** Fait monter la pile quand elle est basse. */
   raises: boolean;
+  /** Simule chaque coup jusqu'au bout (chaînes comprises) pour choisir. */
+  smart: boolean;
+  /** Puissance des attaques en duel : < 1, une partie des dalles se perd ; > 1, des dalles en plus. */
+  power: number;
 }
 
 export const AI_PROFILES: Record<AiSkill, AiProfile> = {
-  easy: { thinkMs: 1700, blunder: 0.5, raises: false },
-  normal: { thinkMs: 950, blunder: 0.2, raises: false },
-  hard: { thinkMs: 350, blunder: 0.03, raises: false },
-  extreme: { thinkMs: 220, blunder: 0.01, raises: false },
+  easy: { thinkMs: 1500, blunder: 0.5, raises: false, smart: false, power: 0.6 },
+  normal: { thinkMs: 900, blunder: 0.25, raises: false, smart: false, power: 1 },
+  hard: { thinkMs: 700, blunder: 0.3, raises: false, smart: false, power: 1.35 },
+  extreme: { thinkMs: 650, blunder: 0.3, raises: false, smart: false, power: 1.8 },
 };
 
 export interface Move {
@@ -102,6 +106,73 @@ function moveGain(game: Game, a: Cell, b: Cell): number {
   return gain;
 }
 
+/**
+ * Simulation rapide d'un échange, sans animation : chute, alignements et chaînes
+ * jusqu'à stabilisation. -1 = vide, -2 = tuile pleine qui ne s'aligne pas.
+ */
+export function simulate(game: Game, a: Cell, b: Cell): { cleared: number; chains: number; maxCombo: number } {
+  const g = game.grid;
+  const cols = g.cols;
+  const rows = g.rows;
+  const cell = new Int8Array(cols * rows);
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const t = g.get(c, r);
+      cell[r * cols + c] = !t ? -1 : t.state !== 'idle' || t.special || t.kind === 'cracked' || t.kind === 'mortar' || t.kind === 'joker' ? -2 : t.color;
+    }
+  }
+  const ia = a.r * cols + a.c;
+  const ib = b.r * cols + b.c;
+  [cell[ia], cell[ib]] = [cell[ib], cell[ia]];
+  const fall = () => {
+    for (let c = 0; c < cols; c++) {
+      let w = rows - 1;
+      for (let r = rows - 1; r >= 0; r--) {
+        const v = cell[r * cols + c];
+        if (v === -1) continue;
+        cell[r * cols + c] = -1;
+        cell[w * cols + c] = v;
+        w--;
+      }
+    }
+  };
+  const at = (c: number, r: number) => (c < 0 || c >= cols || r < 0 || r >= rows ? -1 : cell[r * cols + c]);
+  let cleared = 0;
+  let chains = 0;
+  let maxCombo = 0;
+  fall();
+  for (let guard = 0; guard < 12; guard++) {
+    const hit = new Uint8Array(cols * rows);
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const v = at(c, r);
+        if (v < 0) continue;
+        for (const [, fwd] of AXES) {
+          const run: Cell[] = [{ c, r }];
+          let n = neighbor(c, r, fwd);
+          while (at(n.c, n.r) === v) {
+            run.push(n);
+            n = neighbor(n.c, n.r, fwd);
+          }
+          if (run.length >= 3) for (const k of run) hit[k.r * cols + k.c] = 1;
+        }
+      }
+    }
+    let n = 0;
+    for (let i = 0; i < hit.length; i++) {
+      if (!hit[i]) continue;
+      cell[i] = -1;
+      n++;
+    }
+    if (!n) break;
+    chains++;
+    cleared += n;
+    maxCombo = Math.max(maxCombo, n);
+    fall();
+  }
+  return { cleared, chains, maxCombo };
+}
+
 /** Hauteur de la pile la plus haute (en rangées). */
 export function stackHeight(game: Game): number {
   const g = game.grid;
@@ -127,14 +198,26 @@ export class Ai {
   choose(): Move | null {
     const moves = listMoves(this.game);
     if (!moves.length) return null;
+    const g = this.game.grid;
+    if (this.profile.smart) {
+      // Simulation complète : les chaînes et les gros combos valent bien plus (ils envoient des dalles).
+      const high = stackHeight(this.game) > g.rows * 0.6;
+      for (const m of moves) {
+        const r = simulate(this.game, m.from, m.to);
+        m.gain = r.cleared + (r.chains - 1) * 8 + (r.maxCombo >= 4 ? 4 : 0);
+        if (r.cleared && high) m.gain += (g.rows - Math.min(m.from.r, m.to.r)) * 0.4;
+      }
+    }
     const best = moves.reduce((m, x) => (x.gain > m.gain ? x : m), moves[0]);
-    if (best.gain > 0 && this.rng.next() >= this.profile.blunder) {
+    // De nuit (malus du duel), l'ordinateur voit mal lui aussi : beaucoup plus d'erreurs.
+    const blunder = this.game.nightLeft > 0 ? Math.max(0.6, this.profile.blunder) : this.profile.blunder;
+    if (best.gain > 0 && this.rng.next() >= blunder) {
       // À gain égal, on préfère le bas de la grille (les chutes peuvent enchaîner).
       const top = moves.filter((m) => m.gain === best.gain);
       return top.reduce((m, x) => (x.from.r > m.from.r ? x : m), top[0]);
     }
     // Sinon : un échange qui déplace une tuile du haut vers du vide (étale la pile), ou au hasard.
-    const flatten = moves.filter((m) => this.game.grid.get(m.to.c, m.to.r) === null || this.game.grid.get(m.from.c, m.from.r) === null);
+    const flatten = moves.filter((m) => g.get(m.to.c, m.to.r) === null || g.get(m.from.c, m.from.r) === null);
     const pool = flatten.length ? flatten : moves;
     return pool[this.rng.int(pool.length)];
   }

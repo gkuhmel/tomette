@@ -37,6 +37,9 @@ import { STAGE_COUNT, stageConfig, stageSpec, starsFor } from './core/campaign';
 import { campaignScreen, saveStars, starText, totalStars } from './ui/campaign';
 import { Ai, AI_PROFILES, AiSkill } from './core/ai';
 import { Duel, duelConfig } from './core/duel';
+
+/** Pictogramme d'un malus en approche (au-dessus de la grille du joueur). */
+const MALUS_ICON = { night: '🌙', freeze: '❄', crack: '⚡', quake: '〰' } as const;
 import { drawMini } from './render/mini';
 import { loadDuel, recordDuel } from './ui/duel';
 import { gameOverScreen, homeScreen, pauseScreen, rotateScreen } from './ui/screens';
@@ -163,7 +166,7 @@ function boot(): void {
       game = new Game(duelConfig(config), seed, { mode });
       cpu = new Game(duelConfig(config), seed ^ 0x9e3779b9, { mode });
       ai = new Ai(cpu, AI_PROFILES[aiSkill()], seed);
-      duel = new Duel([game, cpu]);
+      duel = new Duel([game, cpu], [1, AI_PROFILES[aiSkill()].power], seed);
       hudRecLabel.textContent = t('hud.cpu');
       incoming.replaceChildren();
       incoming.dataset.key = '';
@@ -681,6 +684,10 @@ function boot(): void {
       else sound.repair();
     }
     game.signals.length = 0;
+    for (const n of game.notices) {
+      if (n === 'shield' || n === 'blocked' || n === 'counter') sound.repair();
+      else sound.mortar();
+    }
     for (const e of game.events) {
       if (e.rosaces) sound.rosace();
       else if (e.gold) sound.gold();
@@ -718,6 +725,7 @@ function boot(): void {
           duel.step(STEP_MS / 1000);
           cpu.events.length = 0;
           cpu.signals.length = 0;
+          cpu.notices.length = 0;
           duel.eventsCleared(1);
         }
         acc -= STEP_MS;
@@ -744,10 +752,15 @@ function boot(): void {
     if (duel && cpu) {
       drawMini(mini, cpu, theme, duel.pending[1]);
       const list = duel.pending[0];
-      const key = list.map((a) => `${a.w}x${a.h}`).join();
+      const key = `${duel.shield[0]}|${list.map((a) => (a.kind === 'slab' ? `${a.w}x${a.h}` : a.kind)).join()}`;
       if (incoming.dataset.key !== key) {
         incoming.dataset.key = key;
-        incoming.replaceChildren(...list.slice(0, 8).map((a) => el('i', { style: `width:${6 + a.w * 3}px;height:${3 + a.h * 3}px` })));
+        incoming.replaceChildren(
+          ...(duel.shield[0] ? [el('b', { class: 'shield' }, ['🛡'])] : []),
+          ...list.slice(0, 8).map((a) =>
+            a.kind === 'slab' ? el('i', { style: `width:${6 + a.w * 3}px;height:${3 + a.h * 3}px` }) : el('b', { class: 'malus' }, [MALUS_ICON[a.kind]]),
+          ),
+        );
       }
     }
     renderer.draw(game, input.heldId, now);

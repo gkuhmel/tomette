@@ -27,6 +27,9 @@ export interface ClearEvent {
 
 export type GameEvent = ClearEvent;
 
+/** Effet de duel à annoncer à l'écran (malus reçu, bouclier, contre-attaque). */
+export type Notice = 'night' | 'freeze' | 'crack' | 'quake' | 'shield' | 'blocked' | 'counter';
+
 /** Petits signaux pour le son (échange, atterrissage, réparation). */
 export type Signal = 'swap' | 'land' | 'repair' | 'slide' | 'mortar' | 'crumble';
 
@@ -82,9 +85,13 @@ export class Game {
   manualRise = false;
   /** Évènements produits depuis la dernière lecture (pour le rendu). */
   events: GameEvent[] = [];
+  /** Annonces de duel depuis la dernière lecture (vidées par le rendu). */
+  notices: Notice[] = [];
   /** Signaux sonores depuis la dernière lecture. */
   signals: Signal[] = [];
   readonly stats: GameStats = { maxChain: 1, maxCombo: 0, tilesCleared: 0, goldUsed: 0, repairs: 0, alertSaves: 0, maxLevel: 1, slabsBroken: 0 };
+  /** Duel : « nuit tombée » restante (s) ; les tuiles perdent leurs couleurs à l'affichage. */
+  nightLeft = 0;
   /** Prochaine dalle de mortier dans (s). */
   mortarIn = 0;
   /** Dalles en attente de place en haut de la grille (largeurs). */
@@ -142,6 +149,50 @@ export class Game {
       }
     }
     this.signals.push('mortar');
+  }
+
+  /** Tuiles posées et ordinaires (ni spéciales, ni mortier), tirées au hasard. */
+  private randomPlainTiles(n: number): Tile[] {
+    const pool: Tile[] = [];
+    this.grid.forEach((t) => {
+      if (t.state === 'idle' && t.kind === 'normal' && !t.special) pool.push(t);
+    });
+    const out: Tile[] = [];
+    while (out.length < n && pool.length) out.push(pool.splice(this.rng.int(pool.length), 1)[0]);
+    return out;
+  }
+
+  /** Duel, malus « Gel » : `n` tuiles au hasard deviennent scellées. */
+  freezeTiles(n: number): number {
+    const list = this.randomPlainTiles(n);
+    for (const t of list) t.kind = 'sealed';
+    this.notices.push('freeze');
+    return list.length;
+  }
+
+  /** Duel, malus « Fêlures » : `n` tuiles au hasard deviennent fêlées. */
+  crackTiles(n: number): number {
+    const list = this.randomPlainTiles(n);
+    for (const t of list) t.kind = 'cracked';
+    this.notices.push('crack');
+    return list.length;
+  }
+
+  /** Duel, malus « Séisme » : les couleurs des deux rangées du haut de la pile sont mélangées. */
+  quake(): void {
+    const g = this.grid;
+    let top = 0;
+    while (top < g.rows && !g.some((_t, _c, r) => r === top)) top++;
+    g.forEach((t, _c, r) => {
+      if ((r === top || r === top + 1) && t.state === 'idle' && t.kind !== 'mortar' && !t.special) t.color = this.rng.int(this.colors);
+    });
+    this.notices.push('quake');
+  }
+
+  /** Duel, malus « Nuit tombée ». */
+  night(seconds: number): void {
+    this.nightLeft = Math.max(this.nightLeft, seconds);
+    this.notices.push('night');
   }
 
   /** Un clear touche une dalle : toute la dalle devient des tuiles normales, qui peuvent prolonger la chaîne. */
@@ -269,6 +320,7 @@ export class Game {
     const dtS = dtMs / 1000;
     this.time += dtS;
     this.elapsed += dtS;
+    this.nightLeft = Math.max(0, this.nightLeft - dtS);
     const limit = this.mode.timeLimitS(cfg);
     if (limit > 0 && this.elapsed >= limit) {
       this.elapsed = limit;
