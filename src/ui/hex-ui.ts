@@ -15,6 +15,7 @@ const ICONS = {
   sound: '<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="on" d="M15.5 9a4.5 4.5 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/><path class="off" d="M16 9.5l5 5M21 9.5l-5 5"/>',
   music: '<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/><path class="off" d="M3.5 3.5l17 17"/>',
   up: '<path d="M6 14.5 12 8.5l6 6"/>',
+  swords: '<path d="M4 4l9 9M4 4h4M4 4v4M20 4l-9 9M20 4h-4M20 4v4"/><path d="M7 14l3 3M17 14l-3 3M5 19l3-3M19 19l-3-3"/>',
   flag: '<path d="M6 21V4"/><path class="f" d="M6 4h12l-2.5 4L18 12H6z"/>',
 } as const;
 

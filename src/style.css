@@ -518,6 +518,45 @@ body.alert .hud-badge .prog {
   }
 }
 
+@keyframes pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* --- Duel ---------------------------------------------------------------- */
+
+#duel-mini {
+  display: none;
+  flex: none;
+  width: 54px;
+  height: 74px;
+}
+
+body.duel #duel-mini {
+  display: block;
+}
+
+.incoming {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 0;
+}
+
+body.duel .incoming:not(:empty) {
+  height: 10px;
+  margin-top: 3px;
+}
+
+.incoming i {
+  display: block;
+  border-radius: 2px;
+  background: var(--danger);
+  opacity: 0.8;
+  animation: pulse 0.8s ease-in-out infinite;
+}
+
 /* --- Campagne ------------------------------------------------------------ */
 
 .home-pills {

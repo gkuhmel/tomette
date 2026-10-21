@@ -1,6 +1,6 @@
 import type { Config } from '../config';
 
-export type ModeId = 'endless' | 'timeAttack' | 'mosaic' | 'express' | 'campaign';
+export type ModeId = 'endless' | 'timeAttack' | 'mosaic' | 'express' | 'campaign' | 'duel';
 
 export interface Mode {
   id: ModeId;
@@ -47,7 +47,17 @@ export const CAMPAIGN: Mode = {
   record: 'score',
 };
 
+/** Duel contre l'ordinateur (voir duel.ts). */
+export const DUEL: Mode = {
+  id: 'duel',
+  timeLimitS: () => 0,
+  startLevel: () => 1,
+  record: 'score',
+};
+
 export function modeById(id: ModeId): Mode {
-  return id === 'campaign' ? CAMPAIGN : (MODES.find((m) => m.id === id) ?? MODES[0]);
+  if (id === 'campaign') return CAMPAIGN;
+  if (id === 'duel') return DUEL;
+  return MODES.find((m) => m.id === id) ?? MODES[0];
 }
 

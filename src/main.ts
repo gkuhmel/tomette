@@ -35,6 +35,10 @@ import { longMission } from './core/missions';
 import { unlocksBetween } from './core/unlocks';
 import { STAGE_COUNT, stageConfig, stageSpec, starsFor } from './core/campaign';
 import { campaignScreen, saveStars, starText, totalStars } from './ui/campaign';
+import { Ai, AI_PROFILES, AiSkill } from './core/ai';
+import { Duel, duelConfig } from './core/duel';
+import { drawMini } from './render/mini';
+import { loadDuel, recordDuel } from './ui/duel';
 import { gameOverScreen, homeScreen, pauseScreen, rotateScreen } from './ui/screens';
 import { load, loadBest, loadDifficulty, save, saveBest, saveDifficulty } from './ui/storage';
 
@@ -61,7 +65,9 @@ function boot(): void {
   hudTime.insertAdjacentHTML('beforebegin', icon('clock'));
   const pauseBtn = el('button', { id: 'pause-btn', type: 'button', 'aria-label': t('common.pause') });
   pauseBtn.innerHTML = icon('pause');
-  const hud = el('header', { id: 'hud' }, [badge.root, el('div', { class: 'hud-score' }, [hudScore, hudSub]), pauseBtn]);
+  const incoming = el('div', { class: 'incoming' });
+  const mini = el('canvas', { id: 'duel-mini' });
+  const hud = el('header', { id: 'hud' }, [badge.root, el('div', { class: 'hud-score' }, [hudScore, hudSub, incoming]), mini, pauseBtn]);
   const canvas = el('canvas', { id: 'board' });
   const stage = el('main', { id: 'stage' }, [canvas]);
   const raise = el('button', { id: 'raise', type: 'button' }, [t('common.raise')]);
@@ -79,6 +85,11 @@ function boot(): void {
   // --- État --------------------------------------------------------------
   let state: State = 'home';
   let mode: ModeId = 'endless';
+  /** Duel : partie de l'ordinateur, son IA et l'échange de dalles (null hors duel). */
+  let cpu: Game | null = null;
+  let ai: Ai | null = null;
+  let duel: Duel | null = null;
+  const aiSkill = (): AiSkill => (difficulty === 'easy' ? 'easy' : difficulty === 'hard' ? 'hard' : 'normal');
   /** Manche de campagne en cours (ou à lancer). */
   let stageNo = 1;
   let difficulty: Difficulty = loadDifficulty();
@@ -143,9 +154,19 @@ function boot(): void {
     hudRecLabel.textContent = t('hud.record');
     hudCache.length = 0;
     const prev = game.grid;
+    cpu = ai = duel = null;
+    document.body.classList.toggle('duel', mode === 'duel');
     if (mode === 'campaign') {
       const spec = stageSpec(stageNo, config);
       game = new Game(stageConfig(config, spec), seed, { mode, startLevel: spec.level, goalRows: spec.goal });
+    } else if (mode === 'duel') {
+      game = new Game(duelConfig(config), seed, { mode });
+      cpu = new Game(duelConfig(config), seed ^ 0x9e3779b9, { mode });
+      ai = new Ai(cpu, AI_PROFILES[aiSkill()], seed);
+      duel = new Duel([game, cpu]);
+      hudRecLabel.textContent = t('hud.cpu');
+      incoming.replaceChildren();
+      incoming.dataset.key = '';
     } else game = new Game(withDifficulty(config, difficulty), seed, { mode });
     input.release();
     renderer.reset();
@@ -167,7 +188,7 @@ function boot(): void {
   function endGame(): void {
     state = 'over';
     sound.stopMusic();
-    if (game.timeUp) sound.level();
+    if (game.timeUp || game.won || duel?.winner === 0) sound.level();
     else sound.gameOver();
     input.release();
     game.manualRise = false;
@@ -185,6 +206,17 @@ function boot(): void {
     over.record.textContent = record ? t('over.newRecord') : t(rosaces ? 'over.recordRosaces' : 'over.record', { n: best });
     over.next.hidden = true;
     over.replay.textContent = t('common.replay');
+    if (duel) {
+      const w = duel.winner;
+      const result = w === 0 ? 'win' : w === 1 ? 'lose' : 'draw';
+      const rec = recordDuel(aiSkill(), result)[aiSkill()];
+      over.title.textContent = t(`duel.${result}` as Key);
+      over.score.textContent = t('duel.scores', { me: game.score, cpu: cpu!.score });
+      over.record.textContent = t('duel.record', { w: rec.wins, l: rec.losses, d: t(`diff.${difficulty}` as Key) });
+      over.replay.textContent = t('duel.rematch');
+      game.over = true;
+      cpu!.over = true;
+    }
     if (mode === 'campaign') {
       // Campagne : étoiles selon le temps, manche suivante si réussie.
       const spec = stageSpec(stageNo, config);
@@ -301,6 +333,7 @@ function boot(): void {
     const daily = missions.state.daily;
     home.missions.textContent = `${t('missions.title')} ${daily.filter((m) => m.done).length}/${daily.length}`;
     home.campaignStars.textContent = `★ ${totalStars()}/${STAGE_COUNT * 3}`;
+    home.duelWins.textContent = t('duel.wins', { n: loadDuel()[aiSkill()].wins });
     over.screen.hide();
     howto.hide();
     settings.hide();
@@ -424,6 +457,7 @@ function boot(): void {
       showHome();
     },
   );
+  home.duel.addEventListener('click', () => launch('duel'));
   home.campaign.addEventListener('click', () => {
     campaignView.refresh();
     campaignView.root.scrollTop = 0;
@@ -520,14 +554,15 @@ function boot(): void {
     if (!config.animations || game.score < shownScore) shownScore = game.score;
     else if (shownScore < game.score) shownScore = Math.min(game.score, shownScore + Math.max(1, Math.ceil((game.score - shownScore) * 0.12)));
     setText(0, hudScore, String(shownScore));
-    setText(1, hudBest, String(Math.max(best, game.recordValue)));
+    if (!duel) setText(1, hudBest, String(Math.max(best, game.recordValue)));
     setText(2, badge.value, String(game.goalRows > 0 ? stageNo : game.mode.record === 'rosaces' ? game.rosaceCount : game.level));
     const left = game.timeLeft;
     setText(3, hudTime, formatTime(left === null ? game.elapsed : Math.ceil(left)));
     // Jauge de la pastille : temps restant (modes chronométrés) ou avancée dans le niveau.
     const limit = game.mode.timeLimitS(game.cfg);
     const dur = Math.max(1e-6, game.cfg.levelDurationS);
-    if (game.goalRows > 0) {
+    if (duel && cpu) setText(1, hudBest, String(cpu.score));
+    else if (game.goalRows > 0) {
       // Campagne : rangées avant l'arrivée de la ligne, puis tuiles encore au-dessus.
       const above = game.tilesAboveLine();
       setText(5, hudRecLabel, above === null ? t('hud.lineIn') : t('hud.toClear'));
@@ -674,8 +709,17 @@ function boot(): void {
       while (acc >= STEP_MS) {
         input.update();
         game.tick(STEP_MS);
+        if (duel && cpu && ai) {
+          // Duel : l'ordinateur joue, puis les dalles s'échangent.
+          ai.update(STEP_MS);
+          cpu.tick(STEP_MS);
+          duel.step(STEP_MS / 1000);
+          cpu.events.length = 0;
+          cpu.signals.length = 0;
+          duel.eventsCleared(1);
+        }
         acc -= STEP_MS;
-        if (game.over) {
+        if (game.over || (duel && duel.winner !== null)) {
           if (state === 'tutorial') loadTutorialStep();
           else endGame();
           break;
@@ -694,6 +738,16 @@ function boot(): void {
     if (state === 'tutorial') checkTutorial();
     playSounds(now);
     renderer.consumeEvents(game, now);
+    duel?.eventsCleared(0);
+    if (duel && cpu) {
+      drawMini(mini, cpu, theme, duel.pending[1]);
+      const list = duel.pending[0];
+      const key = list.map((a) => `${a.w}x${a.h}`).join();
+      if (incoming.dataset.key !== key) {
+        incoming.dataset.key = key;
+        incoming.replaceChildren(...list.slice(0, 8).map((a) => el('i', { style: `width:${6 + a.w * 3}px;height:${3 + a.h * 3}px` })));
+      }
+    }
     renderer.draw(game, input.heldId, now);
     updateHud();
     requestAnimationFrame(frame);

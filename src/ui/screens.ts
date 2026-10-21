@@ -40,6 +40,8 @@ export interface HomeScreen {
   /** Campagne : bouton et total d'étoiles. */
   campaign: HTMLElement;
   campaignStars: HTMLElement;
+  duel: HTMLElement;
+  duelWins: HTMLElement;
   /** Barre du joueur (niveau, XP, missions du jour) : ouvre l'écran Missions. */
   player: HTMLElement;
   playerLevel: HTMLElement;
@@ -62,14 +64,17 @@ export function homeScreen(): HomeScreen {
   const campaignStars = el('span', { class: 'pill-tag' });
   const campaign = el('button', { type: 'button', class: 'home-pill', style: '--c:var(--t1)' }, [el('span', {}, [t('mode.campaign.name')]), campaignStars]);
   campaign.insertAdjacentHTML('afterbegin', icon('flag'));
+  const duelWins = el('span', { class: 'pill-tag' });
+  const duel = el('button', { type: 'button', class: 'home-pill', style: '--c:var(--t0)' }, [el('span', {}, [t('mode.duel.name')]), duelWins]);
+  duel.insertAdjacentHTML('afterbegin', icon('swords'));
   const screen = new Screen('screen-home', [
     el('div', { class: 'home-top' }, [el('h1', { class: 'title' }, ['Tomettes']), el('small', { class: 'tagline' }, [t('home.tagline')])]),
     rosaceMenu(play, [timeAttack, mosaic, settings, progress, howto, express]),
-    el('div', { class: 'home-pills' }, [campaign]),
+    el('div', { class: 'home-pills' }, [campaign, duel]),
     difficulty,
     player,
   ]);
-  return { screen, difficulty, play, timeAttack, mosaic, express, progress, settings, howto, campaign, campaignStars, player, playerLevel, missions };
+  return { screen, difficulty, play, timeAttack, mosaic, express, progress, settings, howto, campaign, campaignStars, duel, duelWins, player, playerLevel, missions };
 }
 
 export function gameOverScreen(): {

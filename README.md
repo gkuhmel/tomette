@@ -42,6 +42,9 @@ Déploiement manuel possible : `npm run deploy` (après `npx wrangler login`).
 - **Campagne** : 30 manches. Une ligne d'arrivée en damier remonte avec la
   pile ; la manche est gagnée quand plus aucune tuile n'est au-dessus. 1 à 3
   étoiles selon le temps ; chaque manche réussie ouvre la suivante.
+- **Duel** : contre l'ordinateur (facile, normal, expert selon la difficulté
+  choisie). Combos, chaînes, rosaces et tomettes d'or envoient des dalles de
+  mortier chez l'adversaire ; sa pile est affichée en miniature dans le HUD.
 - **Missions et niveau joueur** : 3 missions du jour (nouvelles à minuit) et
   une mission au long cours. Parties et missions rapportent de l'XP ; le
   niveau débloque 4 thèmes et 4 jeux de pictogrammes.

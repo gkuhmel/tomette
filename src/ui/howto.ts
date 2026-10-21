@@ -428,7 +428,7 @@ export function howToScreen(onPlay: () => void, onBack: () => void, onTutorial: 
       section(
         'howto.s8.title',
         null,
-        ...tx('howto.s8.p1', 'howto.s8.p2', 'howto.s8.p3', 'howto.s8.p4', 'howto.s8.p7', 'howto.s8.p5', 'howto.s8.p6'),
+        ...tx('howto.s8.p1', 'howto.s8.p2', 'howto.s8.p3', 'howto.s8.p4', 'howto.s8.p7', 'howto.s8.p8', 'howto.s8.p5', 'howto.s8.p6'),
       ),
       el('div', { class: 'howto-buttons' }, [back, play]),
     ]),
