@@ -89,7 +89,7 @@ function boot(): void {
   let cpu: Game | null = null;
   let ai: Ai | null = null;
   let duel: Duel | null = null;
-  const aiSkill = (): AiSkill => (difficulty === 'easy' ? 'easy' : difficulty === 'hard' ? 'hard' : 'normal');
+  const aiSkill = (): AiSkill => difficulty;
   /** Manche de campagne en cours (ou à lancer). */
   let stageNo = 1;
   let difficulty: Difficulty = loadDifficulty();
@@ -327,13 +327,13 @@ function boot(): void {
       b.rec.textContent = rec > 0 ? (modeById(id).record === 'rosaces' ? `${rec} ✿` : String(rec)) : '—';
       b.button.title = modeTag(modeById(id), config);
     }
-    home.progress.rec.textContent = `${progress.unlocked.size}/${ACHIEVEMENTS.length}`;
+    home.progressCount.textContent = `${progress.unlocked.size}/${ACHIEVEMENTS.length}`;
     const lv = missions.level;
-    home.playerLevel.replaceChildren(el('strong', {}, [t('player.level', { n: lv.level })]), bar(lv.into, lv.need));
+    home.playerLevel.replaceChildren(el('strong', {}, [t('player.level', { n: lv.level })]), bar(lv.into, lv.need), el('small', {}, [t('player.xp', { n: lv.into, need: lv.need })]));
     const daily = missions.state.daily;
-    home.missions.textContent = `${t('missions.title')} ${daily.filter((m) => m.done).length}/${daily.length}`;
-    home.campaignStars.textContent = `★ ${totalStars()}/${STAGE_COUNT * 3}`;
-    home.duelWins.textContent = t('duel.wins', { n: loadDuel()[aiSkill()].wins });
+    home.missions.rec.textContent = `${daily.filter((m) => m.done).length}/${daily.length}`;
+    home.campaign.rec.textContent = `★ ${totalStars()}/${STAGE_COUNT * 3}`;
+    home.duel.rec.textContent = t('duel.wins', { n: loadDuel()[aiSkill()].wins });
     over.screen.hide();
     howto.hide();
     settings.hide();
@@ -402,7 +402,7 @@ function boot(): void {
   renderer.setTheme(theme0);
   applyThemeCss(theme0);
   howto.setTheme(theme0);
-  home.howto.button.addEventListener('click', () => openHowto('home'));
+  home.howto.addEventListener('click', () => openHowto('home'));
   over.replay.addEventListener('click', () => startGame());
   over.next.addEventListener('click', () => {
     stageNo = Math.min(STAGE_COUNT, stageNo + 1);
@@ -441,7 +441,7 @@ function boot(): void {
     state = 'home';
     showHome();
   });
-  home.settings.button.addEventListener('click', () => openSettings('home'));
+  home.settings.addEventListener('click', () => openSettings('home'));
   const progressView = progressScreen(progress, () => {
     progressView.hide();
     home.screen.show();
@@ -457,8 +457,8 @@ function boot(): void {
       showHome();
     },
   );
-  home.duel.addEventListener('click', () => launch('duel'));
-  home.campaign.addEventListener('click', () => {
+  home.duel.button.addEventListener('click', () => launch('duel'));
+  home.campaign.button.addEventListener('click', () => {
     campaignView.refresh();
     campaignView.root.scrollTop = 0;
     home.screen.hide();
@@ -468,13 +468,15 @@ function boot(): void {
     missionsView.hide();
     showHome();
   });
-  home.player.addEventListener('click', () => {
+  const openMissions = () => {
     missionsView.refresh();
     missionsView.root.scrollTop = 0;
     home.screen.hide();
     missionsView.show();
-  });
-  home.progress.button.addEventListener('click', () => {
+  };
+  home.player.addEventListener('click', openMissions);
+  home.missions.button.addEventListener('click', openMissions);
+  home.progress.addEventListener('click', () => {
     progressView.refresh();
     progressView.root.scrollTop = 0;
     home.screen.hide();

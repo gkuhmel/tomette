@@ -115,6 +115,7 @@ export const es: Dict = {
   'diff.easy': 'Relajado',
   'diff.normal': 'Normal',
   'diff.hard': 'Experto',
+  'diff.extreme': 'Extremo',
 
   'pop.rosace': '¡Rosetón!',
   'pop.gold': '¡Oro!',
@@ -261,7 +262,7 @@ export const es: Dict = {
   'howto.s8.p3': 'Mosaico: el máximo de rosetones antes de que acabe el tiempo.',
   'howto.s8.p4': 'Exprés: una partida clásica que empieza directamente a gran velocidad.',
   'howto.s8.p5': 'En los modos con tiempo, la partida también termina si la pila llega arriba.',
-  'howto.s8.p6': 'Dificultad: Relajado (menos colores, pila más lenta), Normal o Experto. Cada dificultad tiene sus propios récords.',
+  'howto.s8.p6': 'Dificultad: Relajado (menos colores, pila más lenta), Normal, Experto o Extremo (para los mejores). Cada dificultad tiene sus propios récords.',
 
   'about.tagline': 'Un puzle de baldosas hexagonales: intercambia, alinea, encadena.',
   'about.version': 'Versión {v}',

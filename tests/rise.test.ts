@@ -130,4 +130,15 @@ describe('difficulté', () => {
     expect(easy.baseSecondsPerRow).toBeCloseTo(27);
     expect(new Game(easy, 1).colors).toBe(5);
   });
+
+  it('Extrême : plus rapide qu\'Expert dès le départ, mais une vitesse maximale et une grâce qui restent jouables', async () => {
+    const { withDifficulty } = await import('../src/core/difficulty');
+    const base = cfg();
+    const hard = withDifficulty(base, 'hard');
+    const extreme = withDifficulty(base, 'extreme');
+    expect(extreme.baseSecondsPerRow).toBeLessThan(hard.baseSecondsPerRow);
+    expect(extreme.mortarEveryS).toBeLessThan(hard.mortarEveryS);
+    expect(extreme.minSecondsPerRow).toBeGreaterThanOrEqual(0.9);
+    expect(extreme.graceS).toBeGreaterThanOrEqual(1.5);
+  });
 });

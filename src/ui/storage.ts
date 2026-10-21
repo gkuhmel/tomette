@@ -40,9 +40,9 @@ export function saveBest(score: number, mode = 'endless', difficulty = 'normal')
 
 const DIFFICULTY_KEY = 'tomettes.difficulty';
 
-export function loadDifficulty(): 'easy' | 'normal' | 'hard' {
+export function loadDifficulty(): 'easy' | 'normal' | 'hard' | 'extreme' {
   const v = load(DIFFICULTY_KEY);
-  return v === 'easy' || v === 'hard' ? v : 'normal';
+  return v === 'easy' || v === 'hard' || v === 'extreme' ? v : 'normal';
 }
 
 export function saveDifficulty(d: string): void {

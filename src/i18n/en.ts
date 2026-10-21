@@ -115,6 +115,7 @@ export const en: Dict = {
   'diff.easy': 'Relaxed',
   'diff.normal': 'Normal',
   'diff.hard': 'Expert',
+  'diff.extreme': 'Extreme',
 
   'pop.rosace': 'Rosette!',
   'pop.gold': 'Gold!',
@@ -261,7 +262,7 @@ export const en: Dict = {
   'howto.s8.p3': 'Mosaic: as many rosettes as possible before the clock runs out.',
   'howto.s8.p4': 'Express: a classic game that starts right away at high speed.',
   'howto.s8.p5': 'In timed modes, the game also ends if the stack reaches the top.',
-  'howto.s8.p6': 'Difficulty: Relaxed (fewer colours, slower stack), Normal or Expert. Each difficulty keeps its own records.',
+  'howto.s8.p6': 'Difficulty: Relaxed (fewer colours, slower stack), Normal, Expert or Extreme (for the very best). Each difficulty keeps its own records.',
 
   'about.tagline': 'A hexagonal tile puzzle: swap, match, chain.',
   'about.version': 'Version {v}',

@@ -115,6 +115,7 @@ export const de: Dict = {
   'diff.easy': 'Entspannt',
   'diff.normal': 'Normal',
   'diff.hard': 'Experte',
+  'diff.extreme': 'Extrem',
 
   'pop.rosace': 'Rosette!',
   'pop.gold': 'Gold!',
@@ -261,7 +262,7 @@ export const de: Dict = {
   'howto.s8.p3': 'Mosaik: möglichst viele Rosetten, bevor die Zeit abläuft.',
   'howto.s8.p4': 'Express: ein klassisches Spiel, das direkt mit hoher Geschwindigkeit beginnt.',
   'howto.s8.p5': 'In den Modi mit Zeitlimit endet das Spiel auch, wenn der Stapel oben ankommt.',
-  'howto.s8.p6': 'Schwierigkeit: Entspannt (weniger Farben, langsamerer Stapel), Normal oder Experte. Jede Schwierigkeit hat eigene Rekorde.',
+  'howto.s8.p6': 'Schwierigkeit: Entspannt (weniger Farben, langsamerer Stapel), Normal, Experte oder Extrem (für die ganz Starken). Jede Schwierigkeit hat eigene Rekorde.',
 
   'about.tagline': 'Ein Puzzle mit sechseckigen Fliesen: tauschen, auflösen, verketten.',
   'about.version': 'Version {v}',

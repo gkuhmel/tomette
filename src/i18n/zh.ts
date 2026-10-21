@@ -116,6 +116,7 @@ export const zh: Dict = {
   'diff.easy': '休闲',
   'diff.normal': '普通',
   'diff.hard': '专家',
+  'diff.extreme': '极限',
 
   'pop.rosace': '花窗！',
   'pop.gold': '金砖！',
@@ -262,7 +263,7 @@ export const zh: Dict = {
   'howto.s8.p3': '马赛克：在时间结束前拼出尽可能多的花窗。',
   'howto.s8.p4': '快车：一开始就高速进行的经典对局。',
   'howto.s8.p5': '在计时模式中，砖堆碰到顶部同样会结束游戏。',
-  'howto.s8.p6': '难度：休闲（颜色更少、砖堆更慢）、普通或专家。每种难度都有独立的纪录。',
+  'howto.s8.p6': '难度：休闲（颜色更少、砖堆更慢）、普通、专家或极限（给高手）。每种难度都有独立的纪录。',
 
   'about.tagline': '六边形花砖益智游戏：交换、消除、连锁。',
   'about.version': '版本 {v}',

@@ -7,7 +7,7 @@ import { Rng } from './rng';
  * chacun aligne (tuile qui retombe comprise) et joue le meilleur, avec un
  * temps de réflexion et des erreurs selon son niveau.
  */
-export type AiSkill = 'easy' | 'normal' | 'hard';
+export type AiSkill = 'easy' | 'normal' | 'hard' | 'extreme';
 
 export interface AiProfile {
   /** Temps entre deux coups (ms). */
@@ -22,6 +22,7 @@ export const AI_PROFILES: Record<AiSkill, AiProfile> = {
   easy: { thinkMs: 1700, blunder: 0.5, raises: false },
   normal: { thinkMs: 950, blunder: 0.2, raises: false },
   hard: { thinkMs: 350, blunder: 0.03, raises: false },
+  extreme: { thinkMs: 220, blunder: 0.01, raises: false },
 };
 
 export interface Move {

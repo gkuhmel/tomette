@@ -1,7 +1,7 @@
 import type { Config, ConfigKey } from '../config';
 
-export type Difficulty = 'easy' | 'normal' | 'hard';
-export const DIFFICULTIES: Difficulty[] = ['easy', 'normal', 'hard'];
+export type Difficulty = 'easy' | 'normal' | 'hard' | 'extreme';
+export const DIFFICULTIES: Difficulty[] = ['easy', 'normal', 'hard', 'extreme'];
 
 type Tweak = Partial<Record<ConfigKey, (c: Config) => number>>;
 
@@ -31,6 +31,20 @@ const TWEAKS: Record<Difficulty, Tweak> = {
     jokerChance: (c) => c.jokerChance * 0.5,
     mortarEveryS: (c) => c.mortarEveryS * 0.7,
     mortarFromLevel: (c) => Math.max(1, c.mortarFromLevel - 1),
+  },
+  // Pour les très forts : vite dès le départ, beaucoup de tuiles spéciales et de mortier,
+  // mais une grâce et une vitesse maximale qui restent jouables.
+  extreme: {
+    initialRows: (c) => c.initialRows + 1,
+    baseSecondsPerRow: (c) => c.baseSecondsPerRow * 0.55,
+    speedFactor: (c) => 1 - (1 - c.speedFactor) * 1.4,
+    minSecondsPerRow: (c) => Math.max(0.9, c.minSecondsPerRow * 0.7),
+    graceS: (c) => Math.max(1.5, c.graceS * 0.6),
+    crackedChance: (c) => c.crackedChance * 2,
+    sealedChance: (c) => c.sealedChance * 2,
+    jokerChance: (c) => c.jokerChance * 0.3,
+    mortarEveryS: (c) => c.mortarEveryS * 0.5,
+    mortarFromLevel: () => 1,
   },
 };
 

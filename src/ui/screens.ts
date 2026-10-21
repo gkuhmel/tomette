@@ -1,6 +1,6 @@
 import { t } from '../i18n';
 import { el } from './dom';
-import { hexButton, HexButtonParts, icon, rosaceMenu } from './hex-ui';
+import { hexButton, HexButtonParts, icon, IconName, rosaceMenu } from './hex-ui';
 import { modeName } from './text';
 
 /** Écran plein (accueil, fin de partie, pause, réglages, orientation…). */
@@ -30,51 +30,55 @@ export class Screen {
 export interface HomeScreen {
   screen: Screen;
   difficulty: HTMLElement;
+  /** Rosace : les modes de jeu (et les missions). */
   play: HexButtonParts;
   timeAttack: HexButtonParts;
   mosaic: HexButtonParts;
   express: HexButtonParts;
-  progress: HexButtonParts;
-  settings: HexButtonParts;
-  howto: HexButtonParts;
-  /** Campagne : bouton et total d'étoiles. */
-  campaign: HTMLElement;
-  campaignStars: HTMLElement;
-  duel: HTMLElement;
-  duelWins: HTMLElement;
-  /** Barre du joueur (niveau, XP, missions du jour) : ouvre l'écran Missions. */
+  campaign: HexButtonParts;
+  duel: HexButtonParts;
+  missions: HexButtonParts;
+  /** Sous la rosace : ce qui n'est pas un mode de jeu. */
+  howto: HTMLElement;
+  progress: HTMLElement;
+  progressCount: HTMLElement;
+  settings: HTMLElement;
+  /** Barre du joueur (niveau, XP) : ouvre l'écran Missions. */
   player: HTMLElement;
   playerLevel: HTMLElement;
-  missions: HTMLElement;
 }
 
-/** Accueil : titre, rosace de boutons (modes au centre et autour), difficulté, records. */
+/** Bouton rond de la rangée d'outils (aide, succès, réglages). */
+function toolButton(iconName: IconName, label: string, extra?: HTMLElement): HTMLButtonElement {
+  const b = el('button', { type: 'button', class: 'tool-btn' }, [el('span', {}, [label]), ...(extra ? [extra] : [])]);
+  b.insertAdjacentHTML('afterbegin', icon(iconName));
+  return b;
+}
+
+/** Accueil : titre, rosace des modes de jeu, outils, difficulté, niveau du joueur. */
 export function homeScreen(): HomeScreen {
   const difficulty = el('div', { class: 'diff-list', role: 'radiogroup', 'aria-label': t('diff.label') });
   const play = hexButton('var(--primary)', 'play', t('common.play'), true);
-  const timeAttack = hexButton('var(--t0)', 'clock', modeName('timeAttack'));
+  const duel = hexButton('var(--t0)', 'swords', modeName('duel'));
+  const timeAttack = hexButton('var(--t5)', 'clock', modeName('timeAttack'));
   const mosaic = hexButton('var(--t4)', 'flower', modeName('mosaic'));
-  const settings = hexButton('var(--t5)', 'gear', t('common.settings'));
-  const progress = hexButton('var(--t3)', 'trophy', t('common.achievements'));
-  const howto = hexButton('var(--t1)', 'help', t('common.help'));
+  const missions = hexButton('var(--t3)', 'target', t('missions.title'));
+  const campaign = hexButton('var(--t1)', 'flag', modeName('campaign'));
   const express = hexButton('var(--t2)', 'bolt', modeName('express'));
+  const howto = toolButton('help', t('common.help'));
+  const progressCount = el('small');
+  const progress = toolButton('trophy', t('common.achievements'), progressCount);
+  const settings = toolButton('gear', t('common.settings'));
   const playerLevel = el('span', { class: 'pb-level' });
-  const missions = el('span', { class: 'pb-missions' });
-  const player = el('button', { type: 'button', class: 'player-bar' }, [playerLevel, missions]);
-  const campaignStars = el('span', { class: 'pill-tag' });
-  const campaign = el('button', { type: 'button', class: 'home-pill', style: '--c:var(--t1)' }, [el('span', {}, [t('mode.campaign.name')]), campaignStars]);
-  campaign.insertAdjacentHTML('afterbegin', icon('flag'));
-  const duelWins = el('span', { class: 'pill-tag' });
-  const duel = el('button', { type: 'button', class: 'home-pill', style: '--c:var(--t0)' }, [el('span', {}, [t('mode.duel.name')]), duelWins]);
-  duel.insertAdjacentHTML('afterbegin', icon('swords'));
+  const player = el('button', { type: 'button', class: 'player-bar' }, [playerLevel]);
   const screen = new Screen('screen-home', [
     el('div', { class: 'home-top' }, [el('h1', { class: 'title' }, ['Tomettes']), el('small', { class: 'tagline' }, [t('home.tagline')])]),
-    rosaceMenu(play, [timeAttack, mosaic, settings, progress, howto, express]),
-    el('div', { class: 'home-pills' }, [campaign, duel]),
+    rosaceMenu(play, [duel, timeAttack, mosaic, missions, campaign, express]),
+    el('div', { class: 'tool-row' }, [howto, progress, settings]),
     difficulty,
     player,
   ]);
-  return { screen, difficulty, play, timeAttack, mosaic, express, progress, settings, howto, campaign, campaignStars, duel, duelWins, player, playerLevel, missions };
+  return { screen, difficulty, play, timeAttack, mosaic, express, campaign, duel, missions, howto, progress, progressCount, settings, player, playerLevel };
 }
 
 export function gameOverScreen(): {

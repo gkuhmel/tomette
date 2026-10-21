@@ -114,6 +114,7 @@ export const fr = {
   'diff.easy': 'Détente',
   'diff.normal': 'Normal',
   'diff.hard': 'Expert',
+  'diff.extreme': 'Extrême',
 
   'pop.rosace': 'Rosace !',
   'pop.gold': 'Or !',
@@ -260,7 +261,7 @@ export const fr = {
   'howto.s8.p3': 'Mosaïque : un maximum de rosaces avant la fin du chrono.',
   'howto.s8.p4': 'Express : une partie classique qui démarre directement à grande vitesse.',
   'howto.s8.p5': 'Dans les modes chronométrés, si la pile touche le haut, la partie s\'arrête aussi.',
-  'howto.s8.p6': 'Difficulté : Détente (moins de couleurs, pile plus lente), Normal ou Expert. Chaque difficulté a ses propres records.',
+  'howto.s8.p6': 'Difficulté : Détente (moins de couleurs, pile plus lente), Normal, Expert ou Extrême (pour les très forts). Chaque difficulté a ses propres records.',
 
   'about.tagline': 'Un puzzle de tomettes hexagonales : échange, aligne, enchaîne.',
   'about.version': 'Version {v}',

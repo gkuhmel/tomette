@@ -6,7 +6,8 @@ const KEY = 'tomettes.duel';
 export type DuelRecord = Record<AiSkill, { wins: number; losses: number }>;
 
 export function loadDuel(): DuelRecord {
-  const empty: DuelRecord = { easy: { wins: 0, losses: 0 }, normal: { wins: 0, losses: 0 }, hard: { wins: 0, losses: 0 } };
+  const z = () => ({ wins: 0, losses: 0 });
+  const empty: DuelRecord = { easy: z(), normal: z(), hard: z(), extreme: z() };
   try {
     const raw = load(KEY);
     return raw ? { ...empty, ...JSON.parse(raw) } : empty;

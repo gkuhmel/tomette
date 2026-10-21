@@ -115,6 +115,7 @@ export const it: Dict = {
   'diff.easy': 'Rilassata',
   'diff.normal': 'Normale',
   'diff.hard': 'Esperto',
+  'diff.extreme': 'Estremo',
 
   'pop.rosace': 'Rosone!',
   'pop.gold': 'Oro!',
@@ -261,7 +262,7 @@ export const it: Dict = {
   'howto.s8.p3': 'Mosaico: più rosoni possibile prima che scada il tempo.',
   'howto.s8.p4': 'Express: una partita classica che parte subito ad alta velocità.',
   'howto.s8.p5': 'Nelle modalità a tempo, la partita finisce anche se la pila arriva in cima.',
-  'howto.s8.p6': 'Difficoltà: Rilassata (meno colori, pila più lenta), Normale o Esperto. Ogni difficoltà ha i suoi record.',
+  'howto.s8.p6': 'Difficoltà: Rilassata (meno colori, pila più lenta), Normale, Esperto o Estremo (per i più forti). Ogni difficoltà ha i suoi record.',
 
   'about.tagline': 'Un puzzle di piastrelle esagonali: scambia, allinea, concatena.',
   'about.version': 'Versione {v}',

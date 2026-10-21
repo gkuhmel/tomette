@@ -424,7 +424,7 @@ body.alert .hud-badge .prog {
 /* --- Rosace de boutons hexagonaux -------------------------------------- */
 
 .rosace-menu {
-  --r: min(62px, calc((100vw - 40px) / 5.12), calc((100dvh - 390px) / 5.33));
+  --r: min(62px, calc((100vw - 40px) / 5.12), calc((100dvh - 380px) / 5.33));
   position: relative;
   flex: none;
   width: calc(var(--r) * 5.12);
@@ -559,37 +559,39 @@ body.duel .incoming:not(:empty) {
 
 /* --- Campagne ------------------------------------------------------------ */
 
-.home-pills {
+.tool-row {
   display: flex;
-  gap: 10px;
-  margin: -4px 0 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: calc(100vw - 24px);
+  gap: 8px;
+  margin: -2px 0 12px;
 }
 
-.home-pill {
+.tool-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 9px 14px;
+  gap: 6px;
+  padding: 8px 12px;
   border: 0;
   border-radius: 14px;
-  background: var(--c);
-  color: #fff;
+  background: var(--surface);
+  color: var(--fg);
   font: inherit;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 900;
-  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.15), 0 6px 14px rgba(30, 50, 110, 0.15);
+  box-shadow: var(--shadow);
   cursor: pointer;
 }
 
-.home-pill svg.i {
-  font-size: 18px;
+.tool-btn svg.i {
+  font-size: 17px;
+  color: var(--t1);
 }
 
-.pill-tag {
-  padding: 2px 7px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.25);
-  font-size: 12px;
+.tool-btn small {
+  color: var(--muted);
+  font-size: 11px;
 }
 
 .campaign-intro {
@@ -696,16 +698,6 @@ body.duel .incoming:not(:empty) {
   text-align: left;
   font-size: 14px;
   font-weight: 900;
-}
-
-.pb-missions {
-  padding: 7px 12px;
-  border-radius: 12px;
-  background: var(--primary);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 900;
-  white-space: nowrap;
 }
 
 .player-level {
@@ -846,8 +838,12 @@ body.duel .incoming:not(:empty) {
 
 .diff-list {
   display: flex;
-  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: calc(100vw - 24px);
+  gap: 6px;
 }
+
 
 .diff-btn {
   padding: 8px 14px;
@@ -1547,4 +1543,27 @@ body.duel .incoming:not(:empty) {
 .debug-note {
   color: #c9ae95;
   font-size: 12px;
+}
+
+/* Petits écrans (iPhone SE…) : outils et difficultés plus compacts. */
+@media (max-width: 360px) {
+  .tool-btn {
+    gap: 4px;
+    padding: 7px 9px;
+    font-size: 12px;
+  }
+
+  .tool-btn svg.i {
+    font-size: 15px;
+  }
+
+  .diff-btn {
+    padding: 7px 9px;
+    font-size: 12px;
+  }
+
+  .player-bar {
+    margin-top: 10px;
+    padding: 8px 12px;
+  }
 }
