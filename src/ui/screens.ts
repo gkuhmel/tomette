@@ -88,6 +88,8 @@ export function gameOverScreen(): {
   record: HTMLElement;
   unlocked: HTMLElement;
   xp: HTMLElement;
+  /** Bloc de fin de duel (vide hors duel). */
+  duel: HTMLElement;
   next: HTMLElement;
   replay: HTMLElement;
   menu: HTMLElement;
@@ -97,11 +99,13 @@ export function gameOverScreen(): {
   const record = el('p', { class: 'best' });
   const unlocked = el('div', { class: 'over-ach' });
   const xp = el('div', { class: 'over-xp' });
+  const duel = el('div', { class: 'over-duel' });
   const next = el('button', { type: 'button', class: 'btn primary' }, [t('camp.next')]);
   next.hidden = true;
   const replay = el('button', { type: 'button', class: 'btn primary' }, [t('common.replay')]);
   const menu = el('button', { type: 'button', class: 'btn' }, [t('common.menu')]);
   const screen = new Screen('screen-over', [
+    duel,
     title,
     score,
     record,
@@ -109,7 +113,7 @@ export function gameOverScreen(): {
     unlocked,
     el('div', { class: 'home-buttons' }, [next, replay, menu]),
   ]);
-  return { screen, title, score, record, unlocked, xp, next, replay, menu };
+  return { screen, title, score, record, unlocked, xp, duel, next, replay, menu };
 }
 
 export interface PauseScreen {

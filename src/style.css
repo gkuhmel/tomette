@@ -562,6 +562,215 @@ body.duel .incoming:not(:empty) {
   animation: pulse 0.8s ease-in-out infinite;
 }
 
+/* --- Fin de duel (« Médaille ») ------------------------------------------- */
+
+#screen-over.is-duel > h2,
+#screen-over.is-duel > .score,
+#screen-over.is-duel > .best {
+  display: none;
+}
+
+#screen-over.is-duel {
+  justify-content: flex-start;
+  padding-top: calc(28px + env(safe-area-inset-top));
+  overflow-y: auto;
+}
+
+#screen-over.is-duel.win {
+  background: linear-gradient(180deg, rgba(255, 238, 196, 0.9), var(--blur) 55%);
+}
+
+#screen-over.is-duel.lose {
+  background: linear-gradient(180deg, rgba(200, 208, 225, 0.92), var(--blur) 55%);
+}
+
+/* XP compacte sous le bilan du duel. */
+#screen-over.is-duel .over-xp {
+  gap: 4px;
+  margin-top: 4px;
+}
+
+#screen-over.is-duel .over-xp-gain {
+  font-size: 20px;
+}
+
+#screen-over.is-duel .player-level {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+}
+
+#screen-over.is-duel .player-level strong {
+  flex: none;
+  font-size: 15px;
+}
+
+#screen-over.is-duel .player-level .bar {
+  flex: 1;
+}
+
+#screen-over.is-duel .over-ach {
+  margin-top: 0;
+}
+
+#screen-over.is-duel .home-buttons {
+  margin-top: 12px;
+}
+
+.over-duel {
+  width: min(100%, 360px);
+}
+
+.over-duel:empty {
+  display: none;
+}
+
+.duel-result {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(100%, 360px);
+}
+
+.dr-medal .medal {
+  width: 104px;
+  height: auto;
+  filter: drop-shadow(0 8px 14px rgba(30, 50, 110, 0.22));
+  animation: hex-in 0.6s cubic-bezier(0.3, 1.4, 0.5, 1) backwards;
+}
+
+.duel-result .dr-title {
+  margin-top: 2px;
+  font-size: 42px;
+  --title-stroke: #7d8aa6;
+  --title-shadow: #a9b3c8;
+}
+
+.duel-result.win .dr-title {
+  --title-stroke: #e0a52c;
+  --title-shadow: #f2c94c;
+}
+
+.dr-sub {
+  margin: 6px 0 14px !important;
+  font-size: 12px !important;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.dr-cards {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.dr-card {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  padding: 12px;
+  border-radius: 18px;
+  background: var(--surface);
+  text-align: left;
+  box-shadow: 0 8px 20px rgba(30, 50, 110, 0.12);
+  opacity: 0.75;
+}
+
+.dr-card.winner {
+  opacity: 1;
+}
+
+.dr-crown {
+  position: absolute;
+  top: -13px;
+  right: 10px;
+  font-size: 22px;
+}
+
+.dr-who {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.dr-who .dot {
+  width: 16px;
+  height: auto;
+}
+
+.dr-score {
+  margin: 2px 0 6px;
+  font-family: var(--font-title);
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.dr-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 2px 0;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.dr-row b {
+  color: var(--fg);
+}
+
+.dr-record {
+  margin-top: 12px !important;
+  font-size: 14px !important;
+  font-weight: 900;
+}
+
+.dr-record .w {
+  color: var(--t3);
+}
+
+.dr-record .l {
+  color: var(--danger);
+}
+
+.dr-confetti {
+  position: fixed;
+  inset: 0 0 auto;
+  height: 45vh;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.dr-confetti i {
+  position: absolute;
+  top: -20px;
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+  animation: confetti linear infinite;
+}
+
+@keyframes confetti {
+  to {
+    transform: translateY(46vh) rotate(240deg);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dr-confetti i {
+    animation: none;
+    display: none;
+  }
+}
+
 /* --- Campagne ------------------------------------------------------------ */
 
 .tool-row {

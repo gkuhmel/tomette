@@ -42,6 +42,7 @@ import { Duel, duelConfig } from './core/duel';
 const MALUS_ICON = { night: '🌙', freeze: '❄', crack: '⚡', quake: '〰' } as const;
 import { drawMini } from './render/mini';
 import { loadDuel, recordDuel } from './ui/duel';
+import { duelResult } from './ui/duel-result';
 import { gameOverScreen, homeScreen, pauseScreen, rotateScreen } from './ui/screens';
 import { load, loadBest, loadDifficulty, save, saveBest, saveDifficulty } from './ui/storage';
 
@@ -209,16 +210,28 @@ function boot(): void {
     over.record.textContent = record ? t('over.newRecord') : t(rosaces ? 'over.recordRosaces' : 'over.record', { n: best });
     over.next.hidden = true;
     over.replay.textContent = t('common.replay');
-    if (duel) {
+    over.duel.replaceChildren();
+    over.screen.root.classList.remove('is-duel', 'win', 'lose', 'draw');
+    if (duel && cpu) {
       const w = duel.winner;
       const result = w === 0 ? 'win' : w === 1 ? 'lose' : 'draw';
       const rec = recordDuel(aiSkill(), result)[aiSkill()];
-      over.title.textContent = t(`duel.${result}` as Key);
-      over.score.textContent = t('duel.scores', { me: game.score, cpu: cpu!.score });
-      over.record.textContent = t('duel.record', { w: rec.wins, l: rec.losses, d: t(`diff.${difficulty}` as Key) });
+      over.duel.append(
+        duelResult({
+          result,
+          level: t(`diff.${difficulty}` as Key),
+          time: formatTime(game.elapsed),
+          me: { score: game.score, sent: duel.sent[0], chain: game.stats.maxChain, rosaces: game.rosaceCount },
+          cpu: { score: cpu.score, sent: duel.sent[1], chain: cpu.stats.maxChain, rosaces: cpu.rosaceCount },
+          wins: rec.wins,
+          losses: rec.losses,
+          streak: rec.streak,
+        }),
+      );
+      over.screen.root.classList.add('is-duel', result);
       over.replay.textContent = t('duel.rematch');
       game.over = true;
-      cpu!.over = true;
+      cpu.over = true;
     }
     if (mode === 'campaign') {
       // Campagne : étoiles selon le temps, manche suivante si réussie.
@@ -512,6 +525,11 @@ function boot(): void {
     if (e.code === 'Escape' || e.code === 'KeyP') {
       if (state === 'playing') pauseGame();
       else if (state === 'paused' && pause.screen.visible) resumeGame();
+      return;
+    }
+    // Mode développeur : W fait perdre l'ordinateur (pour tester la fin de duel).
+    if (dev && e.code === 'KeyW' && cpu && state === 'playing') {
+      cpu.over = true;
       return;
     }
     if (e.code !== 'Space' || debugOpen) return;
