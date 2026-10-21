@@ -14,7 +14,17 @@ npm test         # tests Vitest
 npm run build    # vérification des types + build statique dans dist/
 ```
 
-Déploiement : Netlify lit `netlify.toml` (build `npm run build`, dossier `dist`).
+## Déploiement (Cloudflare)
+
+Site statique servi par Cloudflare (`wrangler.jsonc`, dossier `dist/`, sans code Worker),
+comme les autres jeux. Dans le tableau de bord Cloudflare : Workers & Pages → Create →
+Import a repository → `gkuhmel/tomette`, puis :
+
+- Commande de build : `npm run build`
+- Commande de déploiement : `npx wrangler deploy`
+- Node 22 (fichier `.nvmrc`)
+
+Déploiement manuel possible : `npm run deploy` (après `npx wrangler login`).
 
 ## Jouer
 
@@ -50,7 +60,7 @@ italien, chinois (`src/i18n/`).
   gauche, ou bouton ⚙ avec `?dev=1` dans l'adresse. « Exporter » copie la
   configuration en JSON.
 
-## Variables d'environnement (Netlify → Site configuration → Environment variables)
+## Variables d'environnement (Cloudflare → ton projet → Settings → Build → Variables and secrets)
 
 Toutes optionnelles ; sans elles, aucun service tiers n'est chargé.
 
@@ -63,8 +73,8 @@ Toutes optionnelles ; sans elles, aucun service tiers n'est chargé.
 
 Évènements envoyés à Umami : `game_start` (mode, difficulté, langue),
 `game_end` (mode, difficulté, score et durée par tranches), `achievement`,
-`tutorial_done`. Aucune donnée personnelle. Après ajout d'une variable,
-relancer un déploiement.
+`tutorial_done`. Aucune donnée personnelle. Ces variables servent au **build** : après en avoir
+ajouté une, relancer un déploiement.
 
 ## Hors ligne
 

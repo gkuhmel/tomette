@@ -9,7 +9,7 @@ identifiant de l'appli).
 Capacitor emballe la version web construite (`dist/`) dans une vraie
 application iOS et Android (vue web intégrée). Le jeu est statique et déjà
 hors ligne : le moteur, le rendu, le son, les gestes et les modes ne changent
-pas. La version web Netlify continue d'exister avec le même code.
+pas. La version web (Cloudflare) continue d'exister avec le même code.
 
 ## 1. Adaptations du code
 
@@ -57,7 +57,7 @@ L'identifiant (ex. `fr.tonnom.tomettes`) est définitif une fois publié.
 
 **App Store**
 - Politique de confidentialité (page simple « aucune donnée collectée »,
-  hébergeable sur Netlify), captures d'écran aux tailles iPhone, description,
+  hébergeable avec le site), captures d'écran aux tailles iPhone, description,
   classement d'âge.
 - Risque : Apple refuse les simples sites emballés ; un jeu complet, hors
   ligne, avec vibrations natives passe normalement.

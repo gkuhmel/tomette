@@ -1,7 +1,7 @@
 /**
  * Mesure d'audience (Umami, sans cookie) et remontée d'erreurs (Sentry).
  * Les deux ne s'activent que si leurs identifiants sont fournis au build
- * (variables d'environnement Netlify) ; sinon rien n'est chargé ni envoyé.
+ * (variables de build Cloudflare) ; sinon rien n'est chargé ni envoyé.
  */
 
 type UmamiData = Record<string, string | number | boolean>;

@@ -1,0 +1,10 @@
+// Déploiement Cloudflare : site statique servi depuis dist/ (pas de code Worker).
+// Cloudflare lance `npm run build` puis `npx wrangler deploy`.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "tomettes",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist"
+  }
+}
