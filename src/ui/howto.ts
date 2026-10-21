@@ -1,5 +1,5 @@
-import { Cell, cellCenter, cellHeight } from '../core/hex';
-import { GOLD, JOKER, SpriteCache, Variant } from '../render/sprites';
+import { Cell, cellCenter, cellHeight, neighbor } from '../core/hex';
+import { GOLD, JOKER, MORTAR, SpriteCache, Variant } from '../render/sprites';
 import { Theme, THEMES } from '../render/theme';
 import { config } from '../config';
 import { Key, t } from '../i18n';
@@ -13,7 +13,7 @@ interface SceneTile extends Cell {
   ring?: boolean;
   /** Tomette d'or. */
   gold?: boolean;
-  kind?: 'cracked' | 'sealed' | 'joker';
+  kind?: 'cracked' | 'sealed' | 'joker' | 'mortar';
 }
 
 interface Scene {
@@ -78,8 +78,27 @@ function drawScene(scene: Scene, dpr: number): HTMLCanvasElement {
   for (const t of scene.tiles) {
     const p = at(t.c, t.r);
     const variant: Variant = t.variant ?? (t.r === scene.previewRow ? 'dim' : 'normal');
-    ctx.drawImage(sprites.get(t.gold ? GOLD : t.kind === 'joker' ? JOKER : t.color, variant), p.x - half, p.y - half, half * 2, half * 2);
+    ctx.drawImage(sprites.get(t.gold ? GOLD : t.kind === 'joker' ? JOKER : t.kind === 'mortar' ? MORTAR : t.color, variant), p.x - half, p.y - half, half * 2, half * 2);
     if (t.kind === 'cracked' || t.kind === 'sealed') ctx.drawImage(sprites.overlay(t.kind), p.x - half, p.y - half, half * 2, half * 2);
+  }
+  // Joints entre les morceaux d'une dalle de mortier (comme en jeu).
+  ctx.lineCap = 'round';
+  for (const [color, width] of [[theme.mortar.edge, 0.62], [theme.mortar.base, 0.46]] as const) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = R * width;
+    ctx.beginPath();
+    for (const t of scene.tiles) {
+      if (t.kind !== 'mortar') continue;
+      for (const dir of ['down', 'downRight', 'upRight'] as const) {
+        const n = neighbor(t.c, t.r, dir);
+        if (!scene.tiles.some((u) => u.kind === 'mortar' && u.c === n.c && u.r === n.r)) continue;
+        const a = at(t.c, t.r);
+        const b = at(n.c, n.r);
+        ctx.moveTo(a.x + (b.x - a.x) * 0.28, a.y + (b.y - a.y) * 0.28);
+        ctx.lineTo(a.x + (b.x - a.x) * 0.72, a.y + (b.y - a.y) * 0.72);
+      }
+    }
+    ctx.stroke();
   }
   for (const t of scene.tiles) {
     if (!t.ring) continue;
@@ -341,6 +360,24 @@ const jokerScene: Scene = {
   ],
 };
 
+const mortarBefore: Scene = {
+  R: 18,
+  cols: 4,
+  rows: 4,
+  tiles: [
+    ...[0, 1, 2].map((r) => ({ c: 1, r, color: PURPLE, ring: true })),
+    ...[0, 1, 2, 3].map((c) => ({ c, r: 3, color: 0, kind: 'mortar' as const })),
+    ...filler([[0, 2, YELLOW], [2, 2, TEAL], [3, 2, GREEN]]),
+  ],
+};
+
+const mortarAfter: Scene = {
+  R: 18,
+  cols: 4,
+  rows: 4,
+  tiles: filler([[0, 2, YELLOW], [2, 2, TEAL], [3, 2, GREEN], [0, 3, BLUE], [1, 3, RED_], [2, 3, YELLOW], [3, 3, PURPLE]]),
+};
+
 // --- Écran -----------------------------------------------------------------
 
 export function howToScreen(onPlay: () => void, onBack: () => void, onTutorial: () => void): Screen & { setTheme(t: Theme): void } {
@@ -386,6 +423,7 @@ export function howToScreen(onPlay: () => void, onBack: () => void, onTutorial: 
       section('', fig(goldUse), t('howto.s6.p4')),
       section('howto.s7.title', fig(specialsScene), ...tx('howto.s7.p1', 'howto.s7.p2', 'howto.s7.p3')),
       section('', fig(jokerScene), t('howto.s7.p4')),
+      section('', fig(mortarBefore, '→', mortarAfter), t('howto.s7.p5')),
       section(
         'howto.s8.title',
         null,

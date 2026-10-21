@@ -28,7 +28,7 @@ export interface ClearEvent {
 export type GameEvent = ClearEvent;
 
 /** Petits signaux pour le son (échange, atterrissage, réparation). */
-export type Signal = 'swap' | 'land' | 'repair' | 'slide';
+export type Signal = 'swap' | 'land' | 'repair' | 'slide' | 'mortar' | 'crumble';
 
 /** Bilan de la partie, pour les statistiques et les succès. */
 export interface GameStats {
@@ -40,6 +40,8 @@ export interface GameStats {
   /** Alertes rattrapées par un alignement pendant la grâce. */
   alertSaves: number;
   maxLevel: number;
+  /** Dalles de mortier transformées. */
+  slabsBroken: number;
 }
 
 const clampInt = (v: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, Math.round(v)));
@@ -78,7 +80,12 @@ export class Game {
   events: GameEvent[] = [];
   /** Signaux sonores depuis la dernière lecture. */
   signals: Signal[] = [];
-  readonly stats: GameStats = { maxChain: 1, maxCombo: 0, tilesCleared: 0, goldUsed: 0, repairs: 0, alertSaves: 0, maxLevel: 1 };
+  readonly stats: GameStats = { maxChain: 1, maxCombo: 0, tilesCleared: 0, goldUsed: 0, repairs: 0, alertSaves: 0, maxLevel: 1, slabsBroken: 0 };
+  /** Prochaine dalle de mortier dans (s). */
+  mortarIn = 0;
+  /** Dalles en attente de place en haut de la grille (largeurs). */
+  private mortarQueue: { w: number; h: number }[] = [];
+  private nextSlab = 1;
 
   private rng: Rng;
 
@@ -94,6 +101,63 @@ export class Game {
     this.grid = new Grid(cols, rows);
     if (!options.empty) fillInitial(this.grid, this.rng, this.colors, clampInt(cfg.initialRows, 0, rows - 2));
     this.preview = generatePreview(this.grid, this.rng, this.colors, this.kindChances());
+    this.mortarIn = this.nextMortarDelay();
+  }
+
+  /** Délai avant la prochaine dalle : l'intervalle moyen, à ±40 %. */
+  private nextMortarDelay(): number {
+    const every = this.cfg.mortarEveryS;
+    return every > 0 ? every * (0.6 + 0.8 * this.rng.next()) : Infinity;
+  }
+
+  /** Met une dalle de mortier en file : elle tombe dès qu'il y a la place en haut. */
+  dropMortar(w: number, h = 1): void {
+    this.mortarQueue.push({ w: clampInt(w, 1, this.grid.cols), h: clampInt(h, 1, 4) });
+  }
+
+  /** Pose la première dalle en attente si les rangées du haut sont libres sur sa largeur. */
+  private spawnMortar(): void {
+    const job = this.mortarQueue[0];
+    if (!job) return;
+    const g = this.grid;
+    const starts: number[] = [];
+    for (let c0 = 0; c0 + job.w <= g.cols; c0++) {
+      let free = true;
+      for (let c = c0; c < c0 + job.w && free; c++) for (let r = 0; r < job.h + 1 && free; r++) free = g.get(c, r) === null;
+      if (free) starts.push(c0);
+    }
+    if (!starts.length) return;
+    this.mortarQueue.shift();
+    const c0 = starts[this.rng.int(starts.length)];
+    const slab = this.nextSlab++;
+    for (let r = 0; r < job.h; r++) {
+      for (let c = c0; c < c0 + job.w; c++) {
+        const t = g.place(c, r, 0);
+        Object.assign(t, { kind: 'mortar', slab, state: 'falling', fall: 0 });
+      }
+    }
+    this.signals.push('mortar');
+  }
+
+  /** Un clear touche une dalle : toute la dalle devient des tuiles normales, qui peuvent prolonger la chaîne. */
+  private crumble(slab: number): void {
+    let any = false;
+    this.grid.forEach((t) => {
+      if (t.kind !== 'mortar' || t.slab !== slab) return;
+      any = true;
+      Object.assign(t, {
+        kind: 'normal',
+        slab: 0,
+        color: this.rng.int(this.colors),
+        state: 'hovering',
+        timer: Math.max(this.cfg.hoverMs, this.cfg.clearDurationMs * 0.6),
+        chain: true,
+      });
+    });
+    if (any) {
+      this.stats.slabsBroken++;
+      this.signals.push('crumble');
+    }
   }
 
   private kindChances() {
@@ -147,7 +211,7 @@ export class Game {
     if (!a && !b) return false;
     for (const t of [a, b]) {
       if (t && t.state !== 'idle' && t.state !== 'hovering') return false;
-      if (t && t.kind === 'sealed') return false;
+      if (t && (t.kind === 'sealed' || t.kind === 'mortar')) return false;
     }
     return true;
   }
@@ -227,6 +291,18 @@ export class Game {
     if (cfg.slide) this.stepSlides();
     if (this.level > this.stats.maxLevel) this.stats.maxLevel = this.level;
 
+    // Dalles de mortier : une de temps en temps à partir du niveau prévu.
+    if (cfg.mortarEveryS > 0 && this.level >= cfg.mortarFromLevel) {
+      this.mortarIn -= dtS;
+      if (this.mortarIn <= 0) {
+        const lo = clampInt(cfg.mortarMinW, 1, g.cols);
+        const hi = clampInt(cfg.mortarMaxW, lo, g.cols);
+        this.dropMortar(lo + this.rng.int(hi - lo + 1));
+        this.mortarIn = this.nextMortarDelay();
+      }
+    }
+    this.spawnMortar();
+
     // 3. Alignements.
     const matched = findMatches(g);
     const rosaces = cfg.rosace ? findRosaces(g, cfg.rosaceMin) : [];
@@ -291,18 +367,21 @@ export class Game {
       t.timer = cfg.clearDurationMs;
     }
     for (const k of rosaces) g.get(k.center.c, k.center.r)!.special = true;
-    // Un clear répare les tomettes fêlées et libère les tuiles scellées voisines.
+    // Un clear répare les tomettes fêlées, libère les tuiles scellées et fait tomber en tuiles les dalles voisines.
+    const slabs = new Set<number>();
     for (const { c, r } of cells) {
       for (const dir of ALL_DIRS) {
         const n = neighbor(c, r, dir);
         const t = g.get(n.c, n.r);
-        if (t && t.state !== 'clearing' && (t.kind === 'cracked' || t.kind === 'sealed')) {
+        if (!t || t.state === 'clearing') continue;
+        if (t.kind === 'cracked' || t.kind === 'sealed') {
           t.kind = 'normal';
           this.stats.repairs++;
           this.signals.push('repair');
-        }
+        } else if (t.kind === 'mortar' && t.state !== 'falling') slabs.add(t.slab);
       }
     }
+    for (const s of slabs) this.crumble(s);
     this.rosaceCount += rosaces.length;
 
     const size = cells.length;
@@ -327,7 +406,7 @@ export class Game {
   private activateGold(at: Cell, color: number): void {
     const cells: Cell[] = [at];
     this.grid.forEach((t, c, r) => {
-      if (t.special || t.kind === 'joker' || t.color !== color) return;
+      if (t.special || t.kind === 'joker' || t.kind === 'mortar' || t.color !== color) return;
       if (t.state === 'idle' || t.state === 'hovering') cells.push({ c, r });
     });
     this.startClear(cells, [], true);
@@ -336,7 +415,7 @@ export class Game {
   private updateRise(dtS: number): void {
     const g = this.grid;
     if (this.alert) {
-      if (!g.topRowOccupied()) {
+      if (!g.topRowOccupied(true)) {
         this.alert = false;
         return;
       }
@@ -350,11 +429,13 @@ export class Game {
 
     if (this.clearing || this.stopTime > 0) return;
 
-    if (g.topRowOccupied()) {
+    if (g.topRowOccupied(true)) {
       this.alert = true;
       this.graceLeft = this.cfg.graceS;
       return;
     }
+    // Une dalle qui tombe encore de la rangée du haut : on attend qu'elle soit descendue.
+    if (g.topRowOccupied()) return;
 
     const spr = this.manualRise ? this.cfg.manualRiseSecondsPerRow : this.secondsPerRow;
     this.riseOffset += dtS / Math.max(0.01, spr);

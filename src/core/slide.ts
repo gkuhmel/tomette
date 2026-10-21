@@ -7,7 +7,7 @@ import { neighbor } from './hex';
  * colonnes du bord, qui ont moins de lignes possibles, montent plus vite.
  *
  * Une tuile glisse si :
- *  - elle est posée (idle), sans tuile au-dessus, ni scellée ;
+ *  - elle est posée (idle), sans tuile au-dessus, ni scellée, ni de mortier ;
  *  - la case en biais vers le bas (bas-gauche ou bas-droite) est vide, ainsi
  *    que les `minDrop - 1` cases en dessous dans cette colonne.
  * Si les deux côtés conviennent : le côté où la chute est la plus grande,
@@ -36,7 +36,7 @@ export function findSlides(grid: Grid, minDrop: number): SlideMove[] {
     while (r < grid.rows && grid.get(c, r) === null) r++;
     if (r >= grid.rows) continue;
     const t = grid.get(c, r)!;
-    if (t.state !== 'idle' || t.kind === 'sealed') continue;
+    if (t.state !== 'idle' || t.kind === 'sealed' || t.kind === 'mortar') continue;
     let best: { c: number; r: number; drop: number } | null = null;
     for (const dir of ['downLeft', 'downRight'] as const) {
       const n = neighbor(c, r, dir);

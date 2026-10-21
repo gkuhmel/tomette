@@ -17,12 +17,12 @@ export function findRosaces(grid: Grid, min = 6): Rosace[] {
   const need = Math.min(6, Math.max(4, Math.round(min)));
   const out: Rosace[] = [];
   grid.forEach((center, c, r) => {
-    if (center.state !== 'idle') return;
+    if (center.state !== 'idle' || center.kind === 'mortar') return;
     const byColor = new Map<number, Cell[]>();
     for (const dir of ALL_DIRS) {
       const n = neighbor(c, r, dir);
       const t = grid.get(n.c, n.r);
-      if (!t || t.state !== 'idle' || t.special || t.kind === 'cracked' || t.kind === 'joker') continue;
+      if (!t || t.state !== 'idle' || t.special || t.kind === 'cracked' || t.kind === 'joker' || t.kind === 'mortar') continue;
       const list = byColor.get(t.color) ?? [];
       list.push(n);
       byColor.set(t.color, list);

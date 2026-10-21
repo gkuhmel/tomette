@@ -5,9 +5,11 @@ export type TileState = 'idle' | 'swapping' | 'hovering' | 'falling' | 'clearing
 /**
  * normal ; cracked = tomette fêlée (ne s'aligne pas, réparée par un clear voisin) ;
  * sealed = tuile scellée (ne peut pas être échangée, libérée par un clear voisin) ;
- * joker = compte comme n'importe quelle couleur.
+ * joker = compte comme n'importe quelle couleur ;
+ * mortar = morceau d'une dalle de mortier (ni échangée, ni alignée ; un clear
+ * voisin transforme toute la dalle en tuiles normales).
  */
-export type TileKind = 'normal' | 'cracked' | 'sealed' | 'joker';
+export type TileKind = 'normal' | 'cracked' | 'sealed' | 'joker' | 'mortar';
 
 export interface Tile {
   id: number;
@@ -25,6 +27,8 @@ export interface Tile {
   /** Tomette d'or (née d'une rosace) : ne s'aligne pas, s'active par échange. */
   special: boolean;
   kind: TileKind;
+  /** Dalle de mortier à laquelle appartient la tuile (0 = aucune). */
+  slab: number;
 }
 
 export class Grid {
@@ -54,7 +58,7 @@ export class Grid {
   }
 
   makeTile(color: number): Tile {
-    return { id: this.nextId++, color, state: 'idle', timer: 0, fall: 0, chain: false, swapDc: 0, swapDr: 0, special: false, kind: 'normal' };
+    return { id: this.nextId++, color, state: 'idle', timer: 0, fall: 0, chain: false, swapDc: 0, swapDr: 0, special: false, kind: 'normal', slab: 0 };
   }
 
   /** Crée et pose une tuile idle. */
@@ -87,9 +91,12 @@ export class Grid {
     return false;
   }
 
-  /** Une tuile occupe-t-elle la rangée du haut ? */
-  topRowOccupied(): boolean {
-    for (let c = 0; c < this.cols; c++) if (this.cells[c]) return true;
+  /** Une tuile occupe-t-elle la rangée du haut ? (`settled` : sans compter les tuiles en train de tomber) */
+  topRowOccupied(settled = false): boolean {
+    for (let c = 0; c < this.cols; c++) {
+      const t = this.cells[c];
+      if (t && !(settled && t.state === 'falling')) return true;
+    }
     return false;
   }
 }

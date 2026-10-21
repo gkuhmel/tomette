@@ -183,6 +183,7 @@ export const fr = {
   'howto.s7.p2': 'Scellée (au milieu) : impossible de la déplacer, mais elle peut s\'aligner. Un alignement juste à côté la libère.',
   'howto.s7.p3': 'Joker (à droite) : il compte comme n\'importe quelle couleur.',
   'howto.s7.p4': 'Deux violettes + un joker = un alignement.',
+  'howto.s7.p5': 'Dalle de mortier : elle tombe du haut de temps en temps. Impossible de la déplacer ou de l\'aligner, mais un alignement qui la touche la transforme entièrement en tuiles normales… qui peuvent prolonger ta chaîne !',
   'howto.s8.title': '8. Les modes',
   'howto.s8.p1': 'Classique : sans fin, la pile accélère avec le temps.',
   'howto.s8.p2': 'Contre-la-montre : le meilleur score possible avant la fin du chrono.',

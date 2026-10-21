@@ -16,6 +16,8 @@ const TWEAKS: Record<Difficulty, Tweak> = {
     crackedChance: (c) => c.crackedChance * 0.5,
     sealedChance: (c) => c.sealedChance * 0.5,
     jokerChance: (c) => c.jokerChance * 1.5,
+    mortarEveryS: (c) => c.mortarEveryS * 1.6,
+    mortarMaxW: (c) => Math.max(c.mortarMinW, c.mortarMaxW - 1),
   },
   normal: {},
   hard: {
@@ -27,6 +29,8 @@ const TWEAKS: Record<Difficulty, Tweak> = {
     crackedChance: (c) => c.crackedChance * 1.5,
     sealedChance: (c) => c.sealedChance * 1.5,
     jokerChance: (c) => c.jokerChance * 0.5,
+    mortarEveryS: (c) => c.mortarEveryS * 0.7,
+    mortarFromLevel: (c) => Math.max(1, c.mortarFromLevel - 1),
   },
 };
 

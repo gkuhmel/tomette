@@ -18,6 +18,8 @@ export interface Theme {
   held: string;
   warn: string;
   alert: string;
+  /** Dalles de mortier : fond, mouchetures, joint. */
+  mortar: { base: string; speck: string; edge: string };
   /** Variables CSS de l'interface. */
   css: Record<string, string>;
 }
@@ -40,6 +42,7 @@ const terre: Theme = {
   held: 'rgba(255, 244, 214, 0.95)',
   warn: '255, 160, 60',
   alert: '230, 40, 30',
+  mortar: { base: '#8a7768', speck: '#5e4d41', edge: '#4a3a30' },
   css: {
     '--sky1': '#3d2419',
     '--sky2': '#2f1d16',
@@ -82,6 +85,7 @@ const pastelClair: Theme = {
   held: 'rgba(70, 55, 45, 0.8)',
   warn: '240, 150, 60',
   alert: '225, 70, 60',
+  mortar: { base: '#d9cfc2', speck: '#b3a594', edge: '#a8998a' },
   css: {
     '--sky1': '#fde6d8',
     '--sky2': '#fbf1e6',
@@ -124,6 +128,7 @@ const pastelSombre: Theme = {
   held: 'rgba(255, 255, 255, 0.9)',
   warn: '255, 175, 90',
   alert: '255, 95, 90',
+  mortar: { base: '#6c6578', speck: '#4f495a', edge: '#454050' },
   css: {
     '--sky1': '#332d47',
     '--sky2': '#272433',
@@ -167,6 +172,7 @@ const faience: Theme = {
   held: 'rgba(29, 42, 68, 0.85)',
   warn: '240, 150, 60',
   alert: '220, 60, 60',
+  mortar: { base: '#cdd3de', speck: '#a4adbe', edge: '#8f9ab0' },
   css: {
     '--sky1': '#dbe7ff',
     '--sky2': '#eef0ff',

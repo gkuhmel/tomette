@@ -184,6 +184,7 @@ export const en: Dict = {
   'howto.s7.p2': 'Sealed (middle): it can\'t be moved, but it can be matched. A match right next to it frees it.',
   'howto.s7.p3': 'Joker (right): it counts as any colour.',
   'howto.s7.p4': 'Two purples + a joker = a match.',
+  'howto.s7.p5': 'Mortar slab: it drops from the top now and then. You can\'t move it or match it, but a match touching it turns the whole slab into normal tiles… which can extend your chain!',
   'howto.s8.title': '8. Modes',
   'howto.s8.p1': 'Classic: endless, the stack speeds up over time.',
   'howto.s8.p2': 'Time attack: the best possible score before the clock runs out.',

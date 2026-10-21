@@ -30,6 +30,7 @@ export function tutorialConfig(cfg: Config): Config {
     jokerChance: 0,
     warnRows: 0,
     slide: 0,
+    mortarEveryS: 0,
   };
 }
 

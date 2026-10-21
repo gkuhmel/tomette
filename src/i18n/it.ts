@@ -184,6 +184,7 @@ export const it: Dict = {
   'howto.s7.p2': 'Sigillata (al centro): non si può spostare, ma si può allineare. Un allineamento proprio accanto la libera.',
   'howto.s7.p3': 'Jolly (a destra): vale come qualsiasi colore.',
   'howto.s7.p4': 'Due viola + un jolly = un allineamento.',
+  'howto.s7.p5': 'Lastra di malta: ogni tanto cade dall\'alto. Non si può spostare né allineare, ma un allineamento che la tocca la trasforma tutta in piastrelle normali… che possono allungare la tua catena!',
   'howto.s8.title': '8. Le modalità',
   'howto.s8.p1': 'Classica: senza fine, la pila accelera col tempo.',
   'howto.s8.p2': 'Contro il tempo: il punteggio migliore prima che scada il tempo.',

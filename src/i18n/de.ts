@@ -184,6 +184,7 @@ export const de: Dict = {
   'howto.s7.p2': 'Versiegelt (Mitte): Sie lässt sich nicht bewegen, aber in Reihen auflösen. Eine Reihe direkt daneben befreit sie.',
   'howto.s7.p3': 'Joker (rechts): Er zählt als jede Farbe.',
   'howto.s7.p4': 'Zwei Lila + ein Joker = eine Reihe.',
+  'howto.s7.p5': 'Mörtelplatte: Sie fällt ab und zu von oben herab. Man kann sie weder verschieben noch auflösen, aber eine Reihe, die sie berührt, verwandelt die ganze Platte in normale Fliesen … die deine Kette verlängern können!',
   'howto.s8.title': '8. Spielmodi',
   'howto.s8.p1': 'Klassisch: endlos, der Stapel wird mit der Zeit schneller.',
   'howto.s8.p2': 'Gegen die Uhr: die beste Punktzahl, bevor die Zeit abläuft.',

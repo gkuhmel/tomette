@@ -154,6 +154,21 @@ export class Sound {
     this.pluck(noteHz(9), this.now(), 0.25, 0.14);
   }
 
+  /** Dalle de mortier qui tombe : deux notes graves. */
+  mortar(): void {
+    if (!this.ok()) return;
+    const t = this.now();
+    this.pluck(98, t, 0.2, 0.2, this.sfx, 'triangle');
+    this.pluck(73, t + 0.08, 0.3, 0.18, this.sfx, 'triangle');
+  }
+
+  /** Dalle transformée en tuiles : petit arpège qui s'éparpille. */
+  crumble(): void {
+    if (!this.ok()) return;
+    const t = this.now();
+    [4, 7, 11, 14].forEach((n, i) => this.pluck(noteHz(n), t + i * 0.04, 0.18, 0.1));
+  }
+
   level(): void {
     if (!this.ok()) return;
     const t = this.now();

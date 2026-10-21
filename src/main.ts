@@ -553,6 +553,8 @@ function boot(): void {
       if (s === 'swap') sound.swap();
       else if (s === 'land') sound.land();
       else if (s === 'slide') sound.slide();
+      else if (s === 'mortar') sound.mortar();
+      else if (s === 'crumble') sound.crumble();
       else sound.repair();
     }
     game.signals.length = 0;

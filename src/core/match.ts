@@ -4,7 +4,7 @@ import { Grid } from './grid';
 /**
  * Détecte toutes les séries de ≥ 3 tuiles idle de même couleur sur les 3 axes.
  * Un joker compte comme n'importe quelle couleur (une série doit contenir au
- * moins une tuile normale) ; une tomette fêlée ou d'or ne s'aligne jamais.
+ * moins une tuile normale) ; une tomette fêlée, d'or ou de mortier ne s'aligne jamais.
  * Renvoie l'union des cases concernées (une case n'apparaît qu'une fois),
  * ce qui forme un seul « clear » (L, Y, croix compris).
  */
@@ -13,7 +13,7 @@ export function findMatches(grid: Grid): Cell[] {
   /** -2 = joker, -1 = ne s'aligne pas, sinon la couleur. */
   const colorAt = (c: number, r: number): number => {
     const t = grid.get(c, r);
-    if (!t || t.state !== 'idle' || t.special || t.kind === 'cracked') return -1;
+    if (!t || t.state !== 'idle' || t.special || t.kind === 'cracked' || t.kind === 'mortar') return -1;
     return t.kind === 'joker' ? -2 : t.color;
   };
 

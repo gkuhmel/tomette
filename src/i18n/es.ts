@@ -184,6 +184,7 @@ export const es: Dict = {
   'howto.s7.p2': 'Sellada (centro): no se puede mover, pero sí alinear. Una línea justo al lado la libera.',
   'howto.s7.p3': 'Comodín (derecha): cuenta como cualquier color.',
   'howto.s7.p4': 'Dos violetas + un comodín = una línea.',
+  'howto.s7.p5': 'Losa de mortero: cae desde arriba de vez en cuando. No se puede mover ni alinear, pero una línea que la toque la convierte entera en baldosas normales… ¡que pueden alargar tu cadena!',
   'howto.s8.title': '8. Los modos',
   'howto.s8.p1': 'Clásico: sin fin, la pila acelera con el tiempo.',
   'howto.s8.p2': 'Contrarreloj: la mejor puntuación antes de que acabe el tiempo.',

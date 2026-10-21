@@ -1,9 +1,9 @@
 import type { Game } from '../core/game';
-import { cellCenter } from '../core/hex';
+import { cellCenter, neighbor } from '../core/hex';
 import { Layout } from './layout';
 import { t } from '../i18n';
 import { Effects, roundRect } from './effects';
-import { GOLD, hexPath, JOKER, SpriteCache } from './sprites';
+import { GOLD, hexPath, JOKER, MORTAR, SpriteCache } from './sprites';
 import { Theme, themeFor } from './theme';
 
 interface Popup {
@@ -35,6 +35,9 @@ export class Renderer {
   private previewBorn = 0;
   private activatedIds = new Set<number>();
   private activatedAt = 0;
+  /** Morceaux de mortier vus à l'image précédente, et instant où une dalle s'est transformée. */
+  private mortarIds = new Set<number>();
+  private crumbledAt = new Map<number, number>();
 
   constructor(private canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext('2d')!;
@@ -207,12 +210,21 @@ export class Renderer {
     ctx.globalAlpha = 1;
     const activating = Math.max(0, 1 - (now - this.activatedAt) / ACTIVATE_FADE_MS);
 
+    // Morceaux de mortier vus à cette image ; ceux qui ont disparu de la liste viennent de se transformer.
+    const seen = new Set<number>();
+    g.forEach((t) => {
+      if (t.kind === 'mortar') seen.add(t.id);
+      else if (this.mortarIds.has(t.id)) this.crumbledAt.set(t.id, now);
+    });
+    this.mortarIds = seen;
+    for (const [id, at] of this.crumbledAt) if (now - at > 450) this.crumbledAt.delete(id);
+
     let held: { x: number; y: number } | null = null;
     for (let r = 0; r < g.rows; r++) {
       for (let c = 0; c < g.cols; c++) {
         const t = g.get(c, r);
         if (!t) continue;
-        const color = t.special ? GOLD : t.kind === 'joker' ? JOKER : t.color;
+        const color = t.special ? GOLD : t.kind === 'joker' ? JOKER : t.kind === 'mortar' ? MORTAR : t.color;
         const p = cellCenter(c, r, R);
         let x = x0 + p.x;
         let y = y0 + p.y - rise;
@@ -257,6 +269,13 @@ export class Renderer {
             ctx.drawImage(this.sprites.get(color, 'normal'), x - half, y - half, size, size);
           }
         }
+        const crumbled = this.crumbledAt.get(t.id);
+        if (crumbled !== undefined) {
+          // Dalle transformée : la tuile neuve sort d'un éclat blanc.
+          ctx.globalAlpha = Math.max(0, 1 - (now - crumbled) / 450);
+          ctx.drawImage(this.sprites.get(color, 'flash'), x - half, y - half, size, size);
+          ctx.globalAlpha = 1;
+        }
         if (t.kind === 'cracked' || t.kind === 'sealed') {
           const sz = t.id === heldId ? size * 1.1 : size;
           ctx.drawImage(this.sprites.overlay(t.kind), x - sz / 2, y - sz / 2, sz, sz);
@@ -275,6 +294,33 @@ export class Renderer {
           ctx.stroke();
         }
       }
+    }
+
+    // Dalles de mortier : un joint relie les morceaux voisins d'une même dalle, pour qu'elle se lise d'un bloc.
+    const centerOf = (c: number, r: number) => {
+      const t = g.get(c, r)!;
+      const p = cellCenter(c, r, R);
+      return { x: x0 + p.x, y: y0 + p.y - rise + (t.state === 'falling' ? t.fall * h : 0) };
+    };
+    ctx.lineCap = 'round';
+    for (const [color, width] of [[th.mortar.edge, 0.62], [th.mortar.base, 0.46]] as const) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = R * width;
+      ctx.beginPath();
+      g.forEach((t, c, r) => {
+        if (t.kind !== 'mortar') return;
+        for (const dir of ['down', 'downRight', 'upRight'] as const) {
+          const n = neighbor(c, r, dir);
+          const u = g.get(n.c, n.r);
+          if (!u || u.kind !== 'mortar' || u.slab !== t.slab) continue;
+          const a = centerOf(c, r);
+          const b = centerOf(n.c, n.r);
+          // Le joint s'arrête avant les centres : on voit deux pièces scellées l'une à l'autre.
+          ctx.moveTo(a.x + (b.x - a.x) * 0.28, a.y + (b.y - a.y) * 0.28);
+          ctx.lineTo(a.x + (b.x - a.x) * 0.72, a.y + (b.y - a.y) * 0.72);
+        }
+      });
+      ctx.stroke();
     }
 
     if (held) {

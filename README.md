@@ -39,6 +39,10 @@ Déploiement manuel possible : `npm run deploy` (après `npx wrangler login`).
 - **Tuiles spéciales** : fêlée (ne s'aligne pas, réparée par un alignement
   voisin), scellée (non déplaçable, libérée par un alignement voisin), joker
   (toutes les couleurs).
+- **Dalles de mortier** : à partir du niveau 3, une dalle de 2 à 4 tuiles tombe
+  du haut de temps en temps. Ni déplaçable ni alignable ; un alignement qui la
+  touche la transforme entièrement en tuiles normales, qui peuvent prolonger la
+  chaîne.
 - **La pile monte** : maintenir « Monter » (ou Espace) pour accélérer. Zone
   d'attention orange près du haut, puis alerte rouge avec jauge de grâce.
 - **Éboulement** : une pile nettement plus haute que sa voisine s'affaisse (la

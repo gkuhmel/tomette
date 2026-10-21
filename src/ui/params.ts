@@ -88,6 +88,10 @@ export const PARAM_SECTIONS: ParamSection[] = [
     params: [
       { key: 'crackedChance', label: 'Tomettes fêlées', help: 'Probabilité qu\'une tuile d\'une nouvelle rangée soit fêlée : elle ne s\'aligne pas tant qu\'un alignement voisin ne l\'a pas réparée. 0 = jamais.', min: 0, max: 0.3, step: 0.01 },
       { key: 'sealedChance', label: 'Tuiles scellées', help: 'Probabilité d\'une tuile scellée : impossible à déplacer tant qu\'un alignement voisin ne l\'a pas libérée. 0 = jamais.', min: 0, max: 0.3, step: 0.01 },
+      { key: 'mortarEveryS', label: 'Dalles de mortier', help: 'Intervalle moyen entre deux dalles de mortier qui tombent du haut. Une dalle ne bouge pas et ne s\'aligne pas ; un alignement qui la touche la transforme en tuiles normales (qui peuvent prolonger une chaîne). 0 = jamais.', unit: 's', min: 0, max: 120, step: 5 },
+      { key: 'mortarFromLevel', label: 'Mortier dès le niveau', help: 'Niveau à partir duquel les dalles de mortier commencent à tomber.', min: 1, max: 15, step: 1 },
+      { key: 'mortarMinW', label: 'Largeur min. des dalles', help: 'Largeur minimale d\'une dalle de mortier, en tuiles.', min: 1, max: 8, step: 1 },
+      { key: 'mortarMaxW', label: 'Largeur max. des dalles', help: 'Largeur maximale d\'une dalle de mortier, en tuiles.', min: 1, max: 8, step: 1 },
       { key: 'jokerChance', label: 'Jokers', help: 'Probabilité d\'un joker : il compte comme n\'importe quelle couleur dans un alignement. 0 = jamais.', min: 0, max: 0.1, step: 0.005 },
     ],
   },

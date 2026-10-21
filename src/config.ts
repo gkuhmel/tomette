@@ -35,6 +35,13 @@ export const defaultConfig = {
   crackedChance: 0.05,
   sealedChance: 0.03,
   jokerChance: 0.015,
+  /** Dalles de mortier : une dalle tombe du haut environ toutes les `mortarEveryS` secondes (0 = jamais). */
+  mortarEveryS: 35,
+  /** Niveau à partir duquel les dalles tombent. */
+  mortarFromLevel: 3,
+  /** Largeur des dalles (en tuiles), tirée entre min et max. */
+  mortarMinW: 2,
+  mortarMaxW: 4,
   /** Éboulement : une pile plus haute que sa voisine glisse en biais (1 = activé). */
   slide: 1,
   /** Différence de hauteur (en cases) à partir de laquelle une pile s'éboule. */

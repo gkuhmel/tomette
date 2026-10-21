@@ -6,6 +6,8 @@ export type Variant = 'normal' | 'dim' | 'flash';
 export const GOLD = 99;
 /** « Couleur » de sprite réservée au joker. */
 export const JOKER = 98;
+/** « Couleur » de sprite réservée aux dalles de mortier. */
+export const MORTAR = 97;
 
 /** Trace un hexagone flat-top centré en (x, y). */
 /** Hexagone flat-top aux coins arrondis. */
@@ -135,6 +137,37 @@ function drawJoker(ctx: CanvasRenderingContext2D, x: number, y: number, R: numbe
   ctx.fill();
 }
 
+/** Mortier : mouchetures et petits cailloux, joint sombre sur le bord. */
+function drawMortar(ctx: CanvasRenderingContext2D, x: number, y: number, R: number, speck: string, edge: string, clip: () => void): void {
+  ctx.save();
+  clip();
+  ctx.clip();
+  // Positions fixes (pseudo-aléatoires) : toutes les dalles se ressemblent.
+  let s = 7;
+  const rnd = () => ((s = (s * 9301 + 49297) % 233280) / 233280);
+  ctx.fillStyle = speck;
+  for (let i = 0; i < 22; i++) {
+    const a = rnd() * Math.PI * 2;
+    const d = Math.sqrt(rnd()) * R * 0.85;
+    ctx.beginPath();
+    ctx.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, R * (0.025 + rnd() * 0.05), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 0.5;
+  for (let i = 0; i < 4; i++) {
+    const a = rnd() * Math.PI * 2;
+    const d = rnd() * R * 0.55;
+    ctx.beginPath();
+    ctx.ellipse(x + Math.cos(a) * d, y + Math.sin(a) * d, R * 0.13, R * 0.09, rnd() * Math.PI, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+  clip();
+  ctx.lineWidth = Math.max(1, R * 0.06);
+  ctx.strokeStyle = edge;
+  ctx.stroke();
+}
+
 /** Fêlée : émail blanchi et craquelé (rayons blancs depuis un point d'impact, reliés par un anneau). */
 function drawCracks(ctx: CanvasRenderingContext2D, x: number, y: number, R: number, clip: () => void, light: boolean): void {
   ctx.save();
@@ -262,7 +295,8 @@ export class SpriteCache {
     const th = this.theme;
     const gold = color === GOLD;
     const joker = color === JOKER;
-    const base = gold || joker ? th.gold.base : th.tiles[color % th.tiles.length];
+    const mortar = color === MORTAR;
+    const base = mortar ? th.mortar.base : gold || joker ? th.gold.base : th.tiles[color % th.tiles.length];
     const flat = th.style === 'flat';
     const path = (rr: number) => (flat ? roundHexPath(ctx, cx, cy, rr, R * 0.2) : hexPath(ctx, cx, cy, rr));
 
@@ -310,7 +344,8 @@ export class SpriteCache {
       ctx.stroke();
     }
 
-    if (gold) drawRosette(ctx, cx, cy, R * 0.62, th.gold.petals, th.gold.heart);
+    if (mortar) drawMortar(ctx, cx, cy, R, th.mortar.speck, th.mortar.edge, () => path(r * 0.97));
+    else if (gold) drawRosette(ctx, cx, cy, R * 0.62, th.gold.petals, th.gold.heart);
     else if (joker) drawJoker(ctx, cx, cy, R, th.tiles);
     else drawGlyph(ctx, color, cx, cy, R * 0.42, th.glyph);
 
