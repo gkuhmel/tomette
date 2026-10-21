@@ -135,48 +135,59 @@ function drawJoker(ctx: CanvasRenderingContext2D, x: number, y: number, R: numbe
   ctx.fill();
 }
 
-/** Fêlures : traits sombres avec un liseré clair. */
-function drawCracks(ctx: CanvasRenderingContext2D, x: number, y: number, R: number): void {
-  const lines = [
-    [[-0.7, -0.45], [-0.2, -0.12], [0.02, -0.4], [0.38, 0.02], [0.78, 0.18]],
-    [[-0.2, -0.12], [-0.3, 0.38], [0.08, 0.74]],
-  ];
+/** Fêlée : émail blanchi et craquelé (rayons blancs depuis un point d'impact, reliés par un anneau). */
+function drawCracks(ctx: CanvasRenderingContext2D, x: number, y: number, R: number, clip: () => void, light: boolean): void {
+  ctx.save();
+  clip();
+  ctx.clip();
+  ctx.fillStyle = light ? 'rgba(255, 255, 255, 0.38)' : 'rgba(255, 255, 255, 0.22)';
+  ctx.fillRect(x - R * 1.2, y - R * 1.2, R * 2.4, R * 2.4);
+  const ox = x + R * 0.22;
+  const oy = y - R * 0.18;
+  const rays = [-2.6, -1.5, -0.4, 0.7, 1.9];
+  const pts = rays.map((a) => {
+    const p: [number, number][] = [[ox, oy]];
+    for (let k = 1; k <= 3; k++) {
+      const aa = a + (k % 2 ? 0.22 : -0.18);
+      const d = (R * 1.1 * k) / 3;
+      p.push([ox + Math.cos(aa) * d, oy + Math.sin(aa) * d]);
+    }
+    return p;
+  });
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  for (const [color, w, dy] of [['rgba(255,255,255,0.55)', 0.11, 0.04], ['rgba(45,30,25,0.75)', 0.07, 0]] as const) {
+  // Ombre décalée d'un pixel, puis trait blanc : la craquelure se lit en léger relief.
+  for (const [color, w, d] of [['rgba(30, 40, 70, 0.28)', 0.075, 1], ['rgba(255, 255, 255, 0.95)', 0.05, 0]] as const) {
     ctx.strokeStyle = color;
-    ctx.lineWidth = Math.max(1.2, R * w);
-    for (const pts of lines) {
-      ctx.beginPath();
-      pts.forEach(([px, py], i) => (i ? ctx.lineTo(x + px * R, y + (py + dy) * R) : ctx.moveTo(x + px * R, y + (py + dy) * R)));
-      ctx.stroke();
+    ctx.lineWidth = Math.max(1, R * w);
+    ctx.beginPath();
+    for (const p of pts) p.forEach(([px, py], i) => (i ? ctx.lineTo(px + d, py + d) : ctx.moveTo(px + d, py + d)));
+    for (let i = 0; i < pts.length - 1; i++) {
+      ctx.moveTo(pts[i][2][0] + d, pts[i][2][1] + d);
+      ctx.lineTo(pts[i + 1][2][0] + d, pts[i + 1][2][1] + d);
     }
+    ctx.stroke();
   }
+  ctx.restore();
 }
 
-/** Tuile scellée : contour épais et petit cadenas. */
-function drawSeal(ctx: CanvasRenderingContext2D, x: number, y: number, R: number): void {
-  hexPath(ctx, x, y, R * 0.86);
-  ctx.lineWidth = Math.max(2, R * 0.12);
-  ctx.strokeStyle = 'rgba(60, 50, 45, 0.7)';
+/** Scellée : cerclage sombre riveté, posé à l'intérieur du bord. */
+function drawSeal(ctx: CanvasRenderingContext2D, x: number, y: number, R: number, ring: (r: number) => void, band: string, rivet: string): void {
+  ring(R * 0.8);
+  ctx.lineWidth = R * 0.17;
+  ctx.strokeStyle = band;
   ctx.stroke();
-  const lx = x + R * 0.42;
-  const ly = y - R * 0.38;
-  const s = R * 0.3;
-  ctx.fillStyle = '#4a3f39';
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = Math.max(1, R * 0.05);
-  ctx.beginPath();
-  ctx.arc(lx, ly - s * 0.35, s * 0.42, Math.PI, 0);
-  ctx.lineWidth = Math.max(1.5, R * 0.08);
-  ctx.strokeStyle = '#4a3f39';
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.rect(lx - s * 0.6, ly - s * 0.35, s * 1.2, s * 0.95);
-  ctx.fill();
+  ring(R * 0.8);
   ctx.lineWidth = Math.max(1, R * 0.04);
-  ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
   ctx.stroke();
+  ctx.fillStyle = rivet;
+  for (let i = 0; i < 6; i++) {
+    const a = (Math.PI / 3) * i;
+    ctx.beginPath();
+    ctx.arc(x + Math.cos(a) * R * 0.76, y + Math.sin(a) * R * 0.76, R * 0.06, 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
 /** Cache de sprites pré-rendus (une image par couleur et variante), reconstruit au redimensionnement. */
@@ -216,8 +227,12 @@ export class SpriteCache {
       const R = this.R;
       const cx = this.half;
       const cy = this.half;
-      if (kind === 'cracked') drawCracks(ctx, cx, cy, R);
-      else drawSeal(ctx, cx, cy, R);
+      const th = this.theme;
+      const flat = th.style === 'flat';
+      const shape = (r: number) => (flat ? roundHexPath(ctx, cx, cy, r, R * 0.2) : hexPath(ctx, cx, cy, r));
+      const light = th.bg.startsWith('#f');
+      if (kind === 'cracked') drawCracks(ctx, cx, cy, R, () => shape(R * 0.94 * (flat ? 0.97 : 1)), light);
+      else drawSeal(ctx, cx, cy, R, (r) => (flat ? roundHexPath(ctx, cx, cy, r, R * 0.16) : hexPath(ctx, cx, cy, r)), light ? 'rgba(29, 42, 68, 0.78)' : 'rgba(255, 244, 228, 0.85)', light ? '#ffffff' : th.bg);
       this.cache.set(key, c);
     }
     return c;
