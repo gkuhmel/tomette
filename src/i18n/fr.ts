@@ -13,8 +13,15 @@ export const fr = {
   'common.achievements': 'Succès',
   'common.about': 'À propos',
   'common.pause': 'Pause',
-  'common.raise': '▲ Monter',
+  'common.raise': 'Monter',
+  'common.help': 'Aide',
+  'common.sound': 'Son',
+  'common.music': 'Musique',
   'common.rotate': 'Tourne ton téléphone',
+
+  'home.tagline': 'Échange · aligne · enchaîne',
+  'home.bestClassic': 'Record classique',
+  'home.totalRosaces': 'Rosaces au total',
 
   'hud.score': 'Score',
   'hud.record': 'Record',

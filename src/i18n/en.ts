@@ -14,8 +14,15 @@ export const en: Dict = {
   'common.achievements': 'Achievements',
   'common.about': 'About',
   'common.pause': 'Pause',
-  'common.raise': '▲ Raise',
+  'common.raise': 'Raise',
+  'common.help': 'Help',
+  'common.sound': 'Sound',
+  'common.music': 'Music',
   'common.rotate': 'Turn your phone',
+
+  'home.tagline': 'Swap · match · chain',
+  'home.bestClassic': 'Classic best',
+  'home.totalRosaces': 'Total rosettes',
 
   'hud.score': 'Score',
   'hud.record': 'Best',

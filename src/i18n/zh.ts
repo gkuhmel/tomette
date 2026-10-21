@@ -15,8 +15,15 @@ export const zh: Dict = {
   'common.achievements': '成就',
   'common.about': '关于',
   'common.pause': '暂停',
-  'common.raise': '▲ 上升',
+  'common.raise': '上升',
+  'common.help': '帮助',
+  'common.sound': '音效',
+  'common.music': '音乐',
   'common.rotate': '请竖屏游玩',
+
+  'home.tagline': '交换 · 消除 · 连锁',
+  'home.bestClassic': '经典最高分',
+  'home.totalRosaces': '花窗总数',
 
   'hud.score': '得分',
   'hud.record': '最高',

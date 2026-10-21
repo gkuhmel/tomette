@@ -102,7 +102,7 @@ export class HomeBackground {
     const dt = Math.min(0.05, (now - this.last) / 1000);
     this.last = now;
     const moving = config.animations !== 0;
-    const want = Math.round((w * h) / 16000);
+    const want = Math.round((w * h) / 24000);
     while (this.items.length < want) this.items.push(this.spawn(w, h, true));
     const theme = themeFor(config.theme);
     const ctx = this.ctx;

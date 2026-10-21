@@ -41,6 +41,16 @@ const terre: Theme = {
   warn: '255, 160, 60',
   alert: '230, 40, 30',
   css: {
+    '--sky1': '#3d2419',
+    '--sky2': '#2f1d16',
+    '--sky3': '#22150f',
+    '--primary': '#b5543a',
+    '--surface': '#3a251c',
+    '--floor': 'rgba(232, 162, 74, 0.07)',
+    '--title': '#fbeedd',
+    '--title-stroke': '#c9744f',
+    '--title-shadow': '#7d3523',
+    '--blur': 'rgba(42, 26, 20, 0.72)',
     '--bg': '#2a1a14',
     '--fg': '#fbeedd',
     '--muted': '#c9ae95',
@@ -73,6 +83,16 @@ const pastelClair: Theme = {
   warn: '240, 150, 60',
   alert: '225, 70, 60',
   css: {
+    '--sky1': '#fde6d8',
+    '--sky2': '#fbf1e6',
+    '--sky3': '#f4e8d8',
+    '--primary': '#3d3530',
+    '--surface': '#fffaf4',
+    '--floor': 'rgba(224, 122, 95, 0.09)',
+    '--title': '#ffffff',
+    '--title-stroke': '#e9a28d',
+    '--title-shadow': '#f0b8a6',
+    '--blur': 'rgba(251, 243, 233, 0.78)',
     '--bg': '#f7f1e8',
     '--fg': '#3d3530',
     '--muted': '#8a7d72',
@@ -105,6 +125,16 @@ const pastelSombre: Theme = {
   warn: '255, 175, 90',
   alert: '255, 95, 90',
   css: {
+    '--sky1': '#332d47',
+    '--sky2': '#272433',
+    '--sky3': '#1f1d27',
+    '--primary': '#8f7fd6',
+    '--surface': '#2f2c3a',
+    '--floor': 'rgba(195, 174, 240, 0.07)',
+    '--title': '#f1ecf7',
+    '--title-stroke': '#8f7fd6',
+    '--title-shadow': '#5a4d9e',
+    '--blur': 'rgba(35, 33, 43, 0.72)',
     '--bg': '#23212b',
     '--fg': '#f1ecf7',
     '--muted': '#a49cb5',
@@ -138,6 +168,16 @@ const faience: Theme = {
   warn: '240, 150, 60',
   alert: '220, 60, 60',
   css: {
+    '--sky1': '#dbe7ff',
+    '--sky2': '#eef0ff',
+    '--sky3': '#fbf6ee',
+    '--primary': '#1d2a44',
+    '--surface': '#ffffff',
+    '--floor': 'rgba(52, 102, 214, 0.075)',
+    '--title': '#ffffff',
+    '--title-stroke': '#7f98e6',
+    '--title-shadow': '#9fb4f2',
+    '--blur': 'rgba(238, 243, 251, 0.8)',
     '--bg': '#f5f7fb',
     '--fg': '#1d2a44',
     '--muted': '#6b7a96',
@@ -163,6 +203,26 @@ export function applyThemeCss(theme: Theme): void {
   const root = document.documentElement.style;
   for (const [k, v] of Object.entries(theme.css)) root.setProperty(k, v);
   theme.tiles.forEach((c, i) => root.setProperty(`--t${i}`, c));
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme.bg);
+  root.setProperty('--floor-img', `url("data:image/svg+xml,${encodeURIComponent(floorSvg(theme.css['--floor']))}")`);
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme.css['--sky1']);
   document.documentElement.style.colorScheme = theme.style === 'flat' && theme.bg.startsWith('#f') ? 'light' : 'dark';
+}
+
+/** Motif de sol en tomettes (hexagones à plat, joints fins), répété en fond de page. */
+function floorSvg(fill: string): string {
+  const R = 22;
+  const h = R * Math.sqrt(3);
+  const w = 3 * R;
+  const hex = (cx: number, cy: number) => {
+    const r = R * 0.9;
+    let d = '';
+    for (let i = 0; i < 6; i++) {
+      const a = (Math.PI / 3) * i;
+      d += `${i ? 'L' : 'M'}${(cx + r * Math.cos(a)).toFixed(1)} ${(cy + r * Math.sin(a)).toFixed(1)}`;
+    }
+    return d + 'Z';
+  };
+  const centers = [[0, 0], [w, 0], [0, h], [w, h], [1.5 * R, h / 2]];
+  const d = centers.map(([x, y]) => hex(x, y)).join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h.toFixed(2)}" viewBox="0 0 ${w} ${h.toFixed(2)}"><path d="${d}" fill="${fill}" stroke-linejoin="round"/></svg>`;
 }

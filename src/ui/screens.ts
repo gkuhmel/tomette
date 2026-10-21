@@ -1,6 +1,7 @@
 import { t } from '../i18n';
 import { el } from './dom';
-import { logoSvg } from './home-bg';
+import { hexButton, HexButtonParts, rosaceMenu } from './hex-ui';
+import { modeName } from './text';
 
 /** Écran plein (accueil, fin de partie, pause, réglages, orientation…). */
 export class Screen {
@@ -26,38 +27,42 @@ export class Screen {
 
 }
 
-export function homeScreen(): {
+export interface HomeScreen {
   screen: Screen;
   difficulty: HTMLElement;
-  modes: HTMLElement;
-  howto: HTMLElement;
-  settings: HTMLElement;
-  progress: HTMLElement;
-} {
-  const difficulty = el('div', { class: 'diff-list', role: 'radiogroup', 'aria-label': t('diff.label') });
-  const modes = el('div', { class: 'mode-list' });
-  const howto = el('button', { type: 'button', class: 'btn' }, [t('common.howto')]);
-  const settings = el('button', { type: 'button', class: 'btn' }, [t('common.settings')]);
-  const progress = el('button', { type: 'button', class: 'btn' }, [t('common.achievements')]);
-  const logo = el('div', { class: 'logo-wrap' });
-  logo.innerHTML = logoSvg(92);
-  const screen = new Screen('screen-home', [
-    logo,
-    el('h1', {}, ['Tomettes']),
-    difficulty,
-    modes,
-    el('div', { class: 'home-row' }, [howto, progress, settings]),
-  ]);
-  return { screen, difficulty, modes, howto, settings, progress };
+  play: HexButtonParts;
+  timeAttack: HexButtonParts;
+  mosaic: HexButtonParts;
+  express: HexButtonParts;
+  progress: HexButtonParts;
+  settings: HexButtonParts;
+  howto: HexButtonParts;
+  bestClassic: HTMLElement;
+  totalRosaces: HTMLElement;
 }
 
-/** Bouton de mode : nom, sous-titre et record. */
-export function modeButton(name: string, tagline: string, record: string, primary: boolean): HTMLButtonElement {
-  return el('button', { type: 'button', class: `mode-btn${primary ? ' primary' : ''}` }, [
-    el('span', { class: 'mode-name' }, [name]),
-    el('span', { class: 'mode-tag' }, [tagline]),
-    el('span', { class: 'mode-rec' }, [record]),
+/** Accueil : titre, rosace de boutons (modes au centre et autour), difficulté, records. */
+export function homeScreen(): HomeScreen {
+  const difficulty = el('div', { class: 'diff-list', role: 'radiogroup', 'aria-label': t('diff.label') });
+  const play = hexButton('var(--primary)', 'play', t('common.play'), true);
+  const timeAttack = hexButton('var(--t0)', 'clock', modeName('timeAttack'));
+  const mosaic = hexButton('var(--t4)', 'flower', modeName('mosaic'));
+  const settings = hexButton('var(--t5)', 'gear', t('common.settings'));
+  const progress = hexButton('var(--t3)', 'trophy', t('common.achievements'));
+  const howto = hexButton('var(--t1)', 'help', t('common.help'));
+  const express = hexButton('var(--t2)', 'bolt', modeName('express'));
+  const bestClassic = el('b');
+  const totalRosaces = el('b');
+  const screen = new Screen('screen-home', [
+    el('div', { class: 'home-top' }, [el('h1', { class: 'title' }, ['Tomettes']), el('small', { class: 'tagline' }, [t('home.tagline')])]),
+    rosaceMenu(play, [timeAttack, mosaic, settings, progress, howto, express]),
+    difficulty,
+    el('div', { class: 'recbar' }, [
+      el('span', {}, [t('home.bestClassic'), bestClassic]),
+      el('span', {}, [t('home.totalRosaces'), totalRosaces]),
+    ]),
   ]);
+  return { screen, difficulty, play, timeAttack, mosaic, express, progress, settings, howto, bestClassic, totalRosaces };
 }
 
 export function gameOverScreen(): {
@@ -85,22 +90,43 @@ export function gameOverScreen(): {
   return { screen, title, score, record, unlocked, replay, menu };
 }
 
-export function pauseScreen(): {
+export interface PauseScreen {
   screen: Screen;
+  stats: HTMLElement;
   resume: HTMLElement;
   restart: HTMLElement;
   settings: HTMLElement;
+  sound: HTMLElement;
+  music: HTMLElement;
+  howto: HTMLElement;
   menu: HTMLElement;
-} {
-  const resume = el('button', { type: 'button', class: 'btn primary' }, [t('common.resume')]);
-  const restart = el('button', { type: 'button', class: 'btn' }, [t('common.restart')]);
-  const settings = el('button', { type: 'button', class: 'btn' }, [t('common.settings')]);
-  const menu = el('button', { type: 'button', class: 'btn' }, [t('common.menu')]);
+}
+
+/** Pause : la partie floutée derrière, une rosace d'actions par-dessus. */
+export function pauseScreen(): PauseScreen {
+  const resume = hexButton('var(--primary)', 'play', t('common.resume'), true);
+  const restart = hexButton('var(--t1)', 'restart', t('common.restart'));
+  const settings = hexButton('var(--t5)', 'gear', t('common.settings'));
+  const sound = hexButton('var(--t3)', 'sound', t('common.sound'));
+  const music = hexButton('var(--t4)', 'music', t('common.music'));
+  const howto = hexButton('var(--t2)', 'help', t('common.help'));
+  const menu = hexButton('var(--t0)', 'home', t('common.menu'));
+  const stats = el('small', { class: 'tagline' });
   const screen = new Screen('screen-pause', [
-    el('h2', {}, [t('common.pause')]),
-    el('div', { class: 'home-buttons' }, [resume, restart, settings, menu]),
+    el('div', { class: 'home-top' }, [el('h1', { class: 'title' }, [t('common.pause')]), stats]),
+    rosaceMenu(resume, [restart, settings, sound, music, howto, menu]),
   ]);
-  return { screen, resume, restart, settings, menu };
+  return {
+    screen,
+    stats,
+    resume: resume.button,
+    restart: restart.button,
+    settings: settings.button,
+    sound: sound.button,
+    music: music.button,
+    howto: howto.button,
+    menu: menu.button,
+  };
 }
 
 export function rotateScreen(): Screen {

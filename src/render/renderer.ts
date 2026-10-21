@@ -2,7 +2,7 @@ import type { Game } from '../core/game';
 import { cellCenter } from '../core/hex';
 import { Layout } from './layout';
 import { t } from '../i18n';
-import { Effects } from './effects';
+import { Effects, roundRect } from './effects';
 import { GOLD, hexPath, JOKER, SpriteCache } from './sprites';
 import { Theme, themeFor } from './theme';
 
@@ -37,7 +37,7 @@ export class Renderer {
   private activatedAt = 0;
 
   constructor(private canvas: HTMLCanvasElement) {
-    this.ctx = canvas.getContext('2d', { alpha: false })!;
+    this.ctx = canvas.getContext('2d')!;
   }
 
   /** Change de thème (sprites et plateau redessinés). Renvoie true si le thème a changé. */
@@ -84,13 +84,18 @@ export class Renderer {
     this.previewId = first.id;
   }
 
-  /** Fond du plateau : uniquement la ligne de limite de hauteur, en haut. */
+  /** Fond du plateau : un voile clair qui calme le sol de la page, et la ligne de limite de hauteur en haut. */
   private renderBoardBg(L: Layout, _cols: number, _rows: number): HTMLCanvasElement {
     const c = document.createElement('canvas');
     c.width = Math.ceil(L.boardW * L.dpr) + 2;
     c.height = Math.ceil(L.boardH * L.dpr) + 2;
     const ctx = c.getContext('2d')!;
     ctx.scale(L.dpr, L.dpr);
+    ctx.fillStyle = this.theme.css['--surface'];
+    ctx.globalAlpha = 0.45;
+    roundRect(ctx, 0, 0, L.boardW, L.boardH, Math.min(18, L.R * 0.6));
+    ctx.fill();
+    ctx.globalAlpha = 1;
     ctx.strokeStyle = this.theme.css['--muted'];
     ctx.globalAlpha = 0.55;
     ctx.lineWidth = 2;
@@ -146,9 +151,10 @@ export class Renderer {
     const g = game.grid;
 
     const th = this.theme;
+    // Canvas transparent : le fond de page (dégradé et sol en tomettes) reste visible autour du plateau.
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.fillStyle = th.bg;
-    ctx.fillRect(0, 0, L.cssW, L.cssH);
     this.effects.enabled = cfg.animations !== 0;
     this.effects.shakeEnabled = cfg.screenShake !== 0;
     this.effects.observe(game, L, th, now);

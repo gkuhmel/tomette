@@ -1,10 +1,16 @@
+import '@fontsource/fredoka/latin-600.css';
+import '@fontsource/fredoka/latin-700.css';
+import '@fontsource/nunito/latin-600.css';
+import '@fontsource/nunito/latin-700.css';
+import '@fontsource/nunito/latin-800.css';
+import '@fontsource/nunito/latin-900.css';
 import './style.css';
 import { Sound } from './audio/sound';
 import { bucket, initTelemetry, track } from './telemetry';
 import { config } from './config';
 import { ClearEvent, Game, STEP_MS } from './core/game';
 import { TUTORIAL_STEPS } from './core/tutorial';
-import { MODES, modeById, ModeId } from './core/modes';
+import { modeById, ModeId } from './core/modes';
 import { DIFFICULTIES, Difficulty, withDifficulty } from './core/difficulty';
 import { randomSeed } from './core/rng';
 import { BoardInput } from './input/board-input';
@@ -12,17 +18,19 @@ import { computeLayout, Layout } from './render/layout';
 import { GAME_OVER_FADE_MS } from './render/effects';
 import { Renderer } from './render/renderer';
 import { applyThemeCss, themeFor } from './render/theme';
-import { attachLongPress, DebugPanel, loadSavedConfig } from './ui/debug';
+import { attachLongPress, DebugPanel, loadSavedConfig, setConfigValue } from './ui/debug';
+import { hexBadge, HexButtonParts, icon } from './ui/hex-ui';
+import { ACHIEVEMENTS } from './core/progress';
 import { el, formatTime } from './ui/dom';
 import { isDevMode, isPhone } from './ui/guard';
 import { Key, lang, t } from './i18n';
-import { achName, modeName, modeTag, tutoText as tutoText_, tutoTitle as tutoTitle_ } from './ui/text';
+import { achName, modeTag, tutoText as tutoText_, tutoTitle as tutoTitle_ } from './ui/text';
 import { howToScreen } from './ui/howto';
 import { settingsScreen } from './ui/settings';
 import { aboutScreen } from './ui/about';
 import { HomeBackground } from './ui/home-bg';
 import { Progress, progressScreen } from './ui/progress';
-import { gameOverScreen, homeScreen, modeButton, pauseScreen, rotateScreen } from './ui/screens';
+import { gameOverScreen, homeScreen, pauseScreen, rotateScreen } from './ui/screens';
 import { load, loadBest, loadDifficulty, save, saveBest, saveDifficulty } from './ui/storage';
 
 type State = 'home' | 'playing' | 'paused' | 'over' | 'tutorial';
@@ -36,26 +44,23 @@ function boot(): void {
   loadSavedConfig();
 
   // --- DOM ---------------------------------------------------------------
-  const hudScore = el('span', { class: 'v' });
-  const hudBest = el('span', { class: 'v' });
-  const hudLevel = el('span', { class: 'v' });
-  const hudTime = el('span', { class: 'v' });
   document.documentElement.lang = lang;
-  const hudLevelLabel = el('span', { class: 'k' }, [t('hud.level')]);
-  const hudTimeLabel = el('span', { class: 'k' }, [t('hud.time')]);
-  const hudItem = (label: string | HTMLElement, v: HTMLElement) =>
-    el('div', { class: 'hud-item' }, [typeof label === 'string' ? el('span', { class: 'k' }, [label]) : label, v]);
-  const hud = el('header', { id: 'hud' }, [
-    hudItem(t('hud.score'), hudScore),
-    hudItem(t('hud.record'), hudBest),
-    hudItem(hudLevelLabel, hudLevel),
-    hudItem(hudTimeLabel, hudTime),
-  ]);
+  // HUD : pastille hexagonale (niveau ou rosaces), gros score, record et temps, bouton pause.
+  const badge = hexBadge();
+  badge.label.textContent = t('hud.level');
+  const hudScore = el('div', { class: 'v', 'aria-label': t('hud.score') });
+  const hudBest = el('b');
+  const hudTime = el('b', { class: 'time' });
+  const hudSub = el('div', { class: 's' }, [`${t('hud.record')} `, hudBest, ' · ', hudTime]);
+  hudTime.insertAdjacentHTML('beforebegin', icon('clock'));
+  const pauseBtn = el('button', { id: 'pause-btn', type: 'button', 'aria-label': t('common.pause') });
+  pauseBtn.innerHTML = icon('pause');
+  const hud = el('header', { id: 'hud' }, [badge.root, el('div', { class: 'hud-score' }, [hudScore, hudSub]), pauseBtn]);
   const canvas = el('canvas', { id: 'board' });
   const stage = el('main', { id: 'stage' }, [canvas]);
   const raise = el('button', { id: 'raise', type: 'button' }, [t('common.raise')]);
-  const pauseBtn = el('button', { id: 'pause-btn', type: 'button', 'aria-label': t('common.pause') }, ['❚❚']);
-  const footer = el('footer', { id: 'controls' }, [pauseBtn, raise]);
+  raise.insertAdjacentHTML('afterbegin', icon('up'));
+  const footer = el('footer', { id: 'controls' }, [raise]);
   const app = el('div', { id: 'app' }, [hud, stage, footer]);
   const corner = el('div', { id: 'debug-corner' });
   document.body.append(app, corner);
@@ -102,7 +107,8 @@ function boot(): void {
   attachLongPress(corner, 1000, () => debug.open());
   // Bouton de debug visible seulement avec ?dev=1 (sinon : appui long en haut à gauche).
   if (dev) {
-    const gear = el('button', { id: 'debug-gear', type: 'button', 'aria-label': 'Debug' }, ['⚙']);
+    const gear = el('button', { id: 'debug-gear', type: 'button', 'aria-label': 'Debug' });
+    gear.innerHTML = icon('gear');
     gear.addEventListener('click', () => (debug.isOpen ? debug.close() : debug.open()));
     footer.append(gear);
   }
@@ -124,9 +130,7 @@ function boot(): void {
     shownScore = 0;
     mode = m;
     best = loadBest(mode, difficulty);
-    const info = modeById(mode);
-    hudLevelLabel.textContent = info.record === 'rosaces' ? t('hud.rosaces') : t('hud.level');
-    hudTimeLabel.textContent = info.timeLimitS(config) > 0 ? t('hud.left') : t('hud.time');
+    badge.label.textContent = modeById(mode).record === 'rosaces' ? t('hud.rosaces') : t('hud.level');
     const prev = game.grid;
     game = new Game(withDifficulty(config, difficulty), seed, { mode });
     input.release();
@@ -189,6 +193,12 @@ function boot(): void {
     input.release();
     game.manualRise = false;
     sound.stopMusic();
+    pause.stats.textContent = [
+      `${t('hud.score')} ${game.score}`,
+      game.mode.record === 'rosaces' ? `${t('hud.rosaces')} ${game.rosaceCount}` : `${t('hud.level')} ${game.level}`,
+      formatTime(game.timeLeft === null ? game.elapsed : Math.ceil(game.timeLeft)),
+    ].join(' · ');
+    syncPauseToggles();
     pause.screen.show();
   }
 
@@ -211,7 +221,17 @@ function boot(): void {
     attributeFilter: ['hidden'],
   });
 
-  /** Menu : un bouton par mode, avec son record. */
+  /** Lance un mode depuis l'accueil (la première fois : le tutoriel d'abord). */
+  function launch(m: ModeId): void {
+    if (load(TUTORIAL_KEY)) startGame(randomSeed(), m);
+    else startTutorial(m);
+  }
+  home.play.button.addEventListener('click', () => launch('endless'));
+  home.timeAttack.button.addEventListener('click', () => launch('timeAttack'));
+  home.mosaic.button.addEventListener('click', () => launch('mosaic'));
+  home.express.button.addEventListener('click', () => launch('express'));
+
+  /** Accueil : records du niveau de difficulté choisi, succès obtenus. */
   function showHome(): void {
     home.difficulty.replaceChildren(
       ...DIFFICULTIES.map((d) => {
@@ -224,19 +244,15 @@ function boot(): void {
         return b;
       }),
     );
-    home.modes.replaceChildren(
-      ...MODES.map((m, i) => {
-        const rec = loadBest(m.id, difficulty);
-        const label = rec > 0 ? (m.record === 'rosaces' ? `${rec} 🌸` : `${rec}`) : '';
-        const b = modeButton(modeName(m.id), modeTag(m, config), label, i === 0);
-        b.addEventListener('click', () => {
-          // Première fois : le tutoriel d'abord, puis le mode choisi.
-          if (load(TUTORIAL_KEY)) startGame(randomSeed(), m.id);
-          else startTutorial(m.id);
-        });
-        return b;
-      }),
-    );
+    const recs: [ModeId, HexButtonParts][] = [['endless', home.play], ['timeAttack', home.timeAttack], ['mosaic', home.mosaic], ['express', home.express]];
+    for (const [id, b] of recs) {
+      const rec = loadBest(id, difficulty);
+      b.rec.textContent = rec > 0 ? (modeById(id).record === 'rosaces' ? `${rec} ✿` : String(rec)) : '—';
+      b.button.title = modeTag(modeById(id), config);
+    }
+    home.progress.rec.textContent = `${progress.unlocked.size}/${ACHIEVEMENTS.length}`;
+    home.bestClassic.textContent = String(loadBest('endless', difficulty));
+    home.totalRosaces.textContent = String(progress.totals.rosaces);
     over.screen.hide();
     howto.hide();
     settings.hide();
@@ -251,8 +267,10 @@ function boot(): void {
   const settings = settingsScreen(
     () => {
       settings.hide();
-      if (settingsFrom === 'pause') pause.screen.show();
-      else home.screen.show();
+      if (settingsFrom === 'pause') {
+        syncPauseToggles();
+        pause.screen.show();
+      } else home.screen.show();
     },
     () => syncSound(),
     () => {
@@ -272,25 +290,37 @@ function boot(): void {
     pause.screen.hide();
     settings.show();
   }
+  // Comment jouer : ouvert depuis l'accueil ou la pause, on revient au même endroit.
+  let howtoFrom: 'home' | 'pause' = 'home';
   const howto = howToScreen(
-    () => startGame(),
+    () => {
+      if (howtoFrom === 'pause') {
+        howto.hide();
+        pause.screen.show();
+        resumeGame();
+      } else startGame();
+    },
     () => {
       howto.hide();
-      home.screen.show();
+      if (howtoFrom === 'pause') pause.screen.show();
+      else home.screen.show();
     },
     () => startTutorial(null),
   );
+  function openHowto(from: 'home' | 'pause'): void {
+    howtoFrom = from;
+    home.screen.hide();
+    pause.screen.hide();
+    howto.root.scrollTop = 0;
+    howto.show();
+  }
   showHome();
   // Thème choisi appliqué dès le démarrage (pas de flash de l'ancien thème).
   const theme0 = themeFor(config.theme);
   renderer.setTheme(theme0);
   applyThemeCss(theme0);
   howto.setTheme(theme0);
-  home.howto.addEventListener('click', () => {
-    home.screen.hide();
-    howto.root.scrollTop = 0;
-    howto.show();
-  });
+  home.howto.button.addEventListener('click', () => openHowto('home'));
   over.replay.addEventListener('click', () => startGame());
   over.menu.addEventListener('click', () => {
     state = 'home';
@@ -305,16 +335,32 @@ function boot(): void {
   pause.resume.addEventListener('click', resumeGame);
   pause.restart.addEventListener('click', () => startGame());
   pause.settings.addEventListener('click', () => openSettings('pause'));
+  pause.howto.addEventListener('click', () => openHowto('pause'));
+  // Son et musique coupés ou remis directement depuis la pause.
+  function syncPauseToggles(): void {
+    pause.sound.classList.toggle('off', config.sound === 0);
+    pause.music.classList.toggle('off', config.music === 0);
+  }
+  pause.sound.addEventListener('click', () => {
+    setConfigValue('sound', config.sound === 0 ? 1 : 0);
+    syncSound();
+    syncPauseToggles();
+  });
+  pause.music.addEventListener('click', () => {
+    setConfigValue('music', config.music === 0 ? 1 : 0);
+    syncSound();
+    syncPauseToggles();
+  });
   pause.menu.addEventListener('click', () => {
     state = 'home';
     showHome();
   });
-  home.settings.addEventListener('click', () => openSettings('home'));
+  home.settings.button.addEventListener('click', () => openSettings('home'));
   const progressView = progressScreen(progress, () => {
     progressView.hide();
     home.screen.show();
   });
-  home.progress.addEventListener('click', () => {
+  home.progress.button.addEventListener('click', () => {
     progressView.refresh();
     progressView.root.scrollTop = 0;
     home.screen.hide();
@@ -346,7 +392,7 @@ function boot(): void {
   window.addEventListener('keydown', (e) => {
     if (e.code === 'Escape' || e.code === 'KeyP') {
       if (state === 'playing') pauseGame();
-      else if (state === 'paused' && !settings.visible) resumeGame();
+      else if (state === 'paused' && pause.screen.visible) resumeGame();
       return;
     }
     if (e.code !== 'Space' || debugOpen) return;
@@ -395,9 +441,13 @@ function boot(): void {
     else if (shownScore < game.score) shownScore = Math.min(game.score, shownScore + Math.max(1, Math.ceil((game.score - shownScore) * 0.12)));
     setText(0, hudScore, String(shownScore));
     setText(1, hudBest, String(Math.max(best, game.recordValue)));
-    setText(2, hudLevel, String(game.mode.record === 'rosaces' ? game.rosaceCount : game.level));
+    setText(2, badge.value, String(game.mode.record === 'rosaces' ? game.rosaceCount : game.level));
     const left = game.timeLeft;
     setText(3, hudTime, formatTime(left === null ? game.elapsed : Math.ceil(left)));
+    // Jauge de la pastille : temps restant (modes chronométrés) ou avancée dans le niveau.
+    const limit = game.mode.timeLimitS(game.cfg);
+    const dur = Math.max(1e-6, game.cfg.levelDurationS);
+    badge.setProgress(left !== null && limit > 0 ? left / limit : (game.time % dur) / dur);
     document.body.classList.toggle('hurry', left !== null && left <= 10 && state === 'playing');
     const danger = String(game.danger);
     if (hudCache[4] !== danger) {
@@ -428,8 +478,7 @@ function boot(): void {
     howto.hide();
     over.screen.hide();
     pause.screen.hide();
-    hudLevelLabel.textContent = t('hud.level');
-    hudTimeLabel.textContent = t('hud.time');
+    badge.label.textContent = t('hud.level');
     state = 'tutorial';
     loadTutorialStep();
     sound.startMusic();

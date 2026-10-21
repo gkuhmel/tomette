@@ -14,8 +14,15 @@ export const de: Dict = {
   'common.achievements': 'Erfolge',
   'common.about': 'Über',
   'common.pause': 'Pause',
-  'common.raise': '▲ Anheben',
+  'common.raise': 'Anheben',
+  'common.help': 'Hilfe',
+  'common.sound': 'Ton',
+  'common.music': 'Musik',
   'common.rotate': 'Dreh dein Handy',
+
+  'home.tagline': 'Tauschen · auflösen · verketten',
+  'home.bestClassic': 'Klassik-Rekord',
+  'home.totalRosaces': 'Rosetten gesamt',
 
   'hud.score': 'Punkte',
   'hud.record': 'Rekord',
