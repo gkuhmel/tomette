@@ -303,6 +303,39 @@ export class Renderer {
       }
     }
 
+    // Campagne : ligne d'arrivée en damier, qui suit le bas des tuiles colonne par colonne.
+    if (game.goalRows > 0) {
+      const k = game.lineRows;
+      const base = y0 + (g.rows - k) * h - rise;
+      if (base < y0 + L.boardH + h * 1.6) {
+        const band = Math.max(6, R * 0.26);
+        const sq = band / 2;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(x0 - R, y0 - 2, L.boardW + 2 * R, L.boardH + h * 1.2);
+        ctx.clip();
+        for (let c = 0; c < g.cols; c++) {
+          const p = cellCenter(c, 0, R);
+          const left = x0 + p.x - R * 0.76;
+          const right = x0 + p.x + R * 0.76;
+          const y = base + (c % 2 ? h / 2 : 0) - band / 2;
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(left, y, right - left, band);
+          ctx.fillStyle = th.css['--primary'] ?? '#1d2a44';
+          for (let i = 0; Math.round(left / sq) * sq + i * sq < right; i++) {
+            const x = Math.round(left / sq) * sq + i * sq;
+            for (let j = 0; j < 2; j++) {
+              if ((Math.round(x / sq) + j) % 2) continue;
+              const xa = Math.max(left, x);
+              const xb = Math.min(right, x + sq);
+              if (xb > xa) ctx.fillRect(xa, y + j * sq, xb - xa, sq);
+            }
+          }
+        }
+        ctx.restore();
+      }
+    }
+
     // Dalles de mortier : un joint relie les morceaux voisins d'une même dalle, pour qu'elle se lise d'un bloc.
     const centerOf = (c: number, r: number) => {
       const t = g.get(c, r)!;

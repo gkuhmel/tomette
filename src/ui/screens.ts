@@ -1,6 +1,6 @@
 import { t } from '../i18n';
 import { el } from './dom';
-import { hexButton, HexButtonParts, rosaceMenu } from './hex-ui';
+import { hexButton, HexButtonParts, icon, rosaceMenu } from './hex-ui';
 import { modeName } from './text';
 
 /** Écran plein (accueil, fin de partie, pause, réglages, orientation…). */
@@ -37,6 +37,9 @@ export interface HomeScreen {
   progress: HexButtonParts;
   settings: HexButtonParts;
   howto: HexButtonParts;
+  /** Campagne : bouton et total d'étoiles. */
+  campaign: HTMLElement;
+  campaignStars: HTMLElement;
   /** Barre du joueur (niveau, XP, missions du jour) : ouvre l'écran Missions. */
   player: HTMLElement;
   playerLevel: HTMLElement;
@@ -56,13 +59,17 @@ export function homeScreen(): HomeScreen {
   const playerLevel = el('span', { class: 'pb-level' });
   const missions = el('span', { class: 'pb-missions' });
   const player = el('button', { type: 'button', class: 'player-bar' }, [playerLevel, missions]);
+  const campaignStars = el('span', { class: 'pill-tag' });
+  const campaign = el('button', { type: 'button', class: 'home-pill', style: '--c:var(--t1)' }, [el('span', {}, [t('mode.campaign.name')]), campaignStars]);
+  campaign.insertAdjacentHTML('afterbegin', icon('flag'));
   const screen = new Screen('screen-home', [
     el('div', { class: 'home-top' }, [el('h1', { class: 'title' }, ['Tomettes']), el('small', { class: 'tagline' }, [t('home.tagline')])]),
     rosaceMenu(play, [timeAttack, mosaic, settings, progress, howto, express]),
+    el('div', { class: 'home-pills' }, [campaign]),
     difficulty,
     player,
   ]);
-  return { screen, difficulty, play, timeAttack, mosaic, express, progress, settings, howto, player, playerLevel, missions };
+  return { screen, difficulty, play, timeAttack, mosaic, express, progress, settings, howto, campaign, campaignStars, player, playerLevel, missions };
 }
 
 export function gameOverScreen(): {
@@ -72,6 +79,7 @@ export function gameOverScreen(): {
   record: HTMLElement;
   unlocked: HTMLElement;
   xp: HTMLElement;
+  next: HTMLElement;
   replay: HTMLElement;
   menu: HTMLElement;
 } {
@@ -80,6 +88,8 @@ export function gameOverScreen(): {
   const record = el('p', { class: 'best' });
   const unlocked = el('div', { class: 'over-ach' });
   const xp = el('div', { class: 'over-xp' });
+  const next = el('button', { type: 'button', class: 'btn primary' }, [t('camp.next')]);
+  next.hidden = true;
   const replay = el('button', { type: 'button', class: 'btn primary' }, [t('common.replay')]);
   const menu = el('button', { type: 'button', class: 'btn' }, [t('common.menu')]);
   const screen = new Screen('screen-over', [
@@ -88,9 +98,9 @@ export function gameOverScreen(): {
     record,
     xp,
     unlocked,
-    el('div', { class: 'home-buttons' }, [replay, menu]),
+    el('div', { class: 'home-buttons' }, [next, replay, menu]),
   ]);
-  return { screen, title, score, record, unlocked, xp, replay, menu };
+  return { screen, title, score, record, unlocked, xp, next, replay, menu };
 }
 
 export interface PauseScreen {

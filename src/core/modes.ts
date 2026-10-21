@@ -1,6 +1,6 @@
 import type { Config } from '../config';
 
-export type ModeId = 'endless' | 'timeAttack' | 'mosaic' | 'express';
+export type ModeId = 'endless' | 'timeAttack' | 'mosaic' | 'express' | 'campaign';
 
 export interface Mode {
   id: ModeId;
@@ -39,7 +39,15 @@ export const MODES: Mode[] = [
   },
 ];
 
+/** Campagne : manches à ligne d'arrivée (réglages propres à chaque manche, voir campaign.ts). */
+export const CAMPAIGN: Mode = {
+  id: 'campaign',
+  timeLimitS: () => 0,
+  startLevel: () => 1,
+  record: 'score',
+};
+
 export function modeById(id: ModeId): Mode {
-  return MODES.find((m) => m.id === id) ?? MODES[0];
+  return id === 'campaign' ? CAMPAIGN : (MODES.find((m) => m.id === id) ?? MODES[0]);
 }
 

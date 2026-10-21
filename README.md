@@ -39,6 +39,12 @@ Déploiement manuel possible : `npm run deploy` (après `npx wrangler login`).
 - **Tuiles spéciales** : fêlée (ne s'aligne pas, réparée par un alignement
   voisin), scellée (non déplaçable, libérée par un alignement voisin), joker
   (toutes les couleurs).
+- **Campagne** : 30 manches. Une ligne d'arrivée en damier remonte avec la
+  pile ; la manche est gagnée quand plus aucune tuile n'est au-dessus. 1 à 3
+  étoiles selon le temps ; chaque manche réussie ouvre la suivante.
+- **Missions et niveau joueur** : 3 missions du jour (nouvelles à minuit) et
+  une mission au long cours. Parties et missions rapportent de l'XP ; le
+  niveau débloque 4 thèmes et 4 jeux de pictogrammes.
 - **Dalles de mortier** : à partir du niveau 3, une dalle de 2 à 4 tuiles tombe
   du haut de temps en temps. Ni déplaçable ni alignable ; un alignement qui la
   touche la transforme entièrement en tuiles normales, qui peuvent prolonger la

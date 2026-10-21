@@ -61,6 +61,7 @@ body,
 #screen-progress,
 #screen-about,
 #screen-missions,
+#screen-campaign,
 #screen-rotate {
   background:
     linear-gradient(180deg, var(--sky1) 0%, var(--sky2) 40%, color-mix(in srgb, var(--sky3) 55%, transparent) 78%, transparent 100%),
@@ -395,7 +396,8 @@ body.alert .hud-badge .prog {
 #screen-settings,
 #screen-progress,
 #screen-about,
-#screen-missions {
+#screen-missions,
+#screen-campaign {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
@@ -422,7 +424,7 @@ body.alert .hud-badge .prog {
 /* --- Rosace de boutons hexagonaux -------------------------------------- */
 
 .rosace-menu {
-  --r: min(62px, calc((100vw - 40px) / 5.12), calc((100dvh - 330px) / 5.33));
+  --r: min(62px, calc((100vw - 40px) / 5.12), calc((100dvh - 390px) / 5.33));
   position: relative;
   flex: none;
   width: calc(var(--r) * 5.12);
@@ -514,6 +516,103 @@ body.alert .hud-badge .prog {
     transform: scale(0.3) rotate(-30deg);
     opacity: 0;
   }
+}
+
+/* --- Campagne ------------------------------------------------------------ */
+
+.home-pills {
+  display: flex;
+  gap: 10px;
+  margin: -4px 0 12px;
+}
+
+.home-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--c);
+  color: #fff;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 900;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.15), 0 6px 14px rgba(30, 50, 110, 0.15);
+  cursor: pointer;
+}
+
+.home-pill svg.i {
+  font-size: 18px;
+}
+
+.pill-tag {
+  padding: 2px 7px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.25);
+  font-size: 12px;
+}
+
+.campaign-intro {
+  margin: 0 0 6px !important;
+  font-size: 14px !important;
+  line-height: 1.4;
+  color: var(--muted);
+  text-align: center;
+}
+
+.campaign-total {
+  text-align: center;
+  font-family: var(--font-title);
+  font-size: 22px !important;
+  font-weight: 700;
+  color: var(--t2);
+}
+
+.stage-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.stage-btn {
+  aspect-ratio: 2 / 1.732;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 0;
+  border: 0;
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+  background: var(--t1);
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.stage-btn b {
+  font-family: var(--font-title);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.stage-btn small {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #ffe9a0;
+}
+
+.stage-btn.done {
+  background: var(--t3);
+}
+
+.stage-btn.locked {
+  background: var(--card);
+  color: var(--muted);
+  cursor: default;
 }
 
 /* --- Joueur : niveau, XP, missions --------------------------------------- */
@@ -828,7 +927,8 @@ body.alert .hud-badge .prog {
 #screen-settings,
 #screen-progress,
 #screen-about,
-#screen-missions {
+#screen-missions,
+#screen-campaign {
   overflow-y: auto;
   touch-action: pan-y;
 }
@@ -993,7 +1093,8 @@ body.alert .hud-badge .prog {
 #screen-progress,
 #screen-settings,
 #screen-about,
-#screen-missions {
+#screen-missions,
+#screen-campaign {
   justify-content: flex-start;
   padding-top: calc(24px + env(safe-area-inset-top));
 }

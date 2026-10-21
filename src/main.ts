@@ -33,6 +33,8 @@ import { Progress, progressScreen } from './ui/progress';
 import { bar, Missions, missionsScreen, playerLevel } from './ui/missions';
 import { longMission } from './core/missions';
 import { unlocksBetween } from './core/unlocks';
+import { STAGE_COUNT, stageConfig, stageSpec, starsFor } from './core/campaign';
+import { campaignScreen, saveStars, starText, totalStars } from './ui/campaign';
 import { gameOverScreen, homeScreen, pauseScreen, rotateScreen } from './ui/screens';
 import { load, loadBest, loadDifficulty, save, saveBest, saveDifficulty } from './ui/storage';
 
@@ -54,7 +56,8 @@ function boot(): void {
   const hudScore = el('div', { class: 'v', 'aria-label': t('hud.score') });
   const hudBest = el('b');
   const hudTime = el('b', { class: 'time' });
-  const hudSub = el('div', { class: 's' }, [`${t('hud.record')} `, hudBest, ' · ', hudTime]);
+  const hudRecLabel = el('span', {}, [t('hud.record')]);
+  const hudSub = el('div', { class: 's' }, [hudRecLabel, ' ', hudBest, ' · ', hudTime]);
   hudTime.insertAdjacentHTML('beforebegin', icon('clock'));
   const pauseBtn = el('button', { id: 'pause-btn', type: 'button', 'aria-label': t('common.pause') });
   pauseBtn.innerHTML = icon('pause');
@@ -76,6 +79,8 @@ function boot(): void {
   // --- État --------------------------------------------------------------
   let state: State = 'home';
   let mode: ModeId = 'endless';
+  /** Manche de campagne en cours (ou à lancer). */
+  let stageNo = 1;
   let difficulty: Difficulty = loadDifficulty();
   let best = loadBest(mode, difficulty);
   let game = new Game(config, randomSeed());
@@ -134,9 +139,14 @@ function boot(): void {
     shownScore = 0;
     mode = m;
     best = loadBest(mode, difficulty);
-    badge.label.textContent = modeById(mode).record === 'rosaces' ? t('hud.rosaces') : t('hud.level');
+    badge.label.textContent = mode === 'campaign' ? t('hud.stage') : modeById(mode).record === 'rosaces' ? t('hud.rosaces') : t('hud.level');
+    hudRecLabel.textContent = t('hud.record');
+    hudCache.length = 0;
     const prev = game.grid;
-    game = new Game(withDifficulty(config, difficulty), seed, { mode });
+    if (mode === 'campaign') {
+      const spec = stageSpec(stageNo, config);
+      game = new Game(stageConfig(config, spec), seed, { mode, startLevel: spec.level, goalRows: spec.goal });
+    } else game = new Game(withDifficulty(config, difficulty), seed, { mode });
     input.release();
     renderer.reset();
     if (prev.cols !== game.grid.cols || prev.rows !== game.grid.rows) relayout();
@@ -151,7 +161,7 @@ function boot(): void {
     state = 'playing';
     lastLevel = game.level;
     sound.startMusic();
-    track('game_start', { mode, difficulty, lang });
+    track('game_start', { mode, difficulty, lang, ...(mode === 'campaign' ? { stage: stageNo } : {}) });
   }
 
   function endGame(): void {
@@ -173,6 +183,25 @@ function boot(): void {
       ? t(game.rosaceCount === 1 ? 'over.rosaces_one' : 'over.rosaces_other', { r: game.rosaceCount, s: game.score })
       : t('over.score', { n: game.score });
     over.record.textContent = record ? t('over.newRecord') : t(rosaces ? 'over.recordRosaces' : 'over.record', { n: best });
+    over.next.hidden = true;
+    over.replay.textContent = t('common.replay');
+    if (mode === 'campaign') {
+      // Campagne : étoiles selon le temps, manche suivante si réussie.
+      const spec = stageSpec(stageNo, config);
+      over.replay.textContent = t('camp.retry');
+      if (game.won) {
+        const stars = starsFor(spec, game.elapsed);
+        const better = saveStars(stageNo, stars);
+        over.title.textContent = t('camp.won', { n: stageNo });
+        over.score.textContent = starText(stars);
+        over.record.textContent = `${t('camp.time', { t: formatTime(game.elapsed) })}${better ? ` · ${t('over.newRecord')}` : ''}`;
+        over.next.hidden = stageNo >= STAGE_COUNT;
+      } else {
+        over.title.textContent = t('camp.lost', { n: stageNo });
+        over.score.textContent = t('over.score', { n: game.score });
+        over.record.textContent = t('camp.goal3', { t: formatTime(spec.star3) });
+      }
+    }
     const fresh = progress.finish(game);
     const mr = missions.finish(game);
     over.xp.replaceChildren(
@@ -271,6 +300,7 @@ function boot(): void {
     home.playerLevel.replaceChildren(el('strong', {}, [t('player.level', { n: lv.level })]), bar(lv.into, lv.need));
     const daily = missions.state.daily;
     home.missions.textContent = `${t('missions.title')} ${daily.filter((m) => m.done).length}/${daily.length}`;
+    home.campaignStars.textContent = `★ ${totalStars()}/${STAGE_COUNT * 3}`;
     over.screen.hide();
     howto.hide();
     settings.hide();
@@ -341,6 +371,10 @@ function boot(): void {
   howto.setTheme(theme0);
   home.howto.button.addEventListener('click', () => openHowto('home'));
   over.replay.addEventListener('click', () => startGame());
+  over.next.addEventListener('click', () => {
+    stageNo = Math.min(STAGE_COUNT, stageNo + 1);
+    startGame(randomSeed(), 'campaign');
+  });
   over.menu.addEventListener('click', () => {
     state = 'home';
     showHome();
@@ -378,6 +412,23 @@ function boot(): void {
   const progressView = progressScreen(progress, () => {
     progressView.hide();
     home.screen.show();
+  });
+  const campaignView = campaignScreen(
+    (n) => {
+      stageNo = n;
+      campaignView.hide();
+      launch('campaign');
+    },
+    () => {
+      campaignView.hide();
+      showHome();
+    },
+  );
+  home.campaign.addEventListener('click', () => {
+    campaignView.refresh();
+    campaignView.root.scrollTop = 0;
+    home.screen.hide();
+    campaignView.show();
   });
   const missionsView = missionsScreen(missions, () => {
     missionsView.hide();
@@ -451,7 +502,7 @@ function boot(): void {
   document.addEventListener(
     'touchmove',
     (e) => {
-      if (!(e.target instanceof Element && e.target.closest('#debug-panel, #screen-howto, #screen-settings, #screen-progress, #screen-about, #screen-missions'))) e.preventDefault();
+      if (!(e.target instanceof Element && e.target.closest('#debug-panel, #screen-howto, #screen-settings, #screen-progress, #screen-about, #screen-missions, #screen-campaign'))) e.preventDefault();
     },
     { passive: false },
   );
@@ -470,13 +521,19 @@ function boot(): void {
     else if (shownScore < game.score) shownScore = Math.min(game.score, shownScore + Math.max(1, Math.ceil((game.score - shownScore) * 0.12)));
     setText(0, hudScore, String(shownScore));
     setText(1, hudBest, String(Math.max(best, game.recordValue)));
-    setText(2, badge.value, String(game.mode.record === 'rosaces' ? game.rosaceCount : game.level));
+    setText(2, badge.value, String(game.goalRows > 0 ? stageNo : game.mode.record === 'rosaces' ? game.rosaceCount : game.level));
     const left = game.timeLeft;
     setText(3, hudTime, formatTime(left === null ? game.elapsed : Math.ceil(left)));
     // Jauge de la pastille : temps restant (modes chronométrés) ou avancée dans le niveau.
     const limit = game.mode.timeLimitS(game.cfg);
     const dur = Math.max(1e-6, game.cfg.levelDurationS);
-    badge.setProgress(left !== null && limit > 0 ? left / limit : (game.time % dur) / dur);
+    if (game.goalRows > 0) {
+      // Campagne : rangées avant l'arrivée de la ligne, puis tuiles encore au-dessus.
+      const above = game.tilesAboveLine();
+      setText(5, hudRecLabel, above === null ? t('hud.lineIn') : t('hud.toClear'));
+      setText(1, hudBest, String(above === null ? game.goalRows - game.rowsRisen : above));
+      badge.setProgress(Math.min(1, game.rowsRisen / (game.goalRows + game.grid.rows / 2)));
+    } else badge.setProgress(left !== null && limit > 0 ? left / limit : (game.time % dur) / dur);
     document.body.classList.toggle('hurry', left !== null && left <= 10 && state === 'playing');
     const danger = String(game.danger);
     if (hudCache[4] !== danger) {

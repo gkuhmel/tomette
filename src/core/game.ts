@@ -65,6 +65,10 @@ export class Game {
   rosaceCount = 0;
   /** Partie finie parce que le temps du mode est écoulé (et non par la pile). */
   timeUp = false;
+  /** Campagne : rangées à faire monter avant que la ligne d'arrivée n'entre dans la grille (0 = pas de ligne). */
+  readonly goalRows: number;
+  /** Manche de campagne réussie. */
+  won = false;
   readonly mode: Mode;
   score = 0;
   /** Rang de la chaîne en cours (1 = pas de chaîne). */
@@ -89,10 +93,11 @@ export class Game {
 
   private rng: Rng;
 
-  constructor(cfg: Config, seed: number, options: { empty?: boolean; mode?: ModeId } = {}) {
+  constructor(cfg: Config, seed: number, options: { empty?: boolean; mode?: ModeId; startLevel?: number; goalRows?: number } = {}) {
     this.cfg = cfg;
     this.mode = modeById(options.mode ?? 'endless');
-    this.time = (this.mode.startLevel(cfg) - 1) * cfg.levelDurationS;
+    this.time = ((options.startLevel ?? this.mode.startLevel(cfg)) - 1) * cfg.levelDurationS;
+    this.goalRows = Math.max(0, Math.round(options.goalRows ?? 0));
     this.seed = seed >>> 0;
     this.rng = new Rng(this.seed);
     const cols = clampInt(cfg.columns, 3, 15);
@@ -322,6 +327,29 @@ export class Game {
 
     // 7. Montée, alerte, défaite.
     this.updateRise(dtS);
+
+    // 8. Campagne : plus aucune tuile au-dessus de la ligne d'arrivée = manche réussie.
+    if (!this.over && this.goalRows > 0 && this.tilesAboveLine() === 0) {
+      this.won = true;
+      this.over = true;
+    }
+  }
+
+  /** Hauteur de la ligne d'arrivée au-dessus du bas de la grille, en rangées (négative : pas encore entrée). */
+  get lineRows(): number {
+    return this.rowsRisen - this.goalRows;
+  }
+
+  /** Tuiles au-dessus de la ligne d'arrivée (null tant que la ligne n'est pas entrée dans la grille). */
+  tilesAboveLine(): number | null {
+    const k = this.lineRows;
+    if (this.goalRows <= 0 || k < 0) return null;
+    let n = 0;
+    const top = this.grid.rows - k;
+    this.grid.forEach((_t, _c, r) => {
+      if (r < top) n++;
+    });
+    return n;
   }
 
   /** Lance la disparition des alignements et des anneaux de rosace ; les centres deviennent des tomettes d'or. */
