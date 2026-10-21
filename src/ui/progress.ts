@@ -19,7 +19,7 @@ function readJson<T>(key: string, fallback: T): T {
   }
 }
 
-const snapshot = (g: Game): Snapshot => ({
+export const snapshot = (g: Game): Snapshot => ({
   mode: g.mode.id,
   score: g.score,
   elapsed: g.elapsed,

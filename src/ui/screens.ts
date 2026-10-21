@@ -37,8 +37,10 @@ export interface HomeScreen {
   progress: HexButtonParts;
   settings: HexButtonParts;
   howto: HexButtonParts;
-  bestClassic: HTMLElement;
-  totalRosaces: HTMLElement;
+  /** Barre du joueur (niveau, XP, missions du jour) : ouvre l'écran Missions. */
+  player: HTMLElement;
+  playerLevel: HTMLElement;
+  missions: HTMLElement;
 }
 
 /** Accueil : titre, rosace de boutons (modes au centre et autour), difficulté, records. */
@@ -51,18 +53,16 @@ export function homeScreen(): HomeScreen {
   const progress = hexButton('var(--t3)', 'trophy', t('common.achievements'));
   const howto = hexButton('var(--t1)', 'help', t('common.help'));
   const express = hexButton('var(--t2)', 'bolt', modeName('express'));
-  const bestClassic = el('b');
-  const totalRosaces = el('b');
+  const playerLevel = el('span', { class: 'pb-level' });
+  const missions = el('span', { class: 'pb-missions' });
+  const player = el('button', { type: 'button', class: 'player-bar' }, [playerLevel, missions]);
   const screen = new Screen('screen-home', [
     el('div', { class: 'home-top' }, [el('h1', { class: 'title' }, ['Tomettes']), el('small', { class: 'tagline' }, [t('home.tagline')])]),
     rosaceMenu(play, [timeAttack, mosaic, settings, progress, howto, express]),
     difficulty,
-    el('div', { class: 'recbar' }, [
-      el('span', {}, [t('home.bestClassic'), bestClassic]),
-      el('span', {}, [t('home.totalRosaces'), totalRosaces]),
-    ]),
+    player,
   ]);
-  return { screen, difficulty, play, timeAttack, mosaic, express, progress, settings, howto, bestClassic, totalRosaces };
+  return { screen, difficulty, play, timeAttack, mosaic, express, progress, settings, howto, player, playerLevel, missions };
 }
 
 export function gameOverScreen(): {
@@ -71,6 +71,7 @@ export function gameOverScreen(): {
   score: HTMLElement;
   record: HTMLElement;
   unlocked: HTMLElement;
+  xp: HTMLElement;
   replay: HTMLElement;
   menu: HTMLElement;
 } {
@@ -78,16 +79,18 @@ export function gameOverScreen(): {
   const score = el('p', { class: 'score' });
   const record = el('p', { class: 'best' });
   const unlocked = el('div', { class: 'over-ach' });
+  const xp = el('div', { class: 'over-xp' });
   const replay = el('button', { type: 'button', class: 'btn primary' }, [t('common.replay')]);
   const menu = el('button', { type: 'button', class: 'btn' }, [t('common.menu')]);
   const screen = new Screen('screen-over', [
     title,
     score,
     record,
+    xp,
     unlocked,
     el('div', { class: 'home-buttons' }, [replay, menu]),
   ]);
-  return { screen, title, score, record, unlocked, replay, menu };
+  return { screen, title, score, record, unlocked, xp, replay, menu };
 }
 
 export interface PauseScreen {

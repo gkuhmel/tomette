@@ -24,12 +24,14 @@ import { ACHIEVEMENTS } from './core/progress';
 import { el, formatTime } from './ui/dom';
 import { isDevMode, isPhone } from './ui/guard';
 import { Key, lang, t } from './i18n';
-import { achName, modeTag, tutoText as tutoText_, tutoTitle as tutoTitle_ } from './ui/text';
+import { achName, longText, missionText, modeTag, tutoText as tutoText_, tutoTitle as tutoTitle_ } from './ui/text';
 import { howToScreen } from './ui/howto';
 import { settingsScreen } from './ui/settings';
 import { aboutScreen } from './ui/about';
 import { HomeBackground } from './ui/home-bg';
 import { Progress, progressScreen } from './ui/progress';
+import { bar, Missions, missionsScreen, playerLevel } from './ui/missions';
+import { longMission } from './core/missions';
 import { gameOverScreen, homeScreen, pauseScreen, rotateScreen } from './ui/screens';
 import { load, loadBest, loadDifficulty, save, saveBest, saveDifficulty } from './ui/storage';
 
@@ -83,6 +85,7 @@ function boot(): void {
   const renderer = new Renderer(canvas);
   const sound = new Sound();
   const progress = new Progress();
+  const missions = new Missions();
   const syncSound = () => {
     sound.sfxOn = config.sound !== 0;
     sound.musicOn = config.music !== 0;
@@ -170,6 +173,15 @@ function boot(): void {
       : t('over.score', { n: game.score });
     over.record.textContent = record ? t('over.newRecord') : t(rosaces ? 'over.recordRosaces' : 'over.record', { n: best });
     const fresh = progress.finish(game);
+    const mr = missions.finish(game);
+    over.xp.replaceChildren(
+      el('p', { class: 'over-xp-gain' }, [t('over.xp', { n: mr.xpGame + mr.xpMissions })]),
+      ...(mr.levelAfter > mr.levelBefore ? [el('p', { class: 'over-level-up' }, [t('over.levelUp', { n: mr.levelAfter })])] : []),
+      playerLevel(missions),
+      ...(mr.daily.length || mr.long !== null ? [el('p', { class: 'over-ach-title' }, [t('over.missionsDone')])] : []),
+      ...mr.daily.map((m) => el('p', {}, [`✓ ${missionText(m.id, m.target)}`])),
+      ...(mr.long !== null ? [el('p', {}, [`✓ ${longText(longMission(mr.long).id, longMission(mr.long).target)}`])] : []),
+    );
     track('game_end', {
       mode,
       difficulty,
@@ -251,8 +263,10 @@ function boot(): void {
       b.button.title = modeTag(modeById(id), config);
     }
     home.progress.rec.textContent = `${progress.unlocked.size}/${ACHIEVEMENTS.length}`;
-    home.bestClassic.textContent = String(loadBest('endless', difficulty));
-    home.totalRosaces.textContent = String(progress.totals.rosaces);
+    const lv = missions.level;
+    home.playerLevel.replaceChildren(el('strong', {}, [t('player.level', { n: lv.level })]), bar(lv.into, lv.need));
+    const daily = missions.state.daily;
+    home.missions.textContent = `${t('missions.title')} ${daily.filter((m) => m.done).length}/${daily.length}`;
     over.screen.hide();
     howto.hide();
     settings.hide();
@@ -360,6 +374,16 @@ function boot(): void {
     progressView.hide();
     home.screen.show();
   });
+  const missionsView = missionsScreen(missions, () => {
+    missionsView.hide();
+    showHome();
+  });
+  home.player.addEventListener('click', () => {
+    missionsView.refresh();
+    missionsView.root.scrollTop = 0;
+    home.screen.hide();
+    missionsView.show();
+  });
   home.progress.button.addEventListener('click', () => {
     progressView.refresh();
     progressView.root.scrollTop = 0;
@@ -422,7 +446,7 @@ function boot(): void {
   document.addEventListener(
     'touchmove',
     (e) => {
-      if (!(e.target instanceof Element && e.target.closest('#debug-panel, #screen-howto, #screen-settings, #screen-progress, #screen-about'))) e.preventDefault();
+      if (!(e.target instanceof Element && e.target.closest('#debug-panel, #screen-howto, #screen-settings, #screen-progress, #screen-about, #screen-missions'))) e.preventDefault();
     },
     { passive: false },
   );
