@@ -296,7 +296,7 @@ export class Renderer {
       ctx.strokeStyle = `rgba(${th.alert}, ${pulse})`;
       ctx.strokeRect(x0 - 3, y0 - 3, L.boardW + 6, L.boardH + h + 6);
       const k = cfg.graceS > 0 ? Math.max(0, Math.min(1, game.graceLeft / cfg.graceS)) : 0;
-      const gy = y0 - 13;
+      const gy = y0 - 10;
       ctx.fillStyle = `rgba(${th.alert}, 0.18)`;
       ctx.fillRect(x0, gy, L.boardW, 6);
       ctx.fillStyle = `rgba(${k > 0.4 ? th.warn : th.alert}, 0.95)`;

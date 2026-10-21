@@ -4,7 +4,7 @@
  */
 export const defaultConfig = {
   columns: 8,
-  rows: 12,
+  rows: 11,
   colors: 6,
   initialRows: 4,
   baseSecondsPerRow: 16,

@@ -22,7 +22,7 @@ export function tutorialConfig(cfg: Config): Config {
   return {
     ...cfg,
     columns: 8,
-    rows: 12,
+    rows: 11,
     baseSecondsPerRow: 1e9,
     minSecondsPerRow: 1e9,
     crackedChance: 0,
@@ -54,46 +54,46 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   {
     id: 'swap',
     build: (cfg) => {
-      const g = base(cfg, [10, 11]);
+      const g = base(cfg, [9, 10]);
+      put(g, 3, 9, A);
       put(g, 3, 10, A);
-      put(g, 3, 11, A);
-      g.grid.place(2, 9, A);
+      g.grid.place(2, 8, A);
       return g;
     },
-    hint: { from: { c: 2, r: 9 }, to: { c: 3, r: 9 } },
+    hint: { from: { c: 2, r: 8 }, to: { c: 3, r: 8 } },
     done: (_g, ev) => ev.length > 0,
   },
   {
     id: 'diagonal',
     build: (cfg) => {
-      const g = base(cfg, [10, 11]);
-      put(g, 0, 10, B);
+      const g = base(cfg, [9, 10]);
+      put(g, 0, 9, B);
+      put(g, 2, 9, B);
       put(g, 2, 10, B);
-      put(g, 2, 11, B);
       return g;
     },
-    hint: { from: { c: 2, r: 10 }, to: { c: 1, r: 10 } },
+    hint: { from: { c: 2, r: 9 }, to: { c: 1, r: 9 } },
     done: (_g, ev) => ev.length > 0,
   },
   {
     id: 'chain',
     build: (cfg) => {
-      const g = base(cfg, [10, 11]);
-      put(g, 3, 11, B);
+      const g = base(cfg, [9, 10]);
       put(g, 3, 10, B);
-      put(g, 4, 10, A);
-      g.grid.place(3, 9, A);
-      g.grid.place(3, 8, B);
-      fill(g, 2, 9);
-      g.grid.place(1, 9, A);
+      put(g, 3, 9, B);
+      put(g, 4, 9, A);
+      g.grid.place(3, 8, A);
+      g.grid.place(3, 7, B);
+      fill(g, 2, 8);
+      g.grid.place(1, 8, A);
       return g;
     },
-    hint: { from: { c: 1, r: 9 }, to: { c: 2, r: 9 } },
+    hint: { from: { c: 1, r: 8 }, to: { c: 2, r: 8 } },
     done: (_g, ev) => ev.some((e) => e.chain >= 2),
   },
   {
     id: 'rise',
-    build: (cfg) => base(cfg, [9, 10, 11]),
+    build: (cfg) => base(cfg, [8, 9, 10]),
     hintRise: true,
     done: (g) => g.rowsRisen >= 1,
   },

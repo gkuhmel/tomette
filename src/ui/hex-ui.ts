@@ -80,20 +80,21 @@ export function rosaceMenu(center: HexButtonParts, around: HexButtonParts[]): HT
   return el('div', { class: 'rosace-menu' }, [center.button, ...around.map((p) => p.button)]);
 }
 
-/** Pastille hexagonale du HUD (niveau ou rosaces) avec sa jauge de progression. */
+/** Pastille hexagonale du HUD : la valeur (niveau ou rosaces) dans la tomette, son nom en dessous, et une jauge de progression. */
 export function hexBadge(): { root: HTMLElement; label: HTMLElement; value: HTMLElement; setProgress(p: number): void } {
   const label = el('small');
   const value = el('b');
-  const root = el('div', { class: 'hud-badge' }, [el('div', { class: 't' }, [label, value])]);
-  const w = 74;
-  const h = 66;
-  const inner = roundHexPathD(w / 2, h / 2, 31, 4);
-  root.insertAdjacentHTML(
+  const tile = el('div', { class: 'hud-badge-tile' }, [value]);
+  const root = el('div', { class: 'hud-badge' }, [tile, label]);
+  const w = 64;
+  const h = 56;
+  const inner = roundHexPathD(w / 2, h / 2, 27, 4);
+  tile.insertAdjacentHTML(
     'afterbegin',
-    `<svg viewBox="0 0 ${w} ${h}" aria-hidden="true"><path class="bg" d="${roundHexPathD(w / 2, h / 2, 35, 5)}"/>` +
+    `<svg viewBox="0 0 ${w} ${h}" aria-hidden="true"><path class="bg" d="${roundHexPathD(w / 2, h / 2, 31, 5)}"/>` +
       `<path class="track" d="${inner}"/><path class="prog" d="${inner}" pathLength="100" stroke-dasharray="0 100"/></svg>`,
   );
-  const prog = root.querySelector<SVGPathElement>('.prog')!;
+  const prog = tile.querySelector<SVGPathElement>('.prog')!;
   let last = -1;
   return {
     root,

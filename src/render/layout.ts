@@ -16,11 +16,11 @@ export interface Layout {
   dpr: number;
 }
 
-const PAD = 6;
+const PAD = 3;
 /** Marge du haut : place pour la jauge de grâce. */
-const PAD_TOP = 16;
+const PAD_TOP = 12;
 
-/** R est le plus grand possible : 7 colonnes sur toute la largeur, en tenant aussi dans la hauteur. */
+/** R est le plus grand possible : toutes les colonnes sur toute la largeur, en tenant aussi dans la hauteur. */
 export function computeLayout(cssW: number, cssH: number, cols: number, rows: number, dpr: number): Layout {
   const rW = (cssW - 2 * PAD) / (1.5 * (cols - 1) + 2);
   // rows + demi-case des colonnes impaires + rangée d'aperçu.
