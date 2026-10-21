@@ -142,6 +142,13 @@ export class Sound {
     [0, 2, 4].forEach((s, i) => this.pluck(noteHz(s + 5), t + 0.3 + i * 0.02, 0.9, 0.18));
   }
 
+  slide(): void {
+    if (!this.ok()) return;
+    const t = this.now();
+    this.pluck(660, t, 0.08, 0.1, this.sfx, 'triangle');
+    this.pluck(520, t + 0.05, 0.1, 0.08, this.sfx, 'triangle');
+  }
+
   repair(): void {
     if (!this.ok()) return;
     this.pluck(noteHz(9), this.now(), 0.25, 0.14);

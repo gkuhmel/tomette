@@ -35,6 +35,12 @@ export const defaultConfig = {
   crackedChance: 0.05,
   sealedChance: 0.03,
   jokerChance: 0.015,
+  /** Éboulement : une pile plus haute que sa voisine glisse en biais (1 = activé). */
+  slide: 1,
+  /** Différence de hauteur (en cases) à partir de laquelle une pile s'éboule. */
+  slideMinDrop: 2,
+  /** Durée du glissement (ms). */
+  slideMs: 140,
   /** Durées et niveau de départ des modes. */
   timeAttackS: 120,
   mosaicS: 180,

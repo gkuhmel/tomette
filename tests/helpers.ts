@@ -2,8 +2,9 @@ import { Config, defaultConfig } from '../src/config';
 import { Game } from '../src/core/game';
 import { Dir, neighbor } from '../src/core/hex';
 
+/** Configuration de test : éboulement coupé (scénarios construits colonne par colonne). */
 export function cfg(overrides: Partial<Config> = {}): Config {
-  return { ...defaultConfig, ...overrides };
+  return { ...defaultConfig, slide: 0, ...overrides };
 }
 
 /** Jeu sur grille vide, sans montée (pour des scénarios construits à la main). */

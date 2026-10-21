@@ -166,6 +166,7 @@ export const en: Dict = {
   'howto.s5.p1': 'A new (darker) row comes up from the bottom, faster and faster.',
   'howto.s5.p2': 'Hold “Raise” (or the Space bar) to speed up.',
   'howto.s5.p3': 'When the stack gets close to the top, the frame turns orange. If a tile touches the top, it turns red: you have {n} seconds to make a match, or it\'s game over.',
+  'howto.s5.p4': 'Landslide: when a stack is much taller than its neighbour, the top tile slides diagonally down into the lower column. It can even set off a chain!',
   'howto.s6.title': '6. The rosette',
   'howto.s6.p1': 'Surround a tile with at least 5 tiles of one other colour: that\'s a rosette! The ring disappears (big bonus, long pause of the stack) and the centre tile becomes a golden tile.',
   'howto.s6.p2': 'The 6th neighbour can be another colour, empty, or off the grid: you can also build a rosette against the bottom or a side.',

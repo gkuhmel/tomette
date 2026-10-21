@@ -29,6 +29,7 @@ export function tutorialConfig(cfg: Config): Config {
     sealedChance: 0,
     jokerChance: 0,
     warnRows: 0,
+    slide: 0,
   };
 }
 

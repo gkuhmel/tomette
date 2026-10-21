@@ -1,6 +1,7 @@
 import type { Config } from '../config';
 import { chainInProgress, markChainAbove, pointsFor, stopTimeFor } from './chain';
 import { stepGravity } from './gravity';
+import { findSlides } from './slide';
 import { Grid, Tile } from './grid';
 import { ALL_DIRS, Cell, directionTo, LATERAL_DIRS, neighbor } from './hex';
 import { findMatches } from './match';
@@ -27,7 +28,7 @@ export interface ClearEvent {
 export type GameEvent = ClearEvent;
 
 /** Petits signaux pour le son (échange, atterrissage, réparation). */
-export type Signal = 'swap' | 'land' | 'repair';
+export type Signal = 'swap' | 'land' | 'repair' | 'slide';
 
 /** Bilan de la partie, pour les statistiques et les succès. */
 export interface GameStats {
@@ -223,6 +224,7 @@ export class Game {
 
     // 2. Gravité.
     if (stepGravity(g, cfg, dtMs).length > 0) this.signals.push('land');
+    if (cfg.slide) this.stepSlides();
     if (this.level > this.stats.maxLevel) this.stats.maxLevel = this.level;
 
     // 3. Alignements.
@@ -247,6 +249,28 @@ export class Game {
   }
 
   /** Lance la disparition des alignements et des anneaux de rosace ; les centres deviennent des tomettes d'or. */
+  /** Éboulement : le sommet d'une pile nettement plus haute glisse vers la colonne voisine. */
+  private stepSlides(): void {
+    const g = this.grid;
+    const moves = findSlides(g, this.cfg.slideMinDrop);
+    if (!moves.length) return;
+    // Une tuile qui glisse pendant une cascade peut prolonger la chaîne.
+    const cascading = this.chain > 1 || this.clearing || g.some((t) => t.chain);
+    for (const { tile, from, to } of moves) {
+      if (g.get(to.c, to.r) !== null) continue;
+      g.set(from.c, from.r, null);
+      g.set(to.c, to.r, tile);
+      Object.assign(tile, {
+        state: 'swapping',
+        timer: Math.max(1, this.cfg.slideMs),
+        swapDc: from.c - to.c,
+        swapDr: from.r - to.r,
+        chain: tile.chain || cascading,
+      });
+    }
+    this.signals.push('slide');
+  }
+
   private startClear(matched: Cell[], rosaces: Rosace[] = [], gold = false): void {
     const cfg = this.cfg;
     const g = this.grid;

@@ -165,6 +165,7 @@ export const fr = {
   'howto.s5.p1': 'Une nouvelle rangée (assombrie) arrive par le bas, de plus en plus vite.',
   'howto.s5.p2': 'Maintiens « Monter » (ou la touche Espace) pour accélérer.',
   'howto.s5.p3': 'Quand la pile approche du haut, le cadre devient orange. Si une tuile touche le haut, il devient rouge : tu as {n} secondes pour faire un alignement, sinon c\'est perdu.',
+  'howto.s5.p4': 'Éboulement : quand une pile est nettement plus haute que sa voisine, la tuile du dessus glisse en biais vers la colonne plus basse. Ça peut même déclencher une chaîne !',
   'howto.s6.title': '6. La rosace',
   'howto.s6.p1': 'Entoure une tuile d\'au moins 5 tuiles d\'une même autre couleur : c\'est une rosace ! L\'anneau disparaît (gros bonus, longue pause de la pile) et la tuile du centre devient une tomette d\'or.',
   'howto.s6.p2': 'La 6e voisine peut être d\'une autre couleur, vide ou hors de la grille : une rosace se construit aussi contre le bas ou un côté.',

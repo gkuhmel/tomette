@@ -166,6 +166,7 @@ export const de: Dict = {
   'howto.s5.p1': 'Eine neue (abgedunkelte) Reihe kommt von unten, immer schneller.',
   'howto.s5.p2': 'Halte „Anheben“ (oder die Leertaste), um zu beschleunigen.',
   'howto.s5.p3': 'Nähert sich der Stapel dem oberen Rand, wird der Rahmen orange. Berührt eine Fliese den Rand, wird er rot: Du hast {n} Sekunden für eine Reihe, sonst ist das Spiel vorbei.',
+  'howto.s5.p4': 'Erdrutsch: Ist ein Stapel deutlich höher als sein Nachbar, rutscht die oberste Fliese schräg in die niedrigere Spalte. Das kann sogar eine Kette auslösen!',
   'howto.s6.title': '6. Die Rosette',
   'howto.s6.p1': 'Umgib eine Fliese mit mindestens 5 Fliesen einer anderen, gleichen Farbe: Das ist eine Rosette! Der Ring verschwindet (großer Bonus, lange Pause des Stapels) und die Mittelfliese wird zur Goldfliese.',
   'howto.s6.p2': 'Der 6. Nachbar darf eine andere Farbe haben, leer sein oder außerhalb des Felds liegen: Eine Rosette geht also auch am unteren Rand oder an einer Seite.',

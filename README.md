@@ -41,6 +41,10 @@ Déploiement manuel possible : `npm run deploy` (après `npx wrangler login`).
   (toutes les couleurs).
 - **La pile monte** : maintenir « Monter » (ou Espace) pour accélérer. Zone
   d'attention orange près du haut, puis alerte rouge avec jauge de grâce.
+- **Éboulement** : une pile nettement plus haute que sa voisine s'affaisse (la
+  tuile du sommet glisse en biais). Compense les colonnes du bord, qui ont moins
+  de lignes possibles (5 au lieu de 9) et montaient plus vite. Réglable (`slide`,
+  `slideMinDrop`).
 - **Pause** : bouton ❚❚, Échap ou P.
 
 Modes : Classique (sans fin), Contre-la-montre (2 min), Mosaïque (un max de

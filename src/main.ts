@@ -503,6 +503,7 @@ function boot(): void {
     for (const s of game.signals) {
       if (s === 'swap') sound.swap();
       else if (s === 'land') sound.land();
+      else if (s === 'slide') sound.slide();
       else sound.repair();
     }
     game.signals.length = 0;

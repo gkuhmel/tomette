@@ -166,6 +166,7 @@ export const it: Dict = {
   'howto.s5.p1': 'Una nuova fila (scurita) arriva dal basso, sempre più veloce.',
   'howto.s5.p2': 'Tieni premuto «Alza» (o la barra spaziatrice) per accelerare.',
   'howto.s5.p3': 'Quando la pila si avvicina all\'alto, la cornice diventa arancione. Se una tessera tocca l\'alto, diventa rossa: hai {n} secondi per fare un allineamento, altrimenti hai perso.',
+  'howto.s5.p4': 'Frana: quando una pila è molto più alta della vicina, la tessera in cima scivola in diagonale nella colonna più bassa. Può perfino innescare una catena!',
   'howto.s6.title': '6. Il rosone',
   'howto.s6.p1': 'Circonda una tessera con almeno 5 tessere di un altro stesso colore: è un rosone! L\'anello sparisce (grande bonus, lunga pausa della pila) e la tessera centrale diventa una tessera d\'oro.',
   'howto.s6.p2': 'La 6ª vicina può essere di un altro colore, vuota o fuori dalla griglia: puoi costruire un rosone anche contro il fondo o un lato.',

@@ -41,6 +41,14 @@ export const PARAM_SECTIONS: ParamSection[] = [
     ],
   },
   {
+    title: 'Éboulement',
+    params: [
+      { key: 'slide', label: 'Éboulement activé', help: 'Le sommet d\'une pile nettement plus haute que sa voisine glisse en biais vers elle. Évite les piles sur les côtés et le creux au milieu.', min: 0, max: 1, step: 1, toggle: true },
+      { key: 'slideMinDrop', label: 'Écart minimal', help: 'Nombre de cases vides sous la case en biais pour que la tuile glisse. 1 = très fluide (tout s\'aplanit), 3 = seulement les grosses piles.', unit: 'cases', min: 1, max: 4, step: 1 },
+      { key: 'slideMs', label: 'Durée du glissement', help: 'Durée de l\'animation de glissement.', unit: 'ms', min: 60, max: 400, step: 20 },
+    ],
+  },
+  {
     title: 'Pauses et danger',
     params: [
       { key: 'chainPauseBaseS', label: 'Pause de chaîne', help: 'Arrêt de la pile pour une chaîne ×2.', unit: 's', min: 0, max: 5, step: 0.1 },

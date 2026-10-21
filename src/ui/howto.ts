@@ -380,6 +380,7 @@ export function howToScreen(onPlay: () => void, onBack: () => void, onTutorial: 
         fig(riseScene),
         ...tx('howto.s5.p1', 'howto.s5.p2'),
         t('howto.s5.p3', { n: config.graceS }),
+        ...(config.slide ? [t('howto.s5.p4')] : []),
       ),
       section('howto.s6.title', fig(rosaceBefore, '→', rosaceAfter), ...tx('howto.s6.p1', 'howto.s6.p2', 'howto.s6.p3')),
       section('', fig(goldUse), t('howto.s6.p4')),

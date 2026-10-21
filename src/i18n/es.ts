@@ -166,6 +166,7 @@ export const es: Dict = {
   'howto.s5.p1': 'Una nueva fila (oscurecida) sube desde abajo, cada vez más rápido.',
   'howto.s5.p2': 'Mantén «Subir» (o la barra espaciadora) para acelerar.',
   'howto.s5.p3': 'Cuando la pila se acerca arriba, el marco se pone naranja. Si una ficha toca arriba, se pone rojo: tienes {n} segundos para hacer una línea o pierdes.',
+  'howto.s5.p4': 'Derrumbe: cuando una pila es mucho más alta que su vecina, la ficha de arriba se desliza en diagonal hacia la columna más baja. ¡Puede incluso provocar una cadena!',
   'howto.s6.title': '6. El rosetón',
   'howto.s6.p1': 'Rodea una ficha con al menos 5 fichas de un mismo color distinto: ¡es un rosetón! El anillo desaparece (gran bonificación, pausa larga de la pila) y la ficha central se convierte en una ficha de oro.',
   'howto.s6.p2': 'La 6.ª vecina puede ser de otro color, estar vacía o fuera de la cuadrícula: también puedes hacer un rosetón contra el fondo o un lado.',
