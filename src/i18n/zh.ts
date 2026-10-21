@@ -63,6 +63,9 @@ export const zh: Dict = {
   'mode.campaign.name': '闯关',
   'camp.intro': '终点线随着砖堆上升：清空它上方的所有花砖即可过关。越快过关，星星越多。',
   'camp.total': '★ {n} / {total}',
+  'camp.finish': '终点',
+  'camp.stageTitle': '第 {n} 关 · 终点线还有 {goal} 行',
+  'camp.hint': '终点线 🏁 会随砖堆上升。出现后，清除它上方的所有花砖（它们会闪橙色）即可过关！',
   'camp.next': '下一关',
   'camp.retry': '重试',
   'camp.won': '第 {n} 关通过！',
@@ -103,6 +106,8 @@ export const zh: Dict = {
   'over.newRecord': '新纪录！',
   'over.record': '最高纪录：{n}',
   'over.recordRosaces': '最高纪录：{n} 个花窗',
+  'over.prevRecord': '之前纪录：{n}',
+  'over.prevRecordRosaces': '之前纪录：{n} 个花窗',
   'over.newAch': '新成就',
 
   'mode.endless.name': '经典',

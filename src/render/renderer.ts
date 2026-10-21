@@ -311,36 +311,53 @@ export class Renderer {
       }
     }
 
-    // Campagne : ligne d'arrivée en damier, qui suit le bas des tuiles colonne par colonne.
-    if (game.goalRows > 0) {
+    // Campagne : ligne d'arrivée droite en damier, et tuiles encore au-dessus (à vider) entourées.
+    if (game.goalRows > 0 && game.lineRows >= 0) {
       const k = game.lineRows;
-      const base = y0 + (g.rows - k) * h - rise;
-      if (base < y0 + L.boardH + h * 1.6) {
-        const band = Math.max(6, R * 0.26);
+      const top = g.rows - k;
+      const pulse = 0.75 + 0.25 * Math.sin(now * 0.006);
+      ctx.lineWidth = Math.max(2.5, R * 0.16);
+      ctx.strokeStyle = `rgba(235, 110, 20, ${pulse})`;
+      g.forEach((t, c, r) => {
+        if (r >= top || t.state === 'clearing') return;
+        const p = cellCenter(c, r, R);
+        hexPath(ctx, x0 + p.x, y0 + p.y - rise + (t.state === 'falling' ? t.fall * h : 0), R * 0.9);
+        ctx.stroke();
+      });
+      const y = y0 + top * h - rise + h * 0.25;
+      if (y < y0 + L.boardH + h) {
+        const band = Math.max(8, R * 0.34);
         const sq = band / 2;
+        const left = x0 - R * 0.15;
+        const right = x0 + L.boardW + R * 0.15;
         ctx.save();
-        ctx.beginPath();
-        ctx.rect(x0 - R, y0 - 2, L.boardW + 2 * R, L.boardH + h * 1.2);
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+        ctx.shadowBlur = 4;
+        ctx.fillStyle = '#ffffff';
+        roundRect(ctx, left, y - band / 2, right - left, band, 3);
+        ctx.fill();
+        ctx.restore();
+        ctx.save();
+        roundRect(ctx, left, y - band / 2, right - left, band, 3);
         ctx.clip();
-        for (let c = 0; c < g.cols; c++) {
-          const p = cellCenter(c, 0, R);
-          const left = x0 + p.x - R * 0.76;
-          const right = x0 + p.x + R * 0.76;
-          const y = base + (c % 2 ? h / 2 : 0) - band / 2;
-          ctx.fillStyle = '#ffffff';
-          ctx.fillRect(left, y, right - left, band);
-          ctx.fillStyle = th.css['--primary'] ?? '#1d2a44';
-          for (let i = 0; Math.round(left / sq) * sq + i * sq < right; i++) {
-            const x = Math.round(left / sq) * sq + i * sq;
-            for (let j = 0; j < 2; j++) {
-              if ((Math.round(x / sq) + j) % 2) continue;
-              const xa = Math.max(left, x);
-              const xb = Math.min(right, x + sq);
-              if (xb > xa) ctx.fillRect(xa, y + j * sq, xb - xa, sq);
-            }
-          }
+        ctx.fillStyle = '#1d2a44';
+        for (let i = 0; left + i * sq < right; i++) {
+          ctx.fillRect(left + i * sq, y - band / 2 + (i % 2) * sq, sq, sq);
         }
         ctx.restore();
+        // Étiquette au centre.
+        const label = t('camp.finish');
+        ctx.font = `900 ${Math.round(Math.max(11, R * 0.42))}px Nunito, system-ui, sans-serif`;
+        const w = ctx.measureText(label).width + R * 0.8;
+        const lh = Math.max(18, R * 0.7);
+        const cx = x0 + L.boardW / 2;
+        ctx.fillStyle = th.css['--primary'] ?? '#1d2a44';
+        roundRect(ctx, cx - w / 2, y - lh / 2, w, lh, lh / 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, cx, y + 1);
       }
     }
 

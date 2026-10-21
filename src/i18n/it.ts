@@ -62,6 +62,9 @@ export const it: Dict = {
   'mode.campaign.name': 'Campagna',
   'camp.intro': 'Un traguardo sale con la pila: elimina tutto ciò che sta sopra per vincere il livello. Più sei veloce, più stelle ottieni.',
   'camp.total': '★ {n} / {total}',
+  'camp.finish': 'ARRIVO',
+  'camp.stageTitle': 'Livello {n} · traguardo tra {goal} file',
+  'camp.hint': 'Il traguardo 🏁 sale con la pila. Quando appare, elimina tutte le piastrelle sopra di esso (lampeggiano in arancione) per vincere il livello!',
   'camp.next': 'Livello successivo',
   'camp.retry': 'Riprova',
   'camp.won': 'Livello {n} superato!',
@@ -102,6 +105,8 @@ export const it: Dict = {
   'over.newRecord': 'Nuovo record!',
   'over.record': 'Record: {n}',
   'over.recordRosaces': 'Record: {n} rosoni',
+  'over.prevRecord': 'Record precedente: {n}',
+  'over.prevRecordRosaces': 'Record precedente: {n} rosoni',
   'over.newAch': 'Nuovi obiettivi',
 
   'mode.endless.name': 'Classica',

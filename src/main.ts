@@ -24,7 +24,7 @@ import { ACHIEVEMENTS } from './core/progress';
 import { el, formatTime } from './ui/dom';
 import { isDevMode, isPhone } from './ui/guard';
 import { Key, lang, t } from './i18n';
-import { achName, longText, missionText, modeTag, tutoText as tutoText_, tutoTitle as tutoTitle_ } from './ui/text';
+import { achName, longText, missionText, modeName, modeTag, tutoText as tutoText_, tutoTitle as tutoTitle_ } from './ui/text';
 import { howToScreen } from './ui/howto';
 import { settingsScreen } from './ui/settings';
 import { aboutScreen } from './ui/about';
@@ -34,7 +34,7 @@ import { bar, Missions, missionsScreen, playerLevel } from './ui/missions';
 import { longMission } from './core/missions';
 import { unlocksBetween } from './core/unlocks';
 import { STAGE_COUNT, stageConfig, stageSpec, starsFor } from './core/campaign';
-import { campaignScreen, saveStars, starText, totalStars } from './ui/campaign';
+import { campaignScreen, saveStars, totalStars } from './ui/campaign';
 import { Ai, AI_PROFILES, AiSkill } from './core/ai';
 import { Duel, duelConfig } from './core/duel';
 
@@ -43,6 +43,7 @@ const MALUS_ICON = { night: '🌙', freeze: '❄', crack: '⚡', quake: '〰' } 
 import { drawMini } from './render/mini';
 import { loadDuel, recordDuel } from './ui/duel';
 import { duelResult } from './ui/duel-result';
+import { resultBlock } from './ui/result';
 import { gameOverScreen, homeScreen, pauseScreen, rotateScreen } from './ui/screens';
 import { load, loadBest, loadDifficulty, save, saveBest, saveDifficulty } from './ui/storage';
 
@@ -147,6 +148,7 @@ function boot(): void {
   }
 
   let overTimer = 0;
+  let hintTimer = 0;
   let shownScore = 0;
 
   function startGame(seed: number = randomSeed(), m: ModeId = mode): void {
@@ -181,6 +183,17 @@ function boot(): void {
     over.screen.hide();
     pause.screen.hide();
     tuto.hidden = true;
+    window.clearTimeout(hintTimer);
+    if (mode === 'campaign') {
+      // Rappel du but au début de chaque manche (la bulle disparaît seule).
+      tutoTitle.textContent = t('camp.stageTitle', { n: stageNo, goal: game.goalRows });
+      tutoText.textContent = t('camp.hint');
+      tutoActions.replaceChildren();
+      tuto.hidden = false;
+      hintTimer = window.setTimeout(() => {
+        if (state === 'playing' && mode === 'campaign') tuto.hidden = true;
+      }, 5000);
+    }
     renderer.hint = null;
     raise.classList.remove('pulse');
     state = 'playing';
@@ -197,59 +210,103 @@ function boot(): void {
     input.release();
     game.manualRise = false;
     const value = game.recordValue;
-    const record = value > best;
+    const prevBest = best;
+    const record = value > best && mode !== 'duel' && mode !== 'campaign';
     if (record) {
       best = value;
       saveBest(best, mode, difficulty);
     }
     const rosaces = game.mode.record === 'rosaces';
-    over.title.textContent = game.timeUp ? t('over.timeUp') : t('over.title');
-    over.score.textContent = rosaces
-      ? t(game.rosaceCount === 1 ? 'over.rosaces_one' : 'over.rosaces_other', { r: game.rosaceCount, s: game.score })
-      : t('over.score', { n: game.score });
-    over.record.textContent = record ? t('over.newRecord') : t(rosaces ? 'over.recordRosaces' : 'over.record', { n: best });
     over.next.hidden = true;
     over.replay.textContent = t('common.replay');
     over.duel.replaceChildren();
-    over.screen.root.classList.remove('is-duel', 'win', 'lose', 'draw');
+    over.screen.root.classList.remove('gold', 'grey', 'blue');
+    over.screen.root.classList.add('is-result');
+    const time = formatTime(game.elapsed);
+    const diffName = t(`diff.${difficulty}` as Key);
+    let block: HTMLElement;
     if (duel && cpu) {
       const w = duel.winner;
       const result = w === 0 ? 'win' : w === 1 ? 'lose' : 'draw';
       const rec = recordDuel(aiSkill(), result)[aiSkill()];
-      over.duel.append(
-        duelResult({
-          result,
-          level: t(`diff.${difficulty}` as Key),
-          time: formatTime(game.elapsed),
-          me: { score: game.score, sent: duel.sent[0], chain: game.stats.maxChain, rosaces: game.rosaceCount },
-          cpu: { score: cpu.score, sent: duel.sent[1], chain: cpu.stats.maxChain, rosaces: cpu.rosaceCount },
-          wins: rec.wins,
-          losses: rec.losses,
-          streak: rec.streak,
-        }),
-      );
-      over.screen.root.classList.add('is-duel', result);
+      block = duelResult({
+        result,
+        level: diffName,
+        time,
+        me: { score: game.score, sent: duel.sent[0], chain: game.stats.maxChain, rosaces: game.rosaceCount },
+        cpu: { score: cpu.score, sent: duel.sent[1], chain: cpu.stats.maxChain, rosaces: cpu.rosaceCount },
+        wins: rec.wins,
+        losses: rec.losses,
+        streak: rec.streak,
+      });
+      over.screen.root.classList.add(result === 'win' ? 'gold' : result === 'lose' ? 'grey' : 'blue');
       over.replay.textContent = t('duel.rematch');
       game.over = true;
       cpu.over = true;
-    }
-    if (mode === 'campaign') {
+    } else if (mode === 'campaign') {
       // Campagne : étoiles selon le temps, manche suivante si réussie.
       const spec = stageSpec(stageNo, config);
       over.replay.textContent = t('camp.retry');
+      const sub = `${t('mode.campaign.name')} · ${t('hud.stage')} ${stageNo}`;
       if (game.won) {
         const stars = starsFor(spec, game.elapsed);
         const better = saveStars(stageNo, stars);
-        over.title.textContent = t('camp.won', { n: stageNo });
-        over.score.textContent = starText(stars);
-        over.record.textContent = `${t('camp.time', { t: formatTime(game.elapsed) })}${better ? ` · ${t('over.newRecord')}` : ''}`;
+        block = resultBlock({
+          tone: 'gold',
+          art: 'flag',
+          title: t('camp.won', { n: stageNo }),
+          stars,
+          sub,
+          cards: [{ title: t('duel.you'), color: 'var(--t1)', big: time, rows: [[t('hud.score'), String(game.score)], [t('duel.chain'), `×${game.stats.maxChain}`]] }],
+          footer: [better ? t('over.newRecord') : stars < 3 ? t('camp.goal3', { t: formatTime(spec.star3) }) : ''],
+          confetti: true,
+        });
+        over.screen.root.classList.add('gold');
         over.next.hidden = stageNo >= STAGE_COUNT;
       } else {
-        over.title.textContent = t('camp.lost', { n: stageNo });
-        over.score.textContent = t('over.score', { n: game.score });
-        over.record.textContent = t('camp.goal3', { t: formatTime(spec.star3) });
+        block = resultBlock({
+          tone: 'grey',
+          art: 'crack',
+          title: t('camp.lost', { n: stageNo }),
+          sub,
+          cards: [{ title: t('duel.you'), color: 'var(--t1)', big: String(game.score), rows: [[t('hud.toClear'), String(game.tilesAboveLine() ?? '—')], [t('hud.time'), time]] }],
+          footer: [t('camp.goal3', { t: formatTime(spec.star3) })],
+        });
+        over.screen.root.classList.add('grey');
       }
+    } else {
+      // Modes solo : médaille dorée pour un record, bleue sinon.
+      const tone = record ? 'gold' : 'blue';
+      block = resultBlock({
+        tone,
+        art: record ? 'trophy' : game.timeUp ? 'clock' : 'star',
+        title: record ? t('over.newRecord') : game.timeUp ? t('over.timeUp') : t('over.title'),
+        sub: `${modeName(mode)} · ${diffName} · ${time}`,
+        cards: [
+          {
+            title: rosaces ? t('hud.rosaces') : t('hud.score'),
+            color: 'var(--t1)',
+            big: String(value),
+            rows: [
+              ...(rosaces ? [[t('hud.score'), String(game.score)] as [string, string]] : [[t('stat.rosaces'), String(game.rosaceCount)] as [string, string]]),
+              [t('stat.level'), String(game.stats.maxLevel)],
+              [t('duel.chain'), `×${game.stats.maxChain}`],
+              [t('stat.tiles'), String(game.stats.tilesCleared)],
+            ],
+          },
+        ],
+        footer: [
+          record
+            ? prevBest > 0
+              ? t(rosaces ? 'over.prevRecordRosaces' : 'over.prevRecord', { n: prevBest })
+              : ''
+            : t(rosaces ? 'over.recordRosaces' : 'over.record', { n: best }),
+        ],
+        confetti: record,
+      });
+      over.screen.root.classList.add(tone);
     }
+    over.duel.append(block);
     const fresh = progress.finish(game);
     const mr = missions.finish(game);
     over.xp.replaceChildren(
@@ -428,11 +485,45 @@ function boot(): void {
     state = 'home';
     showHome();
   });
+  // Reprise : compte à rebours 3, 2, 1 avant que la partie ne reparte.
+  const COUNT_STEP_MS = 650;
+  const countNum = el('b');
+  const countdown = el('div', { id: 'countdown' }, [countNum]);
+  countdown.hidden = true;
+  stage.append(countdown);
+  let resumeAt = 0;
   function resumeGame(): void {
     if (isLandscape() || state !== 'paused' || !pause.screen.visible) return;
     pause.screen.hide();
-    state = 'playing';
-    sound.startMusic();
+    resumeAt = performance.now() + 3 * COUNT_STEP_MS;
+    countNum.textContent = '';
+    countdown.hidden = false;
+  }
+  function cancelCountdown(): void {
+    if (!resumeAt) return;
+    resumeAt = 0;
+    countdown.hidden = true;
+    pause.screen.show();
+  }
+  function stepCountdown(now: number): void {
+    if (!resumeAt) return;
+    const left = resumeAt - now;
+    if (left <= 0) {
+      resumeAt = 0;
+      countdown.hidden = true;
+      state = 'playing';
+      sound.startMusic();
+      return;
+    }
+    const n = String(Math.ceil(left / COUNT_STEP_MS));
+    if (countNum.textContent !== n) {
+      countNum.textContent = n;
+      // Relance l'animation à chaque chiffre.
+      countNum.classList.remove('tick');
+      void countNum.offsetWidth;
+      countNum.classList.add('tick');
+      sound.ui();
+    }
   }
   pause.resume.addEventListener('click', resumeGame);
   pause.restart.addEventListener('click', () => startGame());
@@ -523,13 +614,15 @@ function boot(): void {
   // Clavier (ordinateur) : Espace maintenue = accélération.
   window.addEventListener('keydown', (e) => {
     if (e.code === 'Escape' || e.code === 'KeyP') {
-      if (state === 'playing') pauseGame();
+      if (resumeAt) cancelCountdown();
+      else if (state === 'playing') pauseGame();
       else if (state === 'paused' && pause.screen.visible) resumeGame();
       return;
     }
-    // Mode développeur : W fait perdre l'ordinateur (pour tester la fin de duel).
-    if (dev && e.code === 'KeyW' && cpu && state === 'playing') {
-      cpu.over = true;
+    // Mode développeur : W fait gagner le duel ou la manche (pour tester les écrans de fin).
+    if (dev && e.code === 'KeyW' && state === 'playing') {
+      if (cpu) cpu.over = true;
+      else if (mode === 'campaign') game.won = game.over = true;
       return;
     }
     if (e.code !== 'Space' || debugOpen) return;
@@ -545,6 +638,7 @@ function boot(): void {
   // --- Plateforme ---------------------------------------------------------
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
+      cancelCountdown();
       pauseGame();
       sound.suspend();
     } else sound.resume();
@@ -764,6 +858,7 @@ function boot(): void {
     }
     if (renderer.setGlyphs(Math.round(config.glyphs))) howto.redraw();
     if (state === 'tutorial') checkTutorial();
+    stepCountdown(now);
     playSounds(now);
     renderer.consumeEvents(game, now);
     duel?.eventsCleared(0);

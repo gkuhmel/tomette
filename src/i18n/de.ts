@@ -62,6 +62,9 @@ export const de: Dict = {
   'mode.campaign.name': 'Kampagne',
   'camp.intro': 'Eine Ziellinie steigt mit dem Stapel: Räume alles darüber ab, um die Runde zu gewinnen. Je schneller, desto mehr Sterne.',
   'camp.total': '★ {n} / {total}',
+  'camp.finish': 'ZIEL',
+  'camp.stageTitle': 'Runde {n} · Linie in {goal} Reihen',
+  'camp.hint': 'Die Ziellinie 🏁 steigt mit dem Stapel. Sobald sie erscheint, löse alle Fliesen darüber auf (sie blinken orange) und gewinne die Runde!',
   'camp.next': 'Nächste Runde',
   'camp.retry': 'Nochmal',
   'camp.won': 'Runde {n} geschafft!',
@@ -102,6 +105,8 @@ export const de: Dict = {
   'over.newRecord': 'Neuer Rekord!',
   'over.record': 'Rekord: {n}',
   'over.recordRosaces': 'Rekord: {n} Rosetten',
+  'over.prevRecord': 'Alter Rekord: {n}',
+  'over.prevRecordRosaces': 'Alter Rekord: {n} Rosetten',
   'over.newAch': 'Neue Erfolge',
 
   'mode.endless.name': 'Klassisch',

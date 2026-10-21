@@ -59,8 +59,11 @@ export const fr = {
   'long.repairs': 'Répare ou libère {n} tuiles au total',
 
   'mode.campaign.name': 'Campagne',
-  'camp.intro': 'Une ligne d\'arrivée remonte avec la pile : vide tout ce qui est au-dessus pour gagner la manche. Plus tu vas vite, plus tu gagnes d\'étoiles.',
+  'camp.intro': 'Une ligne d\'arrivée 🏁 remonte avec la pile : fais disparaître toutes les tuiles au-dessus d\'elle pour gagner la manche. Plus tu vas vite, plus tu gagnes d\'étoiles.',
   'camp.total': '★ {n} / {total}',
+  'camp.finish': 'ARRIVÉE',
+  'camp.stageTitle': 'Manche {n} · ligne dans {goal} rangées',
+  'camp.hint': 'La ligne d\'arrivée 🏁 monte avec la pile. Quand elle apparaît, fais disparaître toutes les tuiles au-dessus d\'elle (elles clignotent en orange) : la manche est gagnée !',
   'camp.next': 'Manche suivante',
   'camp.retry': 'Réessayer',
   'camp.won': 'Manche {n} réussie !',
@@ -101,6 +104,8 @@ export const fr = {
   'over.newRecord': 'Nouveau record !',
   'over.record': 'Record : {n}',
   'over.recordRosaces': 'Record : {n} rosaces',
+  'over.prevRecord': 'Ancien record : {n}',
+  'over.prevRecordRosaces': 'Ancien record : {n} rosaces',
   'over.newAch': 'Nouveaux succès',
 
   'mode.endless.name': 'Classique',

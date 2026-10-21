@@ -62,6 +62,9 @@ export const en: Dict = {
   'mode.campaign.name': 'Campaign',
   'camp.intro': 'A finish line rises with the stack: clear everything above it to win the stage. The faster you are, the more stars you earn.',
   'camp.total': '★ {n} / {total}',
+  'camp.finish': 'FINISH',
+  'camp.stageTitle': 'Stage {n} · line in {goal} rows',
+  'camp.hint': 'The 🏁 finish line rises with the stack. Once it shows up, clear every tile above it (they flash orange) to win the stage!',
   'camp.next': 'Next stage',
   'camp.retry': 'Try again',
   'camp.won': 'Stage {n} cleared!',
@@ -102,6 +105,8 @@ export const en: Dict = {
   'over.newRecord': 'New record!',
   'over.record': 'Best: {n}',
   'over.recordRosaces': 'Best: {n} rosettes',
+  'over.prevRecord': 'Previous best: {n}',
+  'over.prevRecordRosaces': 'Previous best: {n} rosettes',
   'over.newAch': 'New achievements',
 
   'mode.endless.name': 'Classic',

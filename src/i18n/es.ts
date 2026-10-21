@@ -62,6 +62,9 @@ export const es: Dict = {
   'mode.campaign.name': 'Campaña',
   'camp.intro': 'Una línea de meta sube con la pila: elimina todo lo que esté por encima para ganar la fase. Cuanto más rápido, más estrellas.',
   'camp.total': '★ {n} / {total}',
+  'camp.finish': 'META',
+  'camp.stageTitle': 'Fase {n} · meta en {goal} filas',
+  'camp.hint': 'La línea de meta 🏁 sube con la pila. Cuando aparezca, elimina todas las baldosas por encima de ella (parpadean en naranja) para ganar la fase.',
   'camp.next': 'Siguiente fase',
   'camp.retry': 'Reintentar',
   'camp.won': '¡Fase {n} superada!',
@@ -102,6 +105,8 @@ export const es: Dict = {
   'over.newRecord': '¡Nuevo récord!',
   'over.record': 'Récord: {n}',
   'over.recordRosaces': 'Récord: {n} rosetones',
+  'over.prevRecord': 'Récord anterior: {n}',
+  'over.prevRecordRosaces': 'Récord anterior: {n} rosetones',
   'over.newAch': 'Nuevos logros',
 
   'mode.endless.name': 'Clásico',
