@@ -440,16 +440,34 @@ export class Renderer {
     hexPath(ctx, bx, by, L.R * 0.95);
     ctx.stroke();
     ctx.setLineDash([]);
-    // Flèche qui glisse de la tuile vers la destination.
-    const k = (now % 1200) / 1200;
-    const t = Math.min(1, k * 1.4);
-    const cx = ax + (bx - ax) * t;
-    const cy = ay + (by - ay) * t;
-    ctx.globalAlpha = k < 0.75 ? 1 : 1 - (k - 0.75) / 0.25;
-    ctx.fillStyle = this.theme.held;
-    ctx.beginPath();
-    ctx.arc(cx, cy, L.R * 0.28, 0, Math.PI * 2);
-    ctx.fill();
+    // Main qui montre le geste : appuie sur la tuile, glisse vers la case, puis s'efface.
+    const k = (now % 1600) / 1600;
+    const move = k < 0.2 ? 0 : k < 0.65 ? (k - 0.2) / 0.45 : 1;
+    const ease = move * move * (3 - 2 * move);
+    const cx = ax + (bx - ax) * ease;
+    const cy = ay + (by - ay) * ease;
+    const press = k < 0.2 ? 1 - 0.12 * Math.sin((k / 0.2) * Math.PI) : 1;
+    ctx.globalAlpha = k < 0.8 ? 1 : 1 - (k - 0.8) / 0.2;
+    // Trace du glissement.
+    if (ease > 0) {
+      ctx.strokeStyle = this.theme.held;
+      ctx.lineWidth = L.R * 0.22;
+      ctx.lineCap = 'round';
+      ctx.globalAlpha *= 0.35;
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(cx, cy);
+      ctx.stroke();
+      ctx.globalAlpha = k < 0.8 ? 1 : 1 - (k - 0.8) / 0.2;
+    }
+    const size = L.R * 1.25 * press;
+    ctx.font = `${Math.round(size)}px system-ui, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+    ctx.shadowBlur = 6;
+    // Le bout du doigt de 👆 est en haut : on le pose sur le centre de la tuile.
+    ctx.fillText('👆', cx + size * 0.08, cy - size * 0.08);
     ctx.restore();
   }
 

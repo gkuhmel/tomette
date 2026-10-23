@@ -36,6 +36,10 @@ Déploiement manuel possible : `npm run deploy` (après `npx wrangler login`).
 - **Rosace** : au moins 5 des 6 voisines d'une tuile de la même autre couleur.
   L'anneau disparaît et le centre devient une **tomette d'or** ; l'échanger avec
   une voisine fait disparaître toute la couleur de cette voisine.
+- **Tutoriel** : 9 étapes jouées sur le plateau (échange, en biais, combo,
+  chaîne, monter, tuile fêlée, rosace, tomette d'or, losange), avec une main
+  animée qui montre le geste. Lancé à la première partie, rejouable par le
+  bouton « Tutoriel » de l'accueil ; les règles détaillées sont dans Réglages.
 - **Losange** : 4 tuiles d'une couleur en losange (deux triangles accolés),
   construit par le joueur (une des tuiles vient de bouger) : bonus, et la
   voisine la plus haute devient un joker.

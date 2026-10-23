@@ -65,7 +65,8 @@ export function homeScreen(): HomeScreen {
   const missions = hexButton('var(--t3)', 'target', t('missions.title'));
   const campaign = hexButton('var(--t1)', 'flag', modeName('campaign'));
   const express = hexButton('var(--t2)', 'bolt', modeName('express'));
-  const howto = toolButton('help', t('common.help'));
+  // « Tutoriel » : rejoue le tutoriel pas à pas (les règles détaillées sont dans les Réglages).
+  const howto = toolButton('help', t('common.tutorial'));
   const progressCount = el('small');
   const progress = toolButton('trophy', t('common.achievements'), progressCount);
   const settings = toolButton('gear', t('common.settings'));

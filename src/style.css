@@ -1998,10 +1998,9 @@ button.exp-card:active {
 }
 
 #tuto strong {
-  font-size: 13px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  opacity: 0.75;
+  font-family: var(--font-title);
+  font-size: 22px;
+  font-weight: 700;
 }
 
 #tuto p {
@@ -2035,6 +2034,65 @@ button.exp-card:active {
   font-size: 14px;
   text-decoration: underline;
   opacity: 0.75;
+  cursor: pointer;
+}
+
+/* Tutoriel : la main montre le bouton Monter. */
+#raise {
+  position: relative;
+}
+
+#raise.pulse::after {
+  content: '👆';
+  position: absolute;
+  right: 18%;
+  top: 55%;
+  font-size: 30px;
+  animation: tuto-press 1.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes tuto-press {
+  0%,
+  100% {
+    transform: translateY(6px) scale(1);
+  }
+  45% {
+    transform: translateY(-4px) scale(0.88);
+  }
+}
+
+.tuto-dots {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 6px;
+}
+
+.tuto-dots i {
+  width: 10px;
+  height: 9px;
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+  background: currentColor;
+  opacity: 0.25;
+}
+
+.tuto-dots i.done {
+  opacity: 0.6;
+}
+
+.tuto-dots i.on {
+  opacity: 1;
+  background: var(--t2);
+}
+
+.tuto-icon {
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 22px;
+  line-height: 1;
+  opacity: 0.8;
   cursor: pointer;
 }
 

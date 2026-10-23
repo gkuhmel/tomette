@@ -15,6 +15,7 @@ export function settingsScreen(
   onChange: () => void,
   onAbout: () => void,
   getLevel: () => number,
+  onRules: () => void,
 ): Screen & { refresh(): void } {
   const toggles: [ConfigKey, Key, Key][] = [
     ['sound', 'set.sound', 'set.soundHelp'],
@@ -120,6 +121,8 @@ export function settingsScreen(
 
   const about = el('button', { type: 'button', class: 'btn' }, [t('common.about')]);
   about.addEventListener('click', onAbout);
+  const rules = el('button', { type: 'button', class: 'btn' }, [t('common.howto')]);
+  rules.addEventListener('click', onRules);
 
   const back = el('button', { type: 'button', class: 'btn primary' }, [t('common.back')]);
   back.addEventListener('click', onBack);
@@ -135,7 +138,7 @@ export function settingsScreen(
       el('h3', {}, [t('set.language')]),
       el('div', { class: 'lang-list' }, langButtons),
       el('h3', {}, [t('set.progress')]),
-      el('div', { class: 'home-buttons' }, [reset, about]),
+      el('div', { class: 'home-buttons' }, [rules, reset, about]),
       el('div', { class: 'home-buttons' }, [back]),
     ]),
   ]);

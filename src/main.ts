@@ -636,6 +636,10 @@ function boot(): void {
       about.show();
     },
     () => missions.level.level,
+    () => {
+      settings.hide();
+      openHowto('settings');
+    },
   );
   const about = aboutScreen(() => {
     about.hide();
@@ -649,7 +653,7 @@ function boot(): void {
     settings.show();
   }
   // Comment jouer : ouvert depuis l'accueil ou la pause, on revient au même endroit.
-  let howtoFrom: 'home' | 'pause' = 'home';
+  let howtoFrom: 'home' | 'pause' | 'settings' = 'home';
   const howto = howToScreen(
     () => {
       if (howtoFrom === 'pause') {
@@ -661,11 +665,12 @@ function boot(): void {
     () => {
       howto.hide();
       if (howtoFrom === 'pause') pause.screen.show();
+      else if (howtoFrom === 'settings') settings.show();
       else home.screen.show();
     },
     () => startTutorial(null),
   );
-  function openHowto(from: 'home' | 'pause'): void {
+  function openHowto(from: 'home' | 'pause' | 'settings'): void {
     howtoFrom = from;
     home.screen.hide();
     pause.screen.hide();
@@ -678,7 +683,7 @@ function boot(): void {
   renderer.setTheme(theme0);
   applyThemeCss(theme0);
   howto.setTheme(theme0);
-  home.howto.addEventListener('click', () => openHowto('home'));
+  home.howto.addEventListener('click', () => startTutorial(null));
   over.replay.addEventListener('click', () => {
     if (mode === 'online') {
       // Revanche : la salle relance quand les deux joueurs l'ont demandée.
@@ -853,6 +858,12 @@ function boot(): void {
       return;
     }
     // Mode développeur : W fait gagner le duel ou la manche (pour tester les écrans de fin).
+    // Mode développeur : N passe à l'étape suivante du tutoriel.
+    if (dev && e.code === 'KeyN' && state === 'tutorial') {
+      tutoStep = Math.min(TUTORIAL_STEPS.length - 1, tutoStep + 1);
+      loadTutorialStep();
+      return;
+    }
     if (dev && e.code === 'KeyW' && state === 'playing') {
       if (cpu) cpu.over = true;
       else if (mode === 'campaign' || mode === 'expedition') game.won = game.over = true;
@@ -937,10 +948,11 @@ function boot(): void {
   const TUTORIAL_KEY = 'tomettes.tutorial';
   const tutoTitle = el('strong');
   const tutoText = el('p');
-  const tutoRetry = el('button', { type: 'button', class: 'tuto-link' }, [t('tuto.retry')]);
-  const tutoSkip = el('button', { type: 'button', class: 'tuto-link' }, [t('tuto.skip')]);
+  const tutoRetry = el('button', { type: 'button', class: 'tuto-icon', 'aria-label': t('tuto.retry'), title: t('tuto.retry') }, ['↺']);
+  const tutoSkip = el('button', { type: 'button', class: 'tuto-link' }, [`${t('tuto.skip')} ⏭`]);
+  const tutoDots = el('div', { class: 'tuto-dots' });
   const tutoActions = el('div', { class: 'tuto-actions' }, [tutoRetry, tutoSkip]);
-  const tuto = el('div', { id: 'tuto' }, [tutoTitle, tutoText, tutoActions]);
+  const tuto = el('div', { id: 'tuto' }, [tutoDots, tutoTitle, tutoText, tutoActions]);
   tuto.hidden = true;
   stage.append(tuto);
   let tutoStep = 0;
@@ -950,6 +962,12 @@ function boot(): void {
   function startTutorial(then: ModeId | null): void {
     tutoThen = then;
     tutoStep = 0;
+    // Le tutoriel se joue seul : pas d'adversaire, pas de cartes d'expédition.
+    cpu = ai = duel = null;
+    leaveOnline();
+    document.body.classList.remove('duel');
+    runCards.replaceChildren();
+    window.clearTimeout(overTimer);
     home.screen.hide();
     howto.hide();
     over.screen.hide();
@@ -970,7 +988,8 @@ function boot(): void {
     renderer.hint = step.hint ?? null;
     raise.classList.toggle('pulse', !!step.hintRise);
     tutoDoneAt = 0;
-    tutoTitle.textContent = t('tuto.step', { i: tutoStep + 1, n: TUTORIAL_STEPS.length, title: tutoTitle_(step.id) });
+    tutoTitle.textContent = tutoTitle_(step.id);
+    tutoDots.replaceChildren(...TUTORIAL_STEPS.map((_s, i) => el('i', { class: i < tutoStep ? 'done' : i === tutoStep ? 'on' : '' })));
     tutoText.textContent = tutoText_(step.id);
     tutoActions.replaceChildren(tutoRetry, tutoSkip);
     tuto.hidden = false;
