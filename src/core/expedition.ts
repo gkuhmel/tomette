@@ -3,11 +3,11 @@ import { stageSpec, StageSpec } from './campaign';
 import { Rng } from './rng';
 
 /**
- * Expédition (roguelite) : 8 manches à ligne d'arrivée d'affilée, une seule vie.
+ * Expédition (roguelite) : 20 manches à ligne d'arrivée d'affilée, une seule vie.
  * Après chaque manche réussie, on choisit 1 carte parmi 3 : un bonus et sa
  * contrepartie, valables jusqu'à la fin de l'expédition (les effets s'empilent).
  */
-export const RUN_STAGES = 8;
+export const RUN_STAGES = 20;
 
 /** Effets cumulés des cartes choisies. */
 export interface Mods {
@@ -86,9 +86,9 @@ export function drawCards(rng: Rng, taken: readonly string[], n = 3): string[] {
   return out;
 }
 
-/** Manche `n` (1 à 8) de l'expédition : reprend la difficulté des manches de campagne 2, 5, 8… 23. */
+/** Manche `n` (1 à 20) de l'expédition : reprend la difficulté des manches de campagne, de la 2e à la 30e. */
 export function runStage(n: number, cfg: Config, mods: Mods): { spec: StageSpec; cfg: Config; goal: number } {
-  const spec = stageSpec(n * 3 - 1, cfg);
+  const spec = stageSpec(Math.round(2 + ((n - 1) * 28) / (RUN_STAGES - 1)), cfg);
   const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
   const mortarEvery = spec.mortarEveryS > 0 ? spec.mortarEveryS : mods.mortarEarly ? 30 : 0;
   const out: Config = {

@@ -281,7 +281,8 @@ function boot(): void {
       const spec = stageSpec(stageNo, config);
       game = new Game(stageConfig(config, spec), seed, { mode, startLevel: spec.level, goalRows: spec.goal });
     } else if (mode === 'expedition' && run) {
-      const st = runStage(run.stage, config, modsFor(run.cards));
+      // L'expédition suit la difficulté choisie sur l'accueil.
+      const st = runStage(run.stage, { ...withDifficulty(config, difficulty) }, modsFor(run.cards));
       stageNo = run.stage;
       game = new Game(st.cfg, seed, { mode, startLevel: st.spec.level, goalRows: st.goal, orders: true });
       game.shields = run.shields;
@@ -345,7 +346,7 @@ function boot(): void {
         game.manualRise = false;
         progress.finish(game);
         missions.finish(game);
-        if (run.stage + 1 >= 5) progress.grant(['expHalf']);
+        if (run.stage + 1 >= 10) progress.grant(['expHalf']);
         const choices = drawCards(run.rng, run.cards);
         const stageDone = run.stage;
         const total = run.score;
@@ -420,7 +421,7 @@ function boot(): void {
       // Fin d'expédition : réussie (8 manches) ou perdue.
       const done = game.won && run.stage >= RUN_STAGES;
       const better = saveExp(run.score, done ? RUN_STAGES : run.stage);
-      const grants = [...(run.stage >= 5 ? ['expHalf'] : []), ...(done ? ['exp1'] : []), ...(done && !run.cards.includes('shield') ? ['expNoShield'] : [])];
+      const grants = [...(run.stage >= 10 ? ['expHalf'] : []), ...(done ? ['exp1'] : []), ...(done && !run.cards.includes('shield') ? ['expNoShield'] : [])];
       if (grants.length) progress.grant(grants);
       block = resultBlock({
         tone: done ? 'gold' : 'grey',

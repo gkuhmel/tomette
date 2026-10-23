@@ -7,7 +7,7 @@ import { emptyGame } from './helpers';
 
 describe('expédition', () => {
   it('8 manches de plus en plus dures', () => {
-    expect(RUN_STAGES).toBe(8);
+    expect(RUN_STAGES).toBe(20);
     let prev = runStage(1, defaultConfig, emptyMods());
     for (let n = 2; n <= RUN_STAGES; n++) {
       const s = runStage(n, defaultConfig, emptyMods());
