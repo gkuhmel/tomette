@@ -1,0 +1,110 @@
+import type { Config } from '../config';
+import { stageSpec, StageSpec } from './campaign';
+import { Rng } from './rng';
+
+/**
+ * Expédition (roguelite) : 8 manches à ligne d'arrivée d'affilée, une seule vie.
+ * Après chaque manche réussie, on choisit 1 carte parmi 3 : un bonus et sa
+ * contrepartie, valables jusqu'à la fin de l'expédition (les effets s'empilent).
+ */
+export const RUN_STAGES = 8;
+
+/** Effets cumulés des cartes choisies. */
+export interface Mods {
+  colors: number;
+  /** Multiplicateur du temps par rangée (> 1 : pile plus lente). */
+  rowTime: number;
+  joker: number;
+  cracked: number;
+  sealed: number;
+  grace: number;
+  goal: number;
+  shields: number;
+  score: number;
+  initialRows: number;
+  mortarNarrow: boolean;
+  mortarEvery: number;
+  rosace4: boolean;
+  mortarEarly: boolean;
+  orderBonus: number;
+  pauses: number;
+}
+
+export function emptyMods(): Mods {
+  return {
+    colors: 0, rowTime: 1, joker: 1, cracked: 1, sealed: 1, grace: 0, goal: 0, shields: 0, score: 1,
+    initialRows: 0, mortarNarrow: false, mortarEvery: 1, rosace4: false, mortarEarly: false, orderBonus: 1, pauses: 1,
+  };
+}
+
+export interface Card {
+  /** Textes : card.<id>.name, card.<id>.plus, card.<id>.minus. */
+  id: string;
+  apply: (m: Mods) => void;
+}
+
+export const CARDS: Card[] = [
+  { id: 'palette', apply: (m) => ((m.colors -= 1), (m.rowTime /= 1.2)) },
+  { id: 'joker', apply: (m) => ((m.joker *= 3), (m.cracked *= 2)) },
+  { id: 'grace', apply: (m) => ((m.grace += 2), (m.goal += 2)) },
+  { id: 'shield', apply: (m) => ((m.shields += 1), (m.rowTime /= 1.15)) },
+  { id: 'points', apply: (m) => ((m.score *= 1.5), (m.initialRows += 1)) },
+  { id: 'slow', apply: (m) => ((m.rowTime *= 1.2), (m.sealed *= 2)) },
+  { id: 'mortar', apply: (m) => ((m.mortarNarrow = true), (m.mortarEvery *= 0.5)) },
+  { id: 'rosace', apply: (m) => ((m.rosace4 = true), (m.mortarEarly = true), (m.mortarEvery *= 0.75)) },
+  { id: 'orders', apply: (m) => ((m.orderBonus *= 2), (m.grace -= 1)) },
+  { id: 'pauses', apply: (m) => ((m.pauses *= 1.5), (m.colors += 1)) },
+];
+
+export const cardById = (id: string) => CARDS.find((c) => c.id === id);
+
+/** Effets cumulés d'une liste de cartes. */
+export function modsFor(cards: readonly string[]): Mods {
+  const m = emptyMods();
+  for (const id of cards) cardById(id)?.apply(m);
+  return m;
+}
+
+/** 3 cartes au hasard parmi celles pas encore prises (les cartes déjà prises peuvent revenir s'il n'en reste pas assez). */
+export function drawCards(rng: Rng, taken: readonly string[], n = 3): string[] {
+  const fresh = CARDS.map((c) => c.id).filter((id) => !taken.includes(id));
+  const pool = fresh.length >= n ? fresh : CARDS.map((c) => c.id);
+  const out: string[] = [];
+  while (out.length < n && pool.length) out.push(pool.splice(rng.int(pool.length), 1)[0]);
+  return out;
+}
+
+/** Manche `n` (1 à 8) de l'expédition : reprend la difficulté des manches de campagne 2, 5, 8… 23. */
+export function runStage(n: number, cfg: Config, mods: Mods): { spec: StageSpec; cfg: Config; goal: number } {
+  const spec = stageSpec(n * 3 - 1, cfg);
+  const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+  const mortarEvery = spec.mortarEveryS > 0 ? spec.mortarEveryS : mods.mortarEarly ? 30 : 0;
+  const out: Config = {
+    ...cfg,
+    colors: clamp(spec.colors + mods.colors, 3, 6),
+    initialRows: clamp(spec.initialRows + mods.initialRows, 1, cfg.rows - 3),
+    baseSecondsPerRow: cfg.baseSecondsPerRow * mods.rowTime,
+    minSecondsPerRow: cfg.minSecondsPerRow * mods.rowTime,
+    crackedChance: Math.min(0.3, Math.max(spec.crackedChance, mods.cracked > 1 ? 0.03 : 0) * mods.cracked),
+    sealedChance: Math.min(0.3, Math.max(spec.sealedChance, mods.sealed > 1 ? 0.02 : 0) * mods.sealed),
+    jokerChance: Math.min(0.1, cfg.jokerChance * mods.joker),
+    graceS: Math.max(1, cfg.graceS + mods.grace),
+    mortarEveryS: mortarEvery * mods.mortarEvery,
+    mortarFromLevel: 1,
+    mortarMaxW: mods.mortarNarrow ? Math.max(1, cfg.mortarMaxW - 2) : cfg.mortarMaxW,
+    mortarMinW: mods.mortarNarrow ? 1 : cfg.mortarMinW,
+    rosaceMin: mods.rosace4 ? 4 : cfg.rosaceMin,
+    orderBonus: cfg.orderBonus * mods.orderBonus,
+    chainPauseBaseS: cfg.chainPauseBaseS * mods.pauses,
+    chainPausePerLinkS: cfg.chainPausePerLinkS * mods.pauses,
+    comboPausePerExtraTileS: cfg.comboPausePerExtraTileS * mods.pauses,
+    rosacePauseS: cfg.rosacePauseS * mods.pauses,
+    orderPauseS: cfg.orderPauseS * mods.pauses,
+  };
+  return { spec, cfg: out, goal: spec.goal + mods.goal };
+}
+
+/** Points d'une manche réussie pour l'expédition : score de la manche (× bonus de cartes) + 1 000 × numéro de manche. */
+export function stagePoints(stage: number, score: number, mods: Mods, won: boolean): number {
+  return Math.round(score * mods.score) + (won ? 1000 * stage : 0);
+}

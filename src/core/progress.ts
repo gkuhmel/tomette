@@ -84,6 +84,10 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'chrono3k', check: (_t, g) => inMode(g, 'timeAttack') && g!.score >= 3000 },
   { id: 'games25', check: (t) => t.games >= 25 },
   { id: 'games100', check: (t) => t.games >= 100 },
+  // Expédition : débloqués par l'interface en fin d'expédition (ils dépendent de toute la run).
+  { id: 'expHalf', check: () => false },
+  { id: 'exp1', check: () => false },
+  { id: 'expNoShield', check: () => false },
 ];
 
 /** Succès nouvellement obtenus. */

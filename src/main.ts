@@ -35,6 +35,9 @@ import { longMission } from './core/missions';
 import { unlocksBetween } from './core/unlocks';
 import { STAGE_COUNT, stageConfig, stageSpec, starsFor } from './core/campaign';
 import { campaignScreen, saveStars, totalStars } from './ui/campaign';
+import { drawCards, modsFor, RUN_STAGES, runStage, stagePoints } from './core/expedition';
+import { cardsScreen, loadExp, saveExp } from './ui/expedition';
+import { Rng } from './core/rng';
 import { Ai, AI_PROFILES, AiSkill } from './core/ai';
 import { Duel, duelConfig } from './core/duel';
 
@@ -98,6 +101,20 @@ function boot(): void {
   let ai: Ai | null = null;
   let duel: Duel | null = null;
   const aiSkill = (): AiSkill => difficulty;
+  /** Expédition en cours (null hors expédition). */
+  let run: { stage: number; cards: string[]; score: number; shields: number; time: number; rng: Rng } | null = null;
+  function startExpedition(): void {
+    run = { stage: 1, cards: [], score: 0, shields: 0, time: 0, rng: new Rng(randomSeed()) };
+    launch('expedition');
+  }
+  const cardsView = cardsScreen((id) => {
+    if (!run) return;
+    run.cards.push(id);
+    if (id === 'shield') run.shields++;
+    run.stage++;
+    cardsView.hide();
+    startGame(randomSeed(), 'expedition');
+  });
   /** Manche de campagne en cours (ou à lancer). */
   let stageNo = 1;
   let difficulty: Difficulty = loadDifficulty();
@@ -159,7 +176,7 @@ function boot(): void {
     shownScore = 0;
     mode = m;
     best = loadBest(mode, difficulty);
-    badge.label.textContent = mode === 'campaign' ? t('hud.stage') : modeById(mode).record === 'rosaces' ? t('hud.rosaces') : t('hud.level');
+    badge.label.textContent = mode === 'campaign' || mode === 'expedition' ? t('hud.stage') : modeById(mode).record === 'rosaces' ? t('hud.rosaces') : t('hud.level');
     hudRecLabel.textContent = t('hud.record');
     hudCache.length = 0;
     const prev = game.grid;
@@ -168,6 +185,11 @@ function boot(): void {
     if (mode === 'campaign') {
       const spec = stageSpec(stageNo, config);
       game = new Game(stageConfig(config, spec), seed, { mode, startLevel: spec.level, goalRows: spec.goal });
+    } else if (mode === 'expedition' && run) {
+      const st = runStage(run.stage, config, modsFor(run.cards));
+      stageNo = run.stage;
+      game = new Game(st.cfg, seed, { mode, startLevel: st.spec.level, goalRows: st.goal, orders: true });
+      game.shields = run.shields;
     } else if (mode === 'duel') {
       game = new Game(duelConfig(config), seed, { mode });
       cpu = new Game(duelConfig(config), seed ^ 0x9e3779b9, { mode });
@@ -187,14 +209,14 @@ function boot(): void {
     pause.screen.hide();
     tuto.hidden = true;
     window.clearTimeout(hintTimer);
-    if (mode === 'campaign') {
+    if (mode === 'campaign' || mode === 'expedition') {
       // Rappel du but au début de chaque manche (la bulle disparaît seule).
       tutoTitle.textContent = t('camp.stageTitle', { n: stageNo, goal: game.goalRows });
       tutoText.textContent = t('camp.hint');
       tutoActions.replaceChildren();
       tuto.hidden = false;
       hintTimer = window.setTimeout(() => {
-        if (state === 'playing' && mode === 'campaign') tuto.hidden = true;
+        if (state === 'playing' && (mode === 'campaign' || mode === 'expedition')) tuto.hidden = true;
       }, 5000);
     }
     renderer.hint = null;
@@ -208,13 +230,35 @@ function boot(): void {
   function endGame(): void {
     state = 'over';
     sound.stopMusic();
+    if (mode === 'expedition' && run) {
+      const mods = modsFor(run.cards);
+      run.score += stagePoints(run.stage, game.score, mods, game.won);
+      run.shields = game.shields;
+      run.time += game.elapsed;
+      if (game.won && run.stage < RUN_STAGES) {
+        // Manche réussie : la partie compte (stats, missions), puis choix d'une carte.
+        sound.level();
+        input.release();
+        game.manualRise = false;
+        progress.finish(game);
+        missions.finish(game);
+        if (run.stage + 1 >= 5) progress.grant(['expHalf']);
+        const choices = drawCards(run.rng, run.cards);
+        const stageDone = run.stage;
+        const total = run.score;
+        const show = () => cardsView.open(stageDone, total, choices, run?.cards ?? []);
+        if (config.animations) overTimer = window.setTimeout(show, GAME_OVER_FADE_MS + 250);
+        else show();
+        return;
+      }
+    }
     if (game.timeUp || game.won || duel?.winner === 0) sound.level();
     else sound.gameOver();
     input.release();
     game.manualRise = false;
     const value = game.recordValue;
     const prevBest = best;
-    const record = value > best && mode !== 'duel' && mode !== 'campaign';
+    const record = value > best && mode !== 'duel' && mode !== 'campaign' && mode !== 'expedition';
     if (record) {
       best = value;
       saveBest(best, mode, difficulty);
@@ -246,6 +290,33 @@ function boot(): void {
       over.replay.textContent = t('duel.rematch');
       game.over = true;
       cpu.over = true;
+    } else if (mode === 'expedition' && run) {
+      // Fin d'expédition : réussie (8 manches) ou perdue.
+      const done = game.won && run.stage >= RUN_STAGES;
+      const better = saveExp(run.score, done ? RUN_STAGES : run.stage);
+      const grants = [...(run.stage >= 5 ? ['expHalf'] : []), ...(done ? ['exp1'] : []), ...(done && !run.cards.includes('shield') ? ['expNoShield'] : [])];
+      if (grants.length) progress.grant(grants);
+      block = resultBlock({
+        tone: done ? 'gold' : 'grey',
+        art: done ? 'flag' : 'crack',
+        title: done ? t('exp.done') : t('exp.over'),
+        sub: `${t('mode.expedition.name')} · ${formatTime(run.time)}`,
+        cards: [
+          {
+            title: t('mode.expedition.name'),
+            color: 'var(--t1)',
+            big: String(run.score),
+            rows: [
+              [t('exp.reached'), `${done ? RUN_STAGES : run.stage}/${RUN_STAGES}`],
+              [t('exp.cards'), String(run.cards.length)],
+            ],
+          },
+        ],
+        footer: [better ? t('over.newRecord') : t('exp.record', { n: loadExp().best })],
+        confetti: done,
+      });
+      over.screen.root.classList.add(done ? 'gold' : 'grey');
+      over.replay.textContent = t('exp.new');
     } else if (mode === 'campaign') {
       // Campagne : étoiles selon le temps, manche suivante si réussie.
       const spec = stageSpec(stageNo, config);
@@ -479,7 +550,7 @@ function boot(): void {
   applyThemeCss(theme0);
   howto.setTheme(theme0);
   home.howto.addEventListener('click', () => openHowto('home'));
-  over.replay.addEventListener('click', () => startGame());
+  over.replay.addEventListener('click', () => (mode === 'expedition' ? startExpedition() : startGame()));
   over.next.addEventListener('click', () => {
     stageNo = Math.min(STAGE_COUNT, stageNo + 1);
     startGame(randomSeed(), 'campaign');
@@ -529,7 +600,7 @@ function boot(): void {
     }
   }
   pause.resume.addEventListener('click', resumeGame);
-  pause.restart.addEventListener('click', () => startGame());
+  pause.restart.addEventListener('click', () => (mode === 'expedition' ? startExpedition() : startGame()));
   pause.settings.addEventListener('click', () => openSettings('pause'));
   pause.howto.addEventListener('click', () => openHowto('pause'));
   // Son et musique coupés ou remis directement depuis la pause.
@@ -565,6 +636,10 @@ function boot(): void {
     () => {
       campaignView.hide();
       showHome();
+    },
+    () => {
+      campaignView.hide();
+      startExpedition();
     },
   );
   home.duel.button.addEventListener('click', () => launch('duel'));
@@ -625,7 +700,7 @@ function boot(): void {
     // Mode développeur : W fait gagner le duel ou la manche (pour tester les écrans de fin).
     if (dev && e.code === 'KeyW' && state === 'playing') {
       if (cpu) cpu.over = true;
-      else if (mode === 'campaign') game.won = game.over = true;
+      else if (mode === 'campaign' || mode === 'expedition') game.won = game.over = true;
       return;
     }
     if (e.code !== 'Space' || debugOpen) return;
@@ -683,6 +758,8 @@ function boot(): void {
     const limit = game.mode.timeLimitS(game.cfg);
     const dur = Math.max(1e-6, game.cfg.levelDurationS);
     chip.set(game.order);
+    // Boucliers de l'expédition, sous le score.
+    if (!duel) setText(6, incoming, game.shields > 0 ? '🛡'.repeat(game.shields) : '');
     if (duel && cpu) setText(1, hudBest, String(cpu.score));
     else if (game.goalRows > 0) {
       // Campagne : rangées avant l'arrivée de la ligne, puis tuiles encore au-dessus.
@@ -803,7 +880,7 @@ function boot(): void {
     game.signals.length = 0;
     for (const n of game.notices) {
       if (n === 'order' || n === 'orderGold') sound.rosace();
-      else if (n === 'shield' || n === 'blocked' || n === 'counter') sound.repair();
+      else if (n === 'shield' || n === 'blocked' || n === 'counter' || n === 'shieldUsed') sound.repair();
       else sound.mortar();
     }
     for (const e of game.events) {

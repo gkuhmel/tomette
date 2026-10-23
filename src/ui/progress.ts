@@ -50,6 +50,11 @@ export class Progress {
     return list;
   }
 
+  /** Succès accordés directement (ceux qui dépendent d'une expédition entière). */
+  grant(ids: string[]): Achievement[] {
+    return this.unlock(ACHIEVEMENTS.filter((a) => ids.includes(a.id) && !this.unlocked.has(a.id)));
+  }
+
   /** Pendant la partie : débloque ce qui est déjà acquis. */
   checkLive(game: Game): void {
     const s = snapshot(game);

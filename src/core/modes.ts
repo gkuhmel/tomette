@@ -1,6 +1,6 @@
 import type { Config } from '../config';
 
-export type ModeId = 'endless' | 'timeAttack' | 'mosaic' | 'express' | 'campaign' | 'duel';
+export type ModeId = 'endless' | 'timeAttack' | 'mosaic' | 'express' | 'campaign' | 'duel' | 'expedition';
 
 export interface Mode {
   id: ModeId;
@@ -55,8 +55,12 @@ export const DUEL: Mode = {
   record: 'score',
 };
 
+/** Expédition (roguelite, voir expedition.ts) : manches à ligne d'arrivée comme la campagne. */
+export const EXPEDITION: Mode = { ...CAMPAIGN, id: 'expedition' };
+
 export function modeById(id: ModeId): Mode {
   if (id === 'campaign') return CAMPAIGN;
+  if (id === 'expedition') return EXPEDITION;
   if (id === 'duel') return DUEL;
   return MODES.find((m) => m.id === id) ?? MODES[0];
 }

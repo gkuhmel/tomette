@@ -32,7 +32,7 @@ export interface ClearEvent {
 export type GameEvent = ClearEvent;
 
 /** Effet de duel à annoncer à l'écran (malus reçu, bouclier, contre-attaque). */
-export type Notice = 'night' | 'freeze' | 'crack' | 'quake' | 'shield' | 'blocked' | 'counter' | 'order' | 'orderGold';
+export type Notice = 'night' | 'freeze' | 'crack' | 'quake' | 'shield' | 'blocked' | 'counter' | 'order' | 'orderGold' | 'shieldUsed';
 
 /** Petits signaux pour le son (échange, atterrissage, réparation). */
 export type Signal = 'swap' | 'land' | 'repair' | 'slide' | 'mortar' | 'crumble';
@@ -94,6 +94,8 @@ export class Game {
   /** Signaux sonores depuis la dernière lecture. */
   signals: Signal[] = [];
   readonly stats: GameStats = { maxChain: 1, maxCombo: 0, tilesCleared: 0, goldUsed: 0, repairs: 0, alertSaves: 0, maxLevel: 1, slabsBroken: 0 };
+  /** Boucliers (Expédition) : chacun évite une fois de perdre en balayant le haut de la pile. */
+  shields = 0;
   /** Commande de motif en cours (null : pas de commandes dans ce mode). */
   order: Order | null = null;
   /** Commandes réalisées pendant la partie. */
@@ -587,7 +589,15 @@ export class Game {
       this.graceLeft -= dtS;
       if (this.graceLeft <= 0) {
         this.graceLeft = 0;
-        this.over = true;
+        if (this.shields > 0) {
+          // Bouclier (Expédition) : les 3 rangées du haut sont balayées au lieu de perdre.
+          this.shields--;
+          g.forEach((_t, c, r) => {
+            if (r < 3) g.set(c, r, null);
+          });
+          this.alert = false;
+          this.notices.push('shieldUsed');
+        } else this.over = true;
       }
       return;
     }

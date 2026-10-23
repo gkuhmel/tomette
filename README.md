@@ -49,6 +49,10 @@ Déploiement manuel possible : `npm run deploy` (après `npx wrangler login`).
 - **Campagne** : 30 manches. Une ligne d'arrivée en damier remonte avec la
   pile ; la manche est gagnée quand plus aucune tuile n'est au-dessus. 1 à 3
   étoiles selon le temps ; chaque manche réussie ouvre la suivante.
+- **Expédition** (dans Campagne) : roguelite de 8 manches à ligne d'arrivée,
+  une seule vie. Après chaque manche réussie, 1 carte parmi 3 (bonus +
+  contrepartie, cumulés jusqu'à la fin) ; le Bouclier sauve une fois d'un
+  débordement. Score de run, record et 3 succès dédiés.
 - **Duel** : contre l'ordinateur (niveau selon la difficulté choisie ; plus il
   est fort, plus ses attaques sont puissantes). Combos et chaînes envoient des
   dalles de mortier ; combo de 6 = Fêlures (4 tuiles), chaîne ×4 = Séisme,

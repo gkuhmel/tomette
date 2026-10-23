@@ -645,7 +645,7 @@ body.duel #duel-mini {
   height: 0;
 }
 
-body.duel .incoming:not(:empty) {
+.incoming:not(:empty) {
   height: 10px;
   margin-top: 3px;
 }
@@ -916,6 +916,102 @@ body.duel .incoming:not(:empty) {
     animation: none;
     display: none;
   }
+}
+
+/* --- Expédition ---------------------------------------------------------- */
+
+.exp-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 18px;
+  padding: 14px;
+  border-radius: 18px;
+  background: linear-gradient(160deg, var(--t4), var(--t1));
+  color: #fff;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(30, 50, 110, 0.18);
+}
+
+.exp-block > strong {
+  font-family: var(--font-title);
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.screen .exp-block p {
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.exp-best {
+  font-weight: 900;
+  opacity: 0.9;
+}
+
+.exp-block .btn {
+  min-width: 0;
+  margin-top: 4px;
+  background: #fff;
+  color: var(--primary);
+}
+
+.exp-panel {
+  text-align: center;
+}
+
+#screen-cards .title {
+  font-size: clamp(30px, 9vw, 40px);
+}
+
+.exp-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.exp-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--surface);
+  color: var(--fg);
+  font: inherit;
+  text-align: left;
+  box-shadow: 0 6px 16px rgba(30, 50, 110, 0.12);
+}
+
+button.exp-card {
+  cursor: pointer;
+}
+
+button.exp-card:active {
+  transform: scale(0.98);
+}
+
+.exp-card strong {
+  font-family: var(--font-title);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.exp-card .plus {
+  font-weight: 800;
+  color: var(--t3);
+}
+
+.exp-card .minus {
+  font-weight: 800;
+  color: var(--danger);
+}
+
+.screen .exp-taken {
+  font-size: 14px;
+  color: var(--muted);
 }
 
 /* --- Campagne ------------------------------------------------------------ */
