@@ -319,14 +319,27 @@ body.alert .hud-badge .prog {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 8px;
-  padding: 24px;
+  padding: calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom))
+    calc(16px + env(safe-area-inset-left));
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   text-align: center;
   background: var(--blur);
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
-  touch-action: none;
+  touch-action: pan-y;
+}
+
+/* Centré quand il y a la place ; quand le contenu dépasse, il part du haut et défile
+   (avec justify-content: center, le haut et le bas deviendraient inatteignables). */
+.screen::before,
+.screen::after {
+  content: '';
+  flex: 1 0 0;
 }
 
 .screen[hidden] {
@@ -424,7 +437,8 @@ body.alert .hud-badge .prog {
 /* --- Rosace de boutons hexagonaux -------------------------------------- */
 
 .rosace-menu {
-  --r: min(62px, calc((100vw - 40px) / 5.12), calc((100dvh - 380px) / 5.33));
+  /* Taille réelle calculée en JS selon la place disponible (fitRosace). */
+  --r: 56px;
   position: relative;
   flex: none;
   width: calc(var(--r) * 5.12);
@@ -472,7 +486,7 @@ body.alert .hud-badge .prog {
   align-items: center;
   gap: 1px;
   max-width: calc(var(--r) * 1.5);
-  font-size: calc(var(--r) * 0.205);
+  font-size: max(11px, calc(var(--r) * 0.205));
   font-weight: 900;
   line-height: 1.05;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
@@ -486,7 +500,7 @@ body.alert .hud-badge .prog {
 
 .hex-btn.big .hex-lab {
   font-family: var(--font-title);
-  font-size: calc(var(--r) * 0.3);
+  font-size: max(15px, calc(var(--r) * 0.3));
   font-weight: 600;
 }
 
@@ -496,7 +510,7 @@ body.alert .hud-badge .prog {
 
 .hex-rec {
   font-family: Nunito, sans-serif;
-  font-size: calc(var(--r) * 0.175);
+  font-size: max(10px, calc(var(--r) * 0.175));
   font-weight: 800;
   opacity: 0.92;
   font-variant-numeric: tabular-nums;
@@ -618,10 +632,31 @@ body.duel .incoming:not(:empty) {
   display: none;
 }
 
-#screen-over.is-result {
-  justify-content: flex-start;
-  padding-top: calc(28px + env(safe-area-inset-top));
-  overflow-y: auto;
+/* Fin de partie : boutons juste sous le bilan, XP et succès ensuite. */
+.over-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(100%, 360px);
+  margin-top: 6px;
+}
+
+.over-buttons .btn {
+  min-width: 0;
+  padding: 13px 12px;
+}
+
+.over-buttons .btn[hidden] {
+  display: none;
+}
+
+.over-row {
+  display: flex;
+  gap: 8px;
+}
+
+.over-row .btn {
+  flex: 1;
 }
 
 #screen-over.is-result.gold {
@@ -666,9 +701,7 @@ body.duel .incoming:not(:empty) {
   margin-top: 0;
 }
 
-#screen-over.is-result .home-buttons {
-  margin-top: 12px;
-}
+
 
 .over-duel {
   width: min(100%, 360px);
@@ -695,7 +728,7 @@ body.duel .incoming:not(:empty) {
 
 .duel-result .dr-title {
   margin-top: 2px;
-  font-size: 42px;
+  font-size: clamp(30px, 10vw, 42px);
   --title-stroke: #7d8aa6;
   --title-shadow: #a9b3c8;
 }
@@ -1854,5 +1887,58 @@ body.duel .incoming:not(:empty) {
   .player-bar {
     margin-top: 10px;
     padding: 8px 12px;
+  }
+}
+
+/* Pages longues (réglages, succès, missions, campagne, à propos, aide) :
+   le bouton Retour reste collé en bas, toujours atteignable. */
+.panel > .home-buttons:last-child,
+.howto-buttons {
+  position: sticky;
+  bottom: calc(-16px - env(safe-area-inset-bottom));
+  z-index: 2;
+  margin-bottom: calc(-16px - env(safe-area-inset-bottom));
+  padding: 14px 0 calc(14px + env(safe-area-inset-bottom));
+  background: linear-gradient(to bottom, transparent, var(--sky3) 35%);
+}
+
+/* Accueil sur écran bas (Android avec barres, petits iPhone) : titre et barres compactés. */
+@media (max-height: 720px) {
+  #screen-home .title {
+    font-size: 40px;
+  }
+
+  #screen-home .tagline {
+    display: none;
+  }
+
+  .player-bar {
+    margin-top: 6px;
+    padding: 7px 12px;
+  }
+
+  .player-level small {
+    display: none;
+  }
+}
+
+@media (max-height: 600px) {
+  #screen-home .player-bar {
+    display: none;
+  }
+}
+
+/* Fin de partie sur écran bas : médaille et titre réduits pour garder les boutons visibles. */
+@media (max-height: 720px) {
+  .dr-medal .medal {
+    width: 76px;
+  }
+
+  .duel-result .dr-title {
+    font-size: 32px;
+  }
+
+  .dr-sub {
+    margin: 4px 0 10px !important;
   }
 }

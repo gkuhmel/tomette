@@ -653,7 +653,8 @@ function boot(): void {
   document.addEventListener(
     'touchmove',
     (e) => {
-      if (!(e.target instanceof Element && e.target.closest('#debug-panel, #screen-howto, #screen-settings, #screen-progress, #screen-about, #screen-missions, #screen-campaign'))) e.preventDefault();
+      // Les écrans (menus, fin de partie…) défilent quand leur contenu dépasse ; le plateau, jamais.
+      if (!(e.target instanceof Element && e.target.closest('#debug-panel, .screen'))) e.preventDefault();
     },
     { passive: false },
   );

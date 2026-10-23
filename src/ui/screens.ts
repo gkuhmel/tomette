@@ -1,6 +1,6 @@
 import { t } from '../i18n';
 import { el } from './dom';
-import { hexButton, HexButtonParts, icon, IconName, rosaceMenu } from './hex-ui';
+import { autoFitRosace, hexButton, HexButtonParts, icon, IconName, rosaceMenu } from './hex-ui';
 import { modeName } from './text';
 
 /** Écran plein (accueil, fin de partie, pause, réglages, orientation…). */
@@ -71,13 +71,15 @@ export function homeScreen(): HomeScreen {
   const settings = toolButton('gear', t('common.settings'));
   const playerLevel = el('span', { class: 'pb-level' });
   const player = el('button', { type: 'button', class: 'player-bar' }, [playerLevel]);
+  const rosace = rosaceMenu(play, [duel, timeAttack, mosaic, missions, campaign, express]);
   const screen = new Screen('screen-home', [
     el('div', { class: 'home-top' }, [el('h1', { class: 'title' }, ['Tomettes']), el('small', { class: 'tagline' }, [t('home.tagline')])]),
-    rosaceMenu(play, [duel, timeAttack, mosaic, missions, campaign, express]),
+    rosace,
     el('div', { class: 'tool-row' }, [howto, progress, settings]),
     difficulty,
     player,
   ]);
+  autoFitRosace(rosace);
   return { screen, difficulty, play, timeAttack, mosaic, express, campaign, duel, missions, howto, progress, progressCount, settings, player, playerLevel };
 }
 
@@ -109,9 +111,9 @@ export function gameOverScreen(): {
     title,
     score,
     record,
+    el('div', { class: 'over-buttons' }, [next, el('div', { class: 'over-row' }, [replay, menu])]),
     xp,
     unlocked,
-    el('div', { class: 'home-buttons' }, [next, replay, menu]),
   ]);
   return { screen, title, score, record, unlocked, xp, duel, next, replay, menu };
 }
@@ -138,10 +140,12 @@ export function pauseScreen(): PauseScreen {
   const howto = hexButton('var(--t2)', 'help', t('common.help'));
   const menu = hexButton('var(--t0)', 'home', t('common.menu'));
   const stats = el('small', { class: 'tagline' });
+  const pauseRosace = rosaceMenu(resume, [restart, settings, sound, music, howto, menu]);
   const screen = new Screen('screen-pause', [
     el('div', { class: 'home-top' }, [el('h1', { class: 'title' }, [t('common.pause')]), stats]),
-    rosaceMenu(resume, [restart, settings, sound, music, howto, menu]),
+    pauseRosace,
   ]);
+  autoFitRosace(pauseRosace);
   return {
     screen,
     stats,

@@ -111,3 +111,40 @@ export function hexBadge(): { root: HTMLElement; label: HTMLElement; value: HTML
     },
   };
 }
+
+/**
+ * Taille de la rosace selon la place réellement disponible dans son écran
+ * (téléphones Android aux barres variables, petits iPhone, grandes polices…).
+ */
+export function fitRosace(menu: HTMLElement): void {
+  const screen = menu.parentElement;
+  if (!screen || screen.hidden) return;
+  const cs = getComputedStyle(screen);
+  const padV = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+  const gap = parseFloat(cs.rowGap) || 0;
+  let others = 0;
+  let count = 0;
+  for (const child of Array.from(screen.children)) {
+    if (child === menu || !(child instanceof HTMLElement) || child.offsetParent === null) continue;
+    if (getComputedStyle(child).position === 'absolute') continue;
+    const m = getComputedStyle(child);
+    others += child.offsetHeight + parseFloat(m.marginTop) + parseFloat(m.marginBottom);
+    count++;
+  }
+  const mm = getComputedStyle(menu);
+  const availH = screen.clientHeight - padV - others - gap * count - parseFloat(mm.marginTop) - parseFloat(mm.marginBottom);
+  const availW = Math.min(screen.clientWidth - 24, 520);
+  const r = Math.max(36, Math.min(78, availW / 5.12, availH / 5.33));
+  menu.style.setProperty('--r', `${r.toFixed(1)}px`);
+}
+
+/** Recalcule la taille de la rosace à chaque affichage de l'écran et à chaque redimensionnement. */
+export function autoFitRosace(menu: HTMLElement): void {
+  const run = () => requestAnimationFrame(() => fitRosace(menu));
+  window.addEventListener('resize', run);
+  window.visualViewport?.addEventListener('resize', run);
+  const screen = menu.parentElement;
+  if (screen) new MutationObserver(run).observe(screen, { attributes: true, attributeFilter: ['hidden'] });
+  if (typeof ResizeObserver !== 'undefined' && screen) new ResizeObserver(run).observe(screen);
+  run();
+}
