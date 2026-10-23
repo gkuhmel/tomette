@@ -58,8 +58,10 @@ Déploiement manuel possible : `npm run deploy` (après `npx wrangler login`).
   Chacun fait tourner sa propre partie ; un petit Worker Cloudflare (une salle
   = un Durable Object, `worker/index.ts`) relaie attaques et aperçu de la pile.
   Rien n'est stocké côté serveur.
-- **Expédition** (tuile de l'accueil) : roguelite de 20 manches (difficulté de l'accueil) à ligne d'arrivée,
-  une seule vie. Après chaque manche réussie, 1 carte parmi 3 (bonus +
+- **Expédition** (tuile de l'accueil, qui ouvre un écran de présentation) : roguelite de
+  20 manches (difficulté de l'accueil) à ligne d'arrivée, une seule vie. L'expédition en
+  cours est sauvegardée (`tomettes.run`) : on la reprend (une manche interrompue repart
+  de son début, un choix de carte en attente propose les mêmes cartes) ou on l'abandonne. Après chaque manche réussie, 1 carte parmi 3 (bonus +
   contrepartie, cumulés jusqu'à la fin) ; le Bouclier sauve une fois d'un
   débordement. 15 cartes (dont Carreau : tirer une tuile d'un double-tap,
   Mistral, Feu d'artifice, Arc-en-ciel, Pastis), chacune avec son pictogramme,

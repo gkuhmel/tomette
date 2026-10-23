@@ -36,7 +36,7 @@ import { unlocksBetween } from './core/unlocks';
 import { STAGE_COUNT, stageConfig, stageSpec, starsFor } from './core/campaign';
 import { campaignScreen, saveStars, totalStars } from './ui/campaign';
 import { drawCards, modsFor, RUN_STAGES, runStage, stagePoints } from './core/expedition';
-import { activeCards, cardBadge, cardsScreen, loadExp, saveExp } from './ui/expedition';
+import { activeCards, cardBadge, cardsScreen, clearRun, expIntroScreen, loadExp, loadRun, saveExp, saveRun, SavedRun } from './ui/expedition';
 import { Rng } from './core/rng';
 import { Ai, AI_PROFILES, AiSkill } from './core/ai';
 import { Duel, duelConfig } from './core/duel';
@@ -195,16 +195,48 @@ function boot(): void {
     showHome();
   });
   /** Expédition en cours (null hors expédition). */
-  let run: { stage: number; cards: string[]; score: number; shields: number; time: number; rng: Rng } | null = null;
+  let run: SavedRun | null = null;
   function startExpedition(): void {
-    run = { stage: 1, cards: [], score: 0, shields: 0, time: 0, rng: new Rng(randomSeed()) };
+    run = { stage: 1, cards: [], score: 0, shields: 0, time: 0, seed: randomSeed(), difficulty };
+    saveRun(run);
+    expIntro.hide();
     launch('expedition');
+  }
+  /** Reprise d'une expédition sauvegardée : choix de carte en attente, ou début de la manche. */
+  function resumeExpedition(): void {
+    run = loadRun();
+    if (!run) return startExpedition();
+    expIntro.hide();
+    home.screen.hide();
+    mode = 'expedition';
+    if (run.choices) cardsView.open(run.stage, run.score, run.choices, run.cards);
+    else startGame(randomSeed(), 'expedition');
+  }
+  const expIntro = expIntroScreen({
+    start: startExpedition,
+    resume: resumeExpedition,
+    abandon: () => {
+      clearRun();
+      run = null;
+      openExpIntro();
+    },
+    back: () => {
+      expIntro.hide();
+      showHome();
+    },
+  });
+  function openExpIntro(): void {
+    const saved = loadRun();
+    home.screen.hide();
+    expIntro.open(saved, t(`diff.${saved?.difficulty ?? difficulty}` as Key));
   }
   const cardsView = cardsScreen((id) => {
     if (!run) return;
     run.cards.push(id);
     if (id === 'shield') run.shields++;
     run.stage++;
+    run.choices = undefined;
+    saveRun(run);
     cardsView.hide();
     startGame(randomSeed(), 'expedition');
   });
@@ -282,7 +314,7 @@ function boot(): void {
       game = new Game(stageConfig(config, spec), seed, { mode, startLevel: spec.level, goalRows: spec.goal });
     } else if (mode === 'expedition' && run) {
       // L'expédition suit la difficulté choisie sur l'accueil.
-      const st = runStage(run.stage, { ...withDifficulty(config, difficulty) }, modsFor(run.cards));
+      const st = runStage(run.stage, { ...withDifficulty(config, run.difficulty) }, modsFor(run.cards));
       stageNo = run.stage;
       game = new Game(st.cfg, seed, { mode, startLevel: st.spec.level, goalRows: st.goal, orders: true });
       game.shields = run.shields;
@@ -347,7 +379,10 @@ function boot(): void {
         progress.finish(game);
         missions.finish(game);
         if (run.stage + 1 >= 10) progress.grant(['expHalf']);
-        const choices = drawCards(run.rng, run.cards);
+        // Les cartes proposées découlent de la graine : les mêmes après une reprise.
+        const choices = drawCards(new Rng(run.seed + run.stage * 7919), run.cards);
+        run.choices = choices;
+        saveRun(run);
         const stageDone = run.stage;
         const total = run.score;
         const show = () => cardsView.open(stageDone, total, choices, run?.cards ?? []);
@@ -420,6 +455,7 @@ function boot(): void {
     } else if (mode === 'expedition' && run) {
       // Fin d'expédition : réussie (8 manches) ou perdue.
       const done = game.won && run.stage >= RUN_STAGES;
+      clearRun();
       const better = saveExp(run.score, done ? RUN_STAGES : run.stage);
       const grants = [...(run.stage >= 10 ? ['expHalf'] : []), ...(done ? ['exp1'] : []), ...(done && !run.cards.includes('shield') ? ['expNoShield'] : [])];
       if (grants.length) progress.grant(grants);
@@ -610,7 +646,8 @@ function boot(): void {
     const daily = missions.state.daily;
     home.missionsCount.textContent = `${daily.filter((m) => m.done).length}/${daily.length}`;
     const exp = loadExp();
-    home.expedition.rec.textContent = exp.best ? `${exp.bestStage}/${RUN_STAGES}` : '—';
+    const saved = loadRun();
+    home.expedition.rec.textContent = saved ? `▶ ${saved.choices ? saved.stage + 1 : saved.stage}/${RUN_STAGES}` : exp.best ? `${exp.bestStage}/${RUN_STAGES}` : '—';
     home.campaign.rec.textContent = `★ ${totalStars()}/${STAGE_COUNT * 3}`;
     home.duel.rec.textContent = t('duel.wins', { n: loadDuel()[aiSkill()].wins });
     over.screen.hide();
@@ -748,7 +785,10 @@ function boot(): void {
     }
   }
   pause.resume.addEventListener('click', resumeGame);
-  pause.restart.addEventListener('click', () => (mode === 'expedition' ? startExpedition() : startGame()));
+  pause.restart.addEventListener('click', () => {
+    if (mode !== 'expedition') startGame();
+    else if (window.confirm(t('exp.abandonConfirm'))) startExpedition();
+  });
   pause.settings.addEventListener('click', () => openSettings('pause'));
   pause.howto.addEventListener('click', () => openHowto('pause'));
   // Son et musique coupés ou remis directement depuis la pause.
@@ -810,7 +850,7 @@ function boot(): void {
   };
   home.player.addEventListener('click', openMissions);
   home.missions.addEventListener('click', openMissions);
-  home.expedition.button.addEventListener('click', () => startExpedition());
+  home.expedition.button.addEventListener('click', openExpIntro);
   home.progress.addEventListener('click', () => {
     progressView.refresh();
     progressView.root.scrollTop = 0;
