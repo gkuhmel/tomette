@@ -1,6 +1,6 @@
 import type { Config } from '../config';
 
-export type ModeId = 'endless' | 'timeAttack' | 'mosaic' | 'express' | 'campaign' | 'duel' | 'expedition';
+export type ModeId = 'endless' | 'timeAttack' | 'mosaic' | 'express' | 'campaign' | 'duel' | 'expedition' | 'online';
 
 export interface Mode {
   id: ModeId;
@@ -61,7 +61,7 @@ export const EXPEDITION: Mode = { ...CAMPAIGN, id: 'expedition' };
 export function modeById(id: ModeId): Mode {
   if (id === 'campaign') return CAMPAIGN;
   if (id === 'expedition') return EXPEDITION;
-  if (id === 'duel') return DUEL;
+  if (id === 'duel' || id === 'online') return { ...DUEL, id };
   return MODES.find((m) => m.id === id) ?? MODES[0];
 }
 

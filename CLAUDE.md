@@ -20,7 +20,8 @@ jouable à la souris et au clavier.
 - Langues : français (référence, `src/i18n/fr.ts`), anglais, espagnol, allemand,
   italien, chinois. Tout nouveau texte visible reçoit ses traductions le jour même ;
   `tests/i18n.test.ts` vérifie que chaque langue a toutes les clés.
-- Déploiement : **Cloudflare** (`wrangler.jsonc`, site statique servi depuis `dist/`),
+- Déploiement : **Cloudflare** (`wrangler.jsonc` : site statique servi depuis `dist/`, plus un
+  Worker `worker/index.ts` pour le duel en ligne, routes `/api/*`, salles en Durable Objects),
   branché sur le dépôt GitHub. Build : `npm run build` ; déploiement : `npx wrangler deploy`.
   Chaque push sur `main` part en production. `base: './'` dans Vite, `.nvmrc` à `22`.
 - Le développeur teste surtout sur la version déployée, depuis son iPhone.
@@ -42,3 +43,4 @@ jouable à la souris et au clavier.
 - `npm run build` : vérification des types et build de production
 - `npm test` : Vitest
 - `npm run deploy` : build puis `wrangler deploy` (après `npx wrangler login`)
+- `npm run serve` : build puis `wrangler dev` (jeu + serveur du duel en ligne, en local)

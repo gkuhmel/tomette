@@ -44,6 +44,9 @@ import { Duel, duelConfig } from './core/duel';
 /** Pictogramme d'un malus en approche (au-dessus de la grille du joueur). */
 const MALUS_ICON = { night: '🌙', freeze: '❄', crack: '⚡', quake: '〰' } as const;
 import { drawMini } from './render/mini';
+import { BoardView, isRoomCode, LinkedDuel, NetStats, packView, ServerMsg } from './core/net';
+import { OnlineClient } from './net/client';
+import { duelMenuScreen, recordOnline, roomScreen } from './ui/online';
 import { loadDuel, recordDuel } from './ui/duel';
 import { duelResult } from './ui/duel-result';
 import { orderChip } from './ui/order-chip';
@@ -101,6 +104,94 @@ function boot(): void {
   let ai: Ai | null = null;
   let duel: Duel | null = null;
   const aiSkill = (): AiSkill => difficulty;
+  /** Duel en ligne : connexion, côté local, dernier état reçu de l'ami. */
+  let net: OnlineClient | null = null;
+  let linked: LinkedDuel | null = null;
+  let remote: { view: BoardView; stats: NetStats; pending: number } | null = null;
+  let remoteOver: NetStats | null = null;
+  let rematchAsked = false;
+  let lastStateSent = 0;
+  const emptyStats = (): NetStats => ({ score: 0, sent: 0, chain: 1, rosaces: 0 });
+  const myStats = (): NetStats => ({ score: game.score, sent: linked?.sent ?? 0, chain: game.stats.maxChain, rosaces: game.rosaceCount });
+  function leaveOnline(): void {
+    net?.close();
+    net = null;
+    linked = null;
+    remote = null;
+  }
+  /** Ouvre (ou rejoint) une salle ; le créateur partage le code. */
+  function openRoom(code: string, creator: boolean): void {
+    leaveOnline();
+    duelMenu.hide();
+    home.screen.hide();
+    roomView.open(code, creator);
+    net = new OnlineClient(code, onNet, () => {
+      if (state === 'playing' || state === 'paused') {
+        remoteOver = remoteOver ?? remote?.stats ?? emptyStats();
+      } else roomView.status(t('online.dropped'));
+    });
+    net.connect();
+  }
+  function onNet(m: ServerMsg): void {
+    switch (m.t) {
+      case 'wait':
+        roomView.status(t('online.waiting'));
+        break;
+      case 'full':
+        roomView.status(t('online.full'));
+        net?.close();
+        net = null;
+        break;
+      case 'start':
+        remoteOver = null;
+        rematchAsked = false;
+        roomView.hide();
+        over.screen.hide();
+        startGame(m.seed, 'online');
+        // Compte à rebours commun avant le départ.
+        state = 'paused';
+        resumeAt = performance.now() + 3 * COUNT_STEP_MS;
+        countNum.textContent = '';
+        countdown.hidden = false;
+        break;
+      case 'state':
+        remote = { view: m.view, stats: m.stats, pending: m.pending };
+        break;
+      case 'attack':
+        linked?.receive(m.a);
+        break;
+      case 'over':
+        remoteOver = m.stats;
+        break;
+      case 'left':
+        if (state === 'over' || roomView.visible) {
+          roomView.status(t('online.left'));
+          over.replay.hidden = true;
+        } else remoteOver = remoteOver ?? remote?.stats ?? emptyStats();
+        break;
+      case 'rematchAsked':
+        rematchAsked = true;
+        over.replay.textContent = t('online.rematchAccept');
+        break;
+    }
+  }
+  const duelMenu = duelMenuScreen({
+    cpu: () => {
+      duelMenu.hide();
+      launch('duel');
+    },
+    create: (code) => openRoom(code, true),
+    join: (code) => openRoom(code, false),
+    back: () => {
+      duelMenu.hide();
+      showHome();
+    },
+  });
+  const roomView = roomScreen(() => {
+    leaveOnline();
+    roomView.hide();
+    showHome();
+  });
   /** Expédition en cours (null hors expédition). */
   let run: { stage: number; cards: string[]; score: number; shields: number; time: number; rng: Rng } | null = null;
   function startExpedition(): void {
@@ -181,7 +272,8 @@ function boot(): void {
     hudCache.length = 0;
     const prev = game.grid;
     cpu = ai = duel = null;
-    document.body.classList.toggle('duel', mode === 'duel');
+    document.body.classList.toggle('duel', mode === 'duel' || mode === 'online');
+    if (mode !== 'online') leaveOnline();
     if (mode === 'campaign') {
       const spec = stageSpec(stageNo, config);
       game = new Game(stageConfig(config, spec), seed, { mode, startLevel: spec.level, goalRows: spec.goal });
@@ -190,6 +282,13 @@ function boot(): void {
       stageNo = run.stage;
       game = new Game(st.cfg, seed, { mode, startLevel: st.spec.level, goalRows: st.goal, orders: true });
       game.shields = run.shields;
+    } else if (mode === 'online') {
+      game = new Game(duelConfig(config), seed, { mode });
+      linked = new LinkedDuel(game);
+      remote = null;
+      hudRecLabel.textContent = t('online.opponent');
+      incoming.replaceChildren();
+      incoming.dataset.key = '';
     } else if (mode === 'duel') {
       game = new Game(duelConfig(config), seed, { mode });
       cpu = new Game(duelConfig(config), seed ^ 0x9e3779b9, { mode });
@@ -252,7 +351,7 @@ function boot(): void {
         return;
       }
     }
-    if (game.timeUp || game.won || duel?.winner === 0) sound.level();
+    if (game.timeUp || game.won || duel?.winner === 0 || (mode === 'online' && !game.over)) sound.level();
     else sound.gameOver();
     input.release();
     game.manualRise = false;
@@ -272,7 +371,30 @@ function boot(): void {
     const time = formatTime(game.elapsed);
     const diffName = t(`diff.${difficulty}` as Key);
     let block: HTMLElement;
-    if (duel && cpu) {
+    if (mode === 'online' && linked) {
+      const lost = game.over && !game.timeUp;
+      const opp = remoteOver ?? remote?.stats ?? emptyStats();
+      if (lost) net?.send({ t: 'over', stats: myStats() });
+      const result = lost && remoteOver ? 'draw' : lost ? 'lose' : 'win';
+      const rec = recordOnline(result);
+      block = duelResult({
+        result,
+        level: t('online.opponent'),
+        time,
+        me: { score: game.score, sent: linked.sent, chain: game.stats.maxChain, rosaces: game.rosaceCount },
+        cpu: opp,
+        wins: rec.wins,
+        losses: rec.losses,
+        streak: 0,
+        opponent: t('online.opponent'),
+        sub: t('online.sub', { time }),
+        footer: [`${t('online.record')} : `, el('span', { class: 'w' }, [t('duel.winsN', { n: rec.wins })]), ' · ', el('span', { class: 'l' }, [t('duel.lossesN', { n: rec.losses })])],
+      });
+      over.screen.root.classList.add(result === 'win' ? 'gold' : result === 'lose' ? 'grey' : 'blue');
+      over.replay.textContent = t('duel.rematch');
+      over.replay.hidden = !net;
+      game.over = true;
+    } else if (duel && cpu) {
       const w = duel.winner;
       const result = w === 0 ? 'win' : w === 1 ? 'lose' : 'draw';
       const rec = recordDuel(aiSkill(), result)[aiSkill()];
@@ -412,6 +534,8 @@ function boot(): void {
   }
 
   function pauseGame(): void {
+    // Duel en ligne : pas de pause (l'ami continue de jouer).
+    if (linked) return;
     if (state !== 'playing') return;
     state = 'paused';
     input.release();
@@ -550,12 +674,23 @@ function boot(): void {
   applyThemeCss(theme0);
   howto.setTheme(theme0);
   home.howto.addEventListener('click', () => openHowto('home'));
-  over.replay.addEventListener('click', () => (mode === 'expedition' ? startExpedition() : startGame()));
+  over.replay.addEventListener('click', () => {
+    if (mode === 'online') {
+      // Revanche : la salle relance quand les deux joueurs l'ont demandée.
+      net?.send({ t: 'rematch' });
+      over.replay.textContent = rematchAsked ? t('online.connecting') : t('online.rematchWait');
+      return;
+    }
+    if (mode === 'expedition') startExpedition();
+    else startGame();
+  });
   over.next.addEventListener('click', () => {
     stageNo = Math.min(STAGE_COUNT, stageNo + 1);
     startGame(randomSeed(), 'campaign');
   });
   over.menu.addEventListener('click', () => {
+    leaveOnline();
+    over.replay.hidden = false;
     state = 'home';
     showHome();
   });
@@ -574,7 +709,7 @@ function boot(): void {
     countdown.hidden = false;
   }
   function cancelCountdown(): void {
-    if (!resumeAt) return;
+    if (!resumeAt || linked) return;
     resumeAt = 0;
     countdown.hidden = true;
     pause.screen.show();
@@ -642,7 +777,12 @@ function boot(): void {
       startExpedition();
     },
   );
-  home.duel.button.addEventListener('click', () => launch('duel'));
+  home.duel.button.addEventListener('click', () => {
+    duelMenu.setCpuLabel(t(`diff.${difficulty}` as Key));
+    home.screen.hide();
+    duelMenu.root.scrollTop = 0;
+    duelMenu.show();
+  });
   home.campaign.button.addEventListener('click', () => {
     campaignView.refresh();
     campaignView.root.scrollTop = 0;
@@ -667,7 +807,15 @@ function boot(): void {
     home.screen.hide();
     progressView.show();
   });
+  /** Duel en ligne : le bouton pause propose d'abandonner. */
+  function quitOnline(): void {
+    if (state === 'playing' && window.confirm(t('online.quit'))) game.over = true;
+  }
   pauseBtn.addEventListener('click', () => {
+    if (linked) {
+      quitOnline();
+      return;
+    }
     sound.ui();
     pauseGame();
   });
@@ -692,7 +840,8 @@ function boot(): void {
   // Clavier (ordinateur) : Espace maintenue = accélération.
   window.addEventListener('keydown', (e) => {
     if (e.code === 'Escape' || e.code === 'KeyP') {
-      if (resumeAt) cancelCountdown();
+      if (linked) quitOnline();
+      else if (resumeAt) cancelCountdown();
       else if (state === 'playing') pauseGame();
       else if (state === 'paused' && pause.screen.visible) resumeGame();
       return;
@@ -759,8 +908,9 @@ function boot(): void {
     const dur = Math.max(1e-6, game.cfg.levelDurationS);
     chip.set(game.order);
     // Boucliers de l'expédition, sous le score.
-    if (!duel) setText(6, incoming, game.shields > 0 ? '🛡'.repeat(game.shields) : '');
+    if (!duel && !linked) setText(6, incoming, game.shields > 0 ? '🛡'.repeat(game.shields) : '');
     if (duel && cpu) setText(1, hudBest, String(cpu.score));
+    else if (linked) setText(1, hudBest, String(remote?.stats.score ?? 0));
     else if (game.goalRows > 0) {
       // Campagne : rangées avant l'arrivée de la ligne, puis tuiles encore au-dessus.
       const above = game.tilesAboveLine();
@@ -924,7 +1074,11 @@ function boot(): void {
           duel.eventsCleared(1);
         }
         acc -= STEP_MS;
-        if (game.over || (duel && duel.winner !== null)) {
+        if (linked && net && state === 'playing') {
+          const out = linked.step(STEP_MS / 1000);
+          if (out.length) net.send({ t: 'attack', a: out });
+        }
+        if (game.over || (duel && duel.winner !== null) || (linked && remoteOver)) {
           if (state === 'tutorial') loadTutorialStep();
           else endGame();
           break;
@@ -945,14 +1099,21 @@ function boot(): void {
     playSounds(now);
     renderer.consumeEvents(game, now);
     duel?.eventsCleared(0);
-    if (duel && cpu) {
-      drawMini(mini, cpu, theme, duel.pending[1]);
-      const list = duel.pending[0];
-      const key = `${duel.shield[0]}|${list.map((a) => (a.kind === 'slab' ? `${a.w}x${a.h}` : a.kind)).join()}`;
+    linked?.eventsCleared();
+    if (linked && net && state === 'playing' && now - lastStateSent > 200) {
+      lastStateSent = now;
+      net.send({ t: 'state', view: packView(game), stats: myStats(), pending: linked.pending.length });
+    }
+    if ((duel && cpu) || linked) {
+      if (duel && cpu) drawMini(mini, packView(cpu), theme, duel.pending[1]);
+      else if (remote) drawMini(mini, remote.view, theme, Array.from({ length: Math.min(6, remote.pending) }, () => ({ kind: 'slab' as const, w: 4, h: 1 })));
+      const list = duel ? duel.pending[0] : linked!.pending;
+      const shielded = duel ? duel.shield[0] : linked!.shield;
+      const key = `${shielded}|${list.map((a) => (a.kind === 'slab' ? `${a.w}x${a.h}` : a.kind)).join()}`;
       if (incoming.dataset.key !== key) {
         incoming.dataset.key = key;
         incoming.replaceChildren(
-          ...(duel.shield[0] ? [el('b', { class: 'shield' }, ['🛡'])] : []),
+          ...(shielded ? [el('b', { class: 'shield' }, ['🛡'])] : []),
           ...list.slice(0, 8).map((a) =>
             a.kind === 'slab' ? el('i', { style: `width:${6 + a.w * 3}px;height:${3 + a.h * 3}px` }) : el('b', { class: 'malus' }, [MALUS_ICON[a.kind]]),
           ),
@@ -962,6 +1123,13 @@ function boot(): void {
     renderer.draw(game, input.heldId, now);
     updateHud();
     requestAnimationFrame(frame);
+  }
+
+  // Lien d'invitation (?room=ABCD) : on rejoint directement la salle de l'ami.
+  const invite = new URLSearchParams(location.search).get('room')?.toUpperCase() ?? '';
+  if (isRoomCode(invite)) {
+    history.replaceState(null, '', location.pathname);
+    openRoom(invite, false);
   }
 
   updateOrientation();

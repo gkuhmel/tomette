@@ -49,6 +49,11 @@ Déploiement manuel possible : `npm run deploy` (après `npx wrangler login`).
 - **Campagne** : 30 manches. Une ligne d'arrivée en damier remonte avec la
   pile ; la manche est gagnée quand plus aucune tuile n'est au-dessus. 1 à 3
   étoiles selon le temps ; chaque manche réussie ouvre la suivante.
+- **Défier un ami** (dans Duel) : duel en ligne. Un joueur crée une partie et
+  partage le code de 4 lettres (ou le lien `?room=ABCD`) ; l'autre le saisit.
+  Chacun fait tourner sa propre partie ; un petit Worker Cloudflare (une salle
+  = un Durable Object, `worker/index.ts`) relaie attaques et aperçu de la pile.
+  Rien n'est stocké côté serveur.
 - **Expédition** (dans Campagne) : roguelite de 8 manches à ligne d'arrivée,
   une seule vie. Après chaque manche réussie, 1 carte parmi 3 (bonus +
   contrepartie, cumulés jusqu'à la fin) ; le Bouclier sauve une fois d'un

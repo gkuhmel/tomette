@@ -25,6 +25,7 @@ export function aboutScreen(onBack: () => void): Screen {
       el('p', {}, [t('about.privacy1')]),
       ...(telemetryEnabled ? [el('p', {}, [t('about.privacy2')])] : []),
       el('p', {}, [t('about.privacy3')]),
+      el('p', {}, [t('about.privacy4')]),
       el('div', { class: 'home-buttons' }, [back]),
     ]),
   ]);

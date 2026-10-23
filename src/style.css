@@ -62,6 +62,8 @@ body,
 #screen-about,
 #screen-missions,
 #screen-campaign,
+#screen-duel,
+#screen-room,
 #screen-rotate {
   background:
     linear-gradient(180deg, var(--sky1) 0%, var(--sky2) 40%, color-mix(in srgb, var(--sky3) 55%, transparent) 78%, transparent 100%),
@@ -410,7 +412,9 @@ body.alert .hud-badge .prog {
 #screen-progress,
 #screen-about,
 #screen-missions,
-#screen-campaign {
+#screen-campaign,
+#screen-duel,
+#screen-room {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
@@ -1012,6 +1016,139 @@ button.exp-card:active {
 .screen .exp-taken {
   font-size: 14px;
   color: var(--muted);
+}
+
+/* --- Duel : ordi ou ami ------------------------------------------------- */
+
+.duel-choice {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 2px 12px;
+  width: 100%;
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--t0);
+  color: #fff;
+  font: inherit;
+  text-align: left;
+  box-shadow: 0 6px 16px rgba(30, 50, 110, 0.15);
+  cursor: pointer;
+}
+
+.duel-choice svg.i {
+  grid-row: 1 / span 2;
+  font-size: 30px;
+}
+
+.duel-choice strong {
+  font-family: var(--font-title);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.duel-choice small {
+  font-weight: 800;
+  opacity: 0.9;
+}
+
+.friend-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 18px;
+  background: var(--surface);
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+.friend-box > strong {
+  font-family: var(--font-title);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.screen .friend-box p {
+  font-size: 14px;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.friend-box .btn {
+  min-width: 0;
+}
+
+.join-row {
+  display: flex;
+  gap: 8px;
+}
+
+.join-row .btn {
+  flex: none;
+}
+
+.room-input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 2px solid var(--card);
+  border-radius: 14px;
+  background: var(--bg);
+  color: var(--fg);
+  font: 900 22px/1 var(--font-title);
+  letter-spacing: 0.3em;
+  text-align: center;
+  text-transform: uppercase;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.screen .room-error {
+  min-height: 1em;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--danger);
+}
+
+.room-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.room-panel .btn {
+  min-width: 220px;
+}
+
+.room-panel .btn[hidden] {
+  display: none;
+}
+
+.screen .room-label {
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.room-code {
+  font-family: var(--font-title);
+  font-size: 64px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--primary);
+}
+
+.screen .room-status {
+  font-weight: 800;
+  color: var(--muted);
+  animation: pulse 1.6s ease-in-out infinite;
 }
 
 /* --- Campagne ------------------------------------------------------------ */

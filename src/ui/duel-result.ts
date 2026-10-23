@@ -18,6 +18,10 @@ export interface DuelResultData {
   wins: number;
   losses: number;
   streak: number;
+  /** Nom de l'adversaire (par défaut : « Ordi ») et ligne de bilan propre (duel en ligne). */
+  opponent?: string;
+  sub?: string;
+  footer?: (Node | string)[];
 }
 
 /** Bloc de fin de duel. */
@@ -32,12 +36,12 @@ export function duelResult(d: DuelResultData): HTMLElement {
     tone: d.result === 'win' ? 'gold' : d.result === 'lose' ? 'grey' : 'blue',
     art: d.result === 'win' ? 'trophy' : d.result === 'lose' ? 'crack' : 'scale',
     title: t(`duel.${d.result}`),
-    sub: t('duel.sub', { level: d.level, time: d.time }),
+    sub: d.sub ?? t('duel.sub', { level: d.level, time: d.time }),
     cards: [
       { title: t('duel.you'), color: 'var(--t1)', big: d.me.score.toLocaleString(), rows: side(d.me), winner: d.result === 'win', dim: d.result === 'lose' },
-      { title: t('hud.cpu'), color: 'var(--t0)', big: d.cpu.score.toLocaleString(), rows: side(d.cpu), winner: d.result === 'lose', dim: d.result === 'win' },
+      { title: d.opponent ?? t('hud.cpu'), color: 'var(--t0)', big: d.cpu.score.toLocaleString(), rows: side(d.cpu), winner: d.result === 'lose', dim: d.result === 'win' },
     ],
-    footer: [
+    footer: d.footer ?? [
       `${d.level} : `,
       el('span', { class: 'w' }, [t('duel.winsN', { n: d.wins })]),
       ' · ',
