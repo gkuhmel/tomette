@@ -6,7 +6,7 @@ import { Grid, Tile } from './grid';
  * les casserait avant qu'elles soient finies) :
  * - triangle : 3 tuiles voisines deux à deux ;
  * - losange : 2 triangles accolés (4 tuiles) ;
- * - arc : 4 voisines consécutives autour d'une tuile d'une autre couleur.
+ * - arc : 4 voisines consécutives autour d'une case vide ou d'une tuile d'une autre couleur.
  */
 export type ShapeKind = 'triangle' | 'losange' | 'arc';
 
@@ -43,21 +43,26 @@ export function findShapes(grid: Grid, kind: ShapeKind, fresh: ReadonlySet<numbe
     seen.add(id);
     out.push({ kind, color, cells });
   };
+  // Arc : autour de n'importe quelle case, même vide (une « coupe » en haut de la pile).
+  if (kind === 'arc') {
+    for (let r = 0; r < grid.rows; r++) {
+      for (let c = 0; c < grid.cols; c++) {
+        const center = grid.get(c, r);
+        if (center && center.state !== 'idle') continue;
+        const ring = RING.map((d) => neighbor(c, r, d));
+        for (let i = 0; i < 6; i++) {
+          const cells = [0, 1, 2, 3].map((k) => ring[(i + k) % 6]);
+          const color = colorAt(cells[0]);
+          if (color < 0 || (center && color === center.color)) continue;
+          if (cells.every((x) => colorAt(x) === color)) push(cells, color);
+        }
+      }
+    }
+    return out;
+  }
   grid.forEach((_t, c, r) => {
     const here = { c, r };
     const ring = RING.map((d) => neighbor(c, r, d));
-    if (kind === 'arc') {
-      // Le centre doit exister et être d'une autre couleur.
-      const center = grid.get(c, r)!;
-      if (center.state !== 'idle') return;
-      for (let i = 0; i < 6; i++) {
-        const cells = [0, 1, 2, 3].map((k) => ring[(i + k) % 6]);
-        const color = colorAt(cells[0]);
-        if (color < 0 || color === center.color) continue;
-        if (cells.every((x) => colorAt(x) === color)) push(cells, color);
-      }
-      return;
-    }
     const color = colorAt(here);
     if (color < 0) return;
     for (let i = 0; i < 6; i++) {

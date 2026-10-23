@@ -338,6 +338,8 @@ export class Game {
   forceRise(): boolean {
     if (this.grid.topRowOccupied()) return false;
     activatePreview(this.grid, this.preview, this.rng, this.colors);
+    // La rangée qui entre en jeu compte comme « déplacée » : un losange ou une forme commandée qu'elle complète compte.
+    for (const t of this.preview) this.fresh.add(t.id);
     this.preview = generatePreview(this.grid, this.rng, this.colors, this.kindChances());
     this.riseOffset = 0;
     this.rowsRisen++;
@@ -603,6 +605,7 @@ export class Game {
         if (!t || t.state === 'clearing') continue;
         if (t.kind === 'cracked' || t.kind === 'sealed') {
           t.kind = 'normal';
+          this.fresh.add(t.id);
           this.stats.repairs++;
           this.signals.push('repair');
         } else if (t.kind === 'mortar' && t.state !== 'falling') slabs.add(t.slab);

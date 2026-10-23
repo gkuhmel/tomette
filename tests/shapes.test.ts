@@ -38,6 +38,21 @@ describe('formes', () => {
     expect(findShapes(g2.grid, 'arc', null).some((s) => s.color === A)).toBe(false);
   });
 
+  it('arc autour d\'une case vide (coupe en haut de la pile)', () => {
+    const game = emptyGame();
+    const g = game.grid;
+    const bottom = g.rows - 1;
+    // Centre vide en (3, bottom - 1) : ses voisines bas, bas-gauche, bas-droite et haut-gauche.
+    const ctr = { c: 3, r: bottom - 1 };
+    for (const i of [2, 3, 4, 5]) {
+      const n = neighbor(ctr.c, ctr.r, RING[i]);
+      for (let r = g.rows - 1; r > n.r; r--) if (!g.get(n.c, r)) g.place(n.c, r, 2 + ((n.c + r) % 3));
+      g.place(n.c, n.r, A);
+    }
+    expect(g.get(ctr.c, ctr.r)).toBeNull();
+    expect(findShapes(g, 'arc', null).some((s) => s.color === A)).toBe(true);
+  });
+
   it('une forme doit contenir une tuile qui vient de bouger', () => {
     const game = emptyGame();
     star(game, 3, 6, A, [0, 1, 2]);

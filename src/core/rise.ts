@@ -2,6 +2,7 @@ import { Grid, Tile, TileKind } from './grid';
 import { ColorLookup, findMatches, wouldMatch } from './match';
 import { Rng } from './rng';
 import { findRosaces } from './rosace';
+import { findShapes } from './shapes';
 
 export interface SpeedParams {
   baseSecondsPerRow: number;
@@ -59,6 +60,17 @@ export function fillInitial(grid: Grid, rng: Rng, colors: number, rowsToFill: nu
     for (let c = 0; c < grid.cols; c++) {
       grid.place(c, r, pickColor(rng, colors, lookup, c, r));
     }
+  }
+  breakRosaces(grid, rng, colors);
+  // Ni losange au départ : on recolore la tuile la plus basse de chacun.
+  for (let guard = 0; guard < 60; guard++) {
+    const sh = findShapes(grid, 'losange', null)[0];
+    if (!sh) break;
+    const { c, r } = sh.cells.reduce((a, b) => (b.r > a.r ? b : a));
+    const t = grid.get(c, r)!;
+    const options: number[] = [];
+    for (let k = 0; k < colors; k++) if (k !== t.color && !wouldMatch(lookup, c, r, k)) options.push(k);
+    t.color = options.length ? rng.pick(options) : (t.color + 1) % colors;
   }
   breakRosaces(grid, rng, colors);
 }
@@ -125,19 +137,34 @@ function validatePreview(grid: Grid, preview: Tile[], rng: Rng, colors: number):
   }
   const mine = preview.map((t) => ({ ...t }));
   mine.forEach((t, c) => shadow.set(c, last, t));
-  const lookup = gridLookup(shadow);
-  for (let guard = 0; guard < 40; guard++) {
+  /** Colonnes de l'aperçu impliquées dans un alignement, une rosace ou un losange. */
+  const badColumns = (): Set<number> => {
     const bad = new Set<number>();
     for (const { c, r } of findMatches(shadow)) if (r === last) bad.add(c);
     for (const ros of findRosaces(shadow, 5)) {
       for (const cell of [ros.center, ...ros.ring]) if (cell.r === last) bad.add(cell.c);
     }
+    // Pas de losange tout fait non plus : un losange ne se forme que par le jeu du joueur.
+    for (const sh of findShapes(shadow, 'losange', null)) {
+      for (const cell of sh.cells) if (cell.r === last) bad.add(cell.c);
+    }
+    return bad;
+  };
+  for (let guard = 0; guard < 20; guard++) {
+    const bad = badColumns();
     if (bad.size === 0) break;
     for (const c of bad) {
       const t = mine[c];
-      if (t.kind === 'joker') t.kind = 'normal';
-      else t.color = pickColor(rng, colors, lookup, c, last);
-      if (guard > 20) t.color = (t.color + 1 + rng.int(colors - 1)) % colors;
+      if (t.kind === 'joker') {
+        t.kind = 'normal';
+        continue;
+      }
+      // Essaie chaque couleur (dans un ordre tiré au sort) et garde la première qui règle cette colonne.
+      const order = Array.from({ length: colors }, (_, k) => k).sort(() => rng.next() - 0.5);
+      for (const k of order) {
+        t.color = k;
+        if (!badColumns().has(c)) break;
+      }
     }
   }
   mine.forEach((t, c) => Object.assign(preview[c], { color: t.color, kind: t.kind }));
