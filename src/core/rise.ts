@@ -96,7 +96,11 @@ function pickKind(rng: Rng, p: KindChances): TileKind {
   return 'normal';
 }
 
-/** Génère une rangée d'aperçu qui ne crée pas d'alignement avec la grille actuelle. */
+/**
+ * Génère une rangée d'aperçu qui, montée telle quelle sur la grille actuelle, ne crée
+ * ni alignement (jokers compris) ni rosace. Les corrections se font ici, avant que la
+ * rangée ne s'affiche : une tuile ne change jamais de couleur sous les yeux du joueur.
+ */
 export function generatePreview(grid: Grid, rng: Rng, colors: number, chances: KindChances = NO_KINDS): Tile[] {
   const preview: (Tile | null)[] = new Array(grid.cols).fill(null);
   const lookup = shiftedLookup(grid, preview);
@@ -105,37 +109,50 @@ export function generatePreview(grid: Grid, rng: Rng, colors: number, chances: K
     t.kind = pickKind(rng, chances);
     preview[c] = t;
   }
+  validatePreview(grid, preview as Tile[], rng, colors);
   return preview as Tile[];
+}
+
+/** Corrige l'aperçu sur une copie de la grille déjà montée (seules les tuiles de l'aperçu changent). */
+function validatePreview(grid: Grid, preview: Tile[], rng: Rng, colors: number): void {
+  const shadow = new Grid(grid.cols, grid.rows);
+  const last = grid.rows - 1;
+  for (let r = 0; r < last; r++) {
+    for (let c = 0; c < grid.cols; c++) {
+      const t = grid.get(c, r + 1);
+      shadow.set(c, r, t ? { ...t } : null);
+    }
+  }
+  const mine = preview.map((t) => ({ ...t }));
+  mine.forEach((t, c) => shadow.set(c, last, t));
+  const lookup = gridLookup(shadow);
+  for (let guard = 0; guard < 40; guard++) {
+    const bad = new Set<number>();
+    for (const { c, r } of findMatches(shadow)) if (r === last) bad.add(c);
+    for (const ros of findRosaces(shadow, 5)) {
+      for (const cell of [ros.center, ...ros.ring]) if (cell.r === last) bad.add(cell.c);
+    }
+    if (bad.size === 0) break;
+    for (const c of bad) {
+      const t = mine[c];
+      if (t.kind === 'joker') t.kind = 'normal';
+      else t.color = pickColor(rng, colors, lookup, c, last);
+      if (guard > 20) t.color = (t.color + 1 + rng.int(colors - 1)) % colors;
+    }
+  }
+  mine.forEach((t, c) => Object.assign(preview[c], { color: t.color, kind: t.kind }));
 }
 
 /**
  * Active la rangée d'aperçu : tout monte d'une rangée, l'aperçu devient la dernière rangée.
- * La rangée du haut doit être vide. Les tuiles d'aperçu qui créeraient un alignement
- * (la grille a pu changer depuis leur génération) sont retirées au sort.
+ * La rangée du haut doit être vide. Les tuiles gardent la couleur qu'on voyait dans
+ * l'aperçu : si la grille a changé depuis et qu'un alignement se forme, il disparaît
+ * normalement (comme dans les jeux du genre) plutôt que de voir une tuile changer de couleur.
  */
-export function activatePreview(grid: Grid, preview: Tile[], rng: Rng, colors: number): void {
+export function activatePreview(grid: Grid, preview: Tile[], _rng: Rng, _colors: number): void {
   for (let r = 0; r < grid.rows - 1; r++) {
     for (let c = 0; c < grid.cols; c++) grid.set(c, r, grid.get(c, r + 1));
   }
   const last = grid.rows - 1;
-  for (let c = 0; c < grid.cols; c++) grid.set(c, last, null);
-  const lookup = gridLookup(grid);
-  for (let c = 0; c < grid.cols; c++) {
-    const t = preview[c];
-    if (wouldMatch(lookup, c, last, t.color)) t.color = pickColor(rng, colors, lookup, c, last);
-    grid.set(c, last, t);
-  }
-  // Les jokers (de la nouvelle rangée ou déjà en jeu) peuvent compléter une
-  // série : on corrige la nouvelle rangée jusqu'à n'avoir ni alignement ni rosace.
-  for (let guard = 0; guard < 30; guard++) {
-    breakRosaces(grid, rng, colors);
-    const bad = findMatches(grid).filter((k) => k.r === last);
-    if (bad.length === 0) return;
-    for (const { c } of bad) {
-      const t = grid.get(c, last)!;
-      if (t.kind === 'joker') t.kind = 'normal';
-      else t.color = pickColor(rng, colors, lookup, c, last);
-    }
-    if (guard > 10) for (const { c } of bad) grid.get(c, last)!.kind = 'cracked';
-  }
+  for (let c = 0; c < grid.cols; c++) grid.set(c, last, preview[c]);
 }

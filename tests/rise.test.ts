@@ -27,6 +27,19 @@ describe('génération (§8.6)', () => {
     }
   });
 
+  it('une tuile garde la couleur de son aperçu en entrant en jeu, même si la grille a changé', () => {
+    for (let seed = 1; seed <= 200; seed++) {
+      const game = new Game(cfg(), seed);
+      const g = game.grid;
+      // Le joueur bouleverse la grille entre le tirage de l'aperçu et la montée.
+      g.forEach((t, c) => (t.color = c % 2));
+      const before = game.preview.map((t) => [t.id, t.color]);
+      expect(game.forceRise()).toBe(true);
+      const row = Array.from({ length: g.cols }, (_, c) => g.get(c, g.rows - 1)!);
+      expect(row.map((t) => [t.id, t.color])).toEqual(before);
+    }
+  });
+
   it('déterministe pour une graine donnée', () => {
     const colors = (game: Game) => game.grid.cells.map((t) => (t ? t.color : -1));
     expect(colors(new Game(cfg(), 42))).toEqual(colors(new Game(cfg(), 42)));
