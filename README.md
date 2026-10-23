@@ -57,7 +57,10 @@ Déploiement manuel possible : `npm run deploy` (après `npx wrangler login`).
 - **Expédition** (dans Campagne) : roguelite de 8 manches à ligne d'arrivée,
   une seule vie. Après chaque manche réussie, 1 carte parmi 3 (bonus +
   contrepartie, cumulés jusqu'à la fin) ; le Bouclier sauve une fois d'un
-  débordement. Score de run, record et 3 succès dédiés.
+  débordement. 15 cartes (dont Carreau : tirer une tuile d'un double-tap,
+  Mistral, Feu d'artifice, Arc-en-ciel, Pastis), chacune avec son pictogramme,
+  rappelées sous le score et détaillées dans la pause. Score de run, record et
+  3 succès dédiés.
 - **Duel** : contre l'ordinateur (niveau selon la difficulté choisie ; plus il
   est fort, plus ses attaques sont puissantes). Combos et chaînes envoient des
   dalles de mortier ; combo de 6 = Fêlures (4 tuiles), chaîne ×4 = Séisme,

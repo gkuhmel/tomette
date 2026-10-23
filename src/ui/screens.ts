@@ -121,6 +121,8 @@ export function gameOverScreen(): {
 export interface PauseScreen {
   screen: Screen;
   stats: HTMLElement;
+  /** Cartes d'Expédition en jeu (vide hors expédition). */
+  cards: HTMLElement;
   resume: HTMLElement;
   restart: HTMLElement;
   settings: HTMLElement;
@@ -141,14 +143,17 @@ export function pauseScreen(): PauseScreen {
   const menu = hexButton('var(--t0)', 'home', t('common.menu'));
   const stats = el('small', { class: 'tagline' });
   const pauseRosace = rosaceMenu(resume, [restart, settings, sound, music, howto, menu]);
+  const cards = el('div', { class: 'pause-cards' });
   const screen = new Screen('screen-pause', [
     el('div', { class: 'home-top' }, [el('h1', { class: 'title' }, [t('common.pause')]), stats]),
     pauseRosace,
+    cards,
   ]);
   autoFitRosace(pauseRosace);
   return {
     screen,
     stats,
+    cards,
     resume: resume.button,
     restart: restart.button,
     settings: settings.button,

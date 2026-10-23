@@ -36,7 +36,7 @@ import { unlocksBetween } from './core/unlocks';
 import { STAGE_COUNT, stageConfig, stageSpec, starsFor } from './core/campaign';
 import { campaignScreen, saveStars, totalStars } from './ui/campaign';
 import { drawCards, modsFor, RUN_STAGES, runStage, stagePoints } from './core/expedition';
-import { cardsScreen, loadExp, saveExp } from './ui/expedition';
+import { activeCards, cardBadge, cardsScreen, loadExp, saveExp } from './ui/expedition';
 import { Rng } from './core/rng';
 import { Ai, AI_PROFILES, AiSkill } from './core/ai';
 import { Duel, duelConfig } from './core/duel';
@@ -78,10 +78,12 @@ function boot(): void {
   const pauseBtn = el('button', { id: 'pause-btn', type: 'button', 'aria-label': t('common.pause') });
   pauseBtn.innerHTML = icon('pause');
   const incoming = el('div', { class: 'incoming' });
+  // Expédition : rappel des cartes en jeu sous le score (un appui ouvre la pause, avec le détail).
+  const runCards = el('button', { type: 'button', class: 'run-cards', 'aria-label': t('exp.active') });
   const mini = el('canvas', { id: 'duel-mini' });
   const chip = orderChip();
   chip.root.hidden = true;
-  const hud = el('header', { id: 'hud' }, [badge.root, el('div', { class: 'hud-score' }, [hudScore, hudSub, incoming]), chip.root, mini, pauseBtn]);
+  const hud = el('header', { id: 'hud' }, [badge.root, el('div', { class: 'hud-score' }, [hudScore, hudSub, incoming, runCards]), chip.root, mini, pauseBtn]);
   const canvas = el('canvas', { id: 'board' });
   const stage = el('main', { id: 'stage' }, [canvas]);
   const raise = el('button', { id: 'raise', type: 'button' }, [t('common.raise')]);
@@ -272,6 +274,7 @@ function boot(): void {
     hudCache.length = 0;
     const prev = game.grid;
     cpu = ai = duel = null;
+    runCards.replaceChildren(...(m === 'expedition' && run ? [...new Set(run.cards)].map((id) => cardBadge(id, true)) : []));
     document.body.classList.toggle('duel', mode === 'duel' || mode === 'online');
     if (mode !== 'online') leaveOnline();
     if (mode === 'campaign') {
@@ -282,6 +285,7 @@ function boot(): void {
       stageNo = run.stage;
       game = new Game(st.cfg, seed, { mode, startLevel: st.spec.level, goalRows: st.goal, orders: true });
       game.shields = run.shields;
+      game.shots = modsFor(run.cards).shots;
     } else if (mode === 'online') {
       game = new Game(duelConfig(config), seed, { mode });
       linked = new LinkedDuel(game);
@@ -311,7 +315,7 @@ function boot(): void {
     if (mode === 'campaign' || mode === 'expedition') {
       // Rappel du but au début de chaque manche (la bulle disparaît seule).
       tutoTitle.textContent = t('camp.stageTitle', { n: stageNo, goal: game.goalRows });
-      tutoText.textContent = t('camp.hint');
+      tutoText.textContent = t('camp.hint') + (game.shots > 0 ? ` ${t('exp.shotHint')}` : '');
       tutoActions.replaceChildren();
       tuto.hidden = false;
       hintTimer = window.setTimeout(() => {
@@ -547,6 +551,7 @@ function boot(): void {
       formatTime(game.timeLeft === null ? game.elapsed : Math.ceil(game.timeLeft)),
     ].join(' · ');
     syncPauseToggles();
+    pause.cards.replaceChildren(...(mode === 'expedition' && run && run.cards.length ? [el('h3', {}, [t('exp.active')]), activeCards(run.cards)] : []));
     pause.screen.show();
   }
 
@@ -811,6 +816,7 @@ function boot(): void {
   function quitOnline(): void {
     if (state === 'playing' && window.confirm(t('online.quit'))) game.over = true;
   }
+  runCards.addEventListener('click', () => pauseGame());
   pauseBtn.addEventListener('click', () => {
     if (linked) {
       quitOnline();
@@ -908,7 +914,7 @@ function boot(): void {
     const dur = Math.max(1e-6, game.cfg.levelDurationS);
     chip.set(game.order);
     // Boucliers de l'expédition, sous le score.
-    if (!duel && !linked) setText(6, incoming, game.shields > 0 ? '🛡'.repeat(game.shields) : '');
+    if (!duel && !linked) setText(6, incoming, '🛡'.repeat(game.shields) + '🎯'.repeat(game.shots));
     if (duel && cpu) setText(1, hudBest, String(cpu.score));
     else if (linked) setText(1, hudBest, String(remote?.stats.score ?? 0));
     else if (game.goalRows > 0) {
@@ -1029,7 +1035,9 @@ function boot(): void {
     }
     game.signals.length = 0;
     for (const n of game.notices) {
-      if (n === 'order' || n === 'orderGold') sound.rosace();
+      if (n === 'order' || n === 'orderGold' || n === 'fireworks' || n === 'rainbow') sound.rosace();
+      else if (n === 'mistral') sound.slide();
+      else if (n === 'shot') sound.repair();
       else if (n === 'shield' || n === 'blocked' || n === 'counter' || n === 'shieldUsed') sound.repair();
       else sound.mortar();
     }

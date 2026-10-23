@@ -12,6 +12,8 @@ export class BoardInput {
   private pointerId: number | null = null;
   private fx = 0;
   private fy = 0;
+  /** Dernier appui (pour le double-tap de la carte Carreau). */
+  private lastTap = { c: -1, r: -1, at: 0 };
 
   constructor(
     private canvas: HTMLCanvasElement,
@@ -54,6 +56,16 @@ export class BoardInput {
     if (!cell) return;
     const t = game.grid.get(cell.c, cell.r);
     if (!t || t.state === 'clearing') return;
+    // Double-tap sur la même case : tir (carte Carreau), s'il en reste.
+    const now = performance.now();
+    if (game.shots > 0 && this.lastTap.c === cell.c && this.lastTap.r === cell.r && now - this.lastTap.at < 320) {
+      this.lastTap.at = 0;
+      if (game.shoot(cell.c, cell.r)) {
+        e.preventDefault();
+        return;
+      }
+    }
+    this.lastTap = { c: cell.c, r: cell.r, at: now };
     this.pointerId = e.pointerId;
     this.heldId = t.id;
     try {

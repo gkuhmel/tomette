@@ -977,8 +977,8 @@ body.duel #duel-mini {
 
 .exp-card {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 14px;
   padding: 14px 16px;
   border: 0;
   border-radius: 18px;
@@ -995,6 +995,108 @@ button.exp-card {
 
 button.exp-card:active {
   transform: scale(0.98);
+}
+
+.exp-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+/* Pictogramme d'une carte, dans une tomette de couleur. */
+.card-badge {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 50px;
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+  background: var(--c);
+  font-size: 26px;
+  line-height: 1;
+}
+
+.card-badge.small {
+  width: 30px;
+  height: 26px;
+  font-size: 14px;
+}
+
+.run-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 3px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.run-cards:empty {
+  display: none;
+}
+
+.run-cards .card-badge.small {
+  width: 23px;
+  height: 20px;
+  font-size: 11px;
+}
+
+.exp-mini-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.exp-mini {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.exp-mini > span:last-child {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.exp-mini strong {
+  font-size: 14px;
+}
+
+.exp-mini small {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.exp-mini .plus {
+  color: var(--t3);
+}
+
+.exp-mini .minus {
+  color: var(--danger);
+}
+
+.pause-cards {
+  width: min(100%, 360px);
+}
+
+.pause-cards:empty {
+  display: none;
+}
+
+.pause-cards h3 {
+  margin: 4px 0 8px;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .exp-card strong {
@@ -2167,11 +2269,16 @@ button.exp-card:active {
 .panel > .home-buttons:last-child,
 .howto-buttons {
   position: sticky;
-  bottom: calc(-16px - env(safe-area-inset-bottom));
+  bottom: 10px;
   z-index: 2;
-  margin-bottom: calc(-16px - env(safe-area-inset-bottom));
-  padding: 14px 0 calc(14px + env(safe-area-inset-bottom));
-  background: linear-gradient(to bottom, transparent, var(--sky3) 35%);
+  margin-bottom: 0;
+  padding: 0;
+  background: none;
+}
+
+.panel > .home-buttons:last-child .btn,
+.howto-buttons .btn {
+  box-shadow: 0 6px 18px rgba(30, 50, 110, 0.25);
 }
 
 /* Accueil sur écran bas (Android avec barres, petits iPhone) : titre et barres compactés. */

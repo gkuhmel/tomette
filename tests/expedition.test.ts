@@ -22,7 +22,7 @@ describe('expédition', () => {
     for (const c of CARDS) {
       const s = runStage(4, defaultConfig, modsFor([c.id]));
       const changed = Object.keys(base.cfg).filter((k) => base.cfg[k as keyof typeof base.cfg] !== s.cfg[k as keyof typeof s.cfg]);
-      const diff = changed.length + (s.goal !== base.goal ? 1 : 0) + (modsFor([c.id]).shields + (modsFor([c.id]).score !== 1 ? 1 : 0));
+      const diff = changed.length + (s.goal !== base.goal ? 1 : 0) + (modsFor([c.id]).shields + modsFor([c.id]).shots + (modsFor([c.id]).score !== 1 ? 1 : 0));
       expect(diff, c.id).toBeGreaterThanOrEqual(2);
     }
   });
@@ -48,6 +48,37 @@ describe('expédition', () => {
   it('points de manche', () => {
     expect(stagePoints(3, 1000, modsFor(['points']), true)).toBe(1500 + 3000);
     expect(stagePoints(3, 1000, emptyMods(), false)).toBe(1000);
+  });
+
+  it('chaque carte a une icône', () => {
+    for (const c of CARDS) expect(c.icon.length).toBeGreaterThan(0);
+    expect(CARDS.length).toBe(15);
+  });
+
+  it('carreau : un tir fait disparaître une tuile, même scellée', () => {
+    const g = emptyGame();
+    const bottom = g.grid.rows - 1;
+    g.grid.place(2, bottom, 1).kind = 'sealed';
+    expect(g.shoot(2, bottom)).toBe(false);
+    g.shots = 1;
+    expect(g.shoot(2, bottom)).toBe(true);
+    expect(g.shots).toBe(0);
+    for (let i = 0; i < 60; i++) g.tick();
+    expect(g.grid.get(2, bottom)).toBeNull();
+  });
+
+  it('mistral : le haut de chaque colonne s\'envole', () => {
+    const g0 = emptyGame();
+    const g = new Game({ ...g0.cfg, mistralEveryS: 1, baseSecondsPerRow: 1e9, minSecondsPerRow: 1e9 }, 1, { empty: true });
+    const bottom = g.grid.rows - 1;
+    g.grid.place(0, bottom, 0);
+    g.grid.place(0, bottom - 1, 1);
+    g.grid.place(3, bottom, 2);
+    for (let i = 0; i < 60 * 1.2; i++) g.tick();
+    for (let i = 0; i < 60; i++) g.tick();
+    expect(g.grid.get(0, bottom)).not.toBeNull();
+    expect(g.grid.get(0, bottom - 1)).toBeNull();
+    expect(g.grid.get(3, bottom)).toBeNull();
   });
 
   it('bouclier : la grâce écoulée balaie le haut de la pile au lieu de perdre', () => {

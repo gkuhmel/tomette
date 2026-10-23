@@ -32,7 +32,7 @@ export interface ClearEvent {
 export type GameEvent = ClearEvent;
 
 /** Effet de duel à annoncer à l'écran (malus reçu, bouclier, contre-attaque). */
-export type Notice = 'night' | 'freeze' | 'crack' | 'quake' | 'shield' | 'blocked' | 'counter' | 'order' | 'orderGold' | 'shieldUsed';
+export type Notice = 'night' | 'freeze' | 'crack' | 'quake' | 'shield' | 'blocked' | 'counter' | 'order' | 'orderGold' | 'shieldUsed' | 'mistral' | 'fireworks' | 'rainbow' | 'shot';
 
 /** Petits signaux pour le son (échange, atterrissage, réparation). */
 export type Signal = 'swap' | 'land' | 'repair' | 'slide' | 'mortar' | 'crumble';
@@ -94,6 +94,10 @@ export class Game {
   /** Signaux sonores depuis la dernière lecture. */
   signals: Signal[] = [];
   readonly stats: GameStats = { maxChain: 1, maxCombo: 0, tilesCleared: 0, goldUsed: 0, repairs: 0, alertSaves: 0, maxLevel: 1, slabsBroken: 0 };
+  /** Tirs restants (carte Carreau) : un double-tap fait disparaître une tuile. */
+  shots = 0;
+  /** Prochain coup de mistral dans (s). */
+  mistralIn = 0;
   /** Boucliers (Expédition) : chacun évite une fois de perdre en balayant le haut de la pile. */
   shields = 0;
   /** Commande de motif en cours (null : pas de commandes dans ce mode). */
@@ -166,6 +170,16 @@ export class Game {
       }
     }
     this.signals.push('mortar');
+  }
+
+  /** Carte Carreau : fait disparaître la tuile visée (même scellée ou de mortier), sans points. */
+  shoot(c: number, r: number): boolean {
+    const t = this.grid.get(c, r);
+    if (this.shots <= 0 || this.over || !t || t.state === 'clearing' || t.special) return false;
+    this.shots--;
+    Object.assign(t, { state: 'clearing', timer: this.cfg.clearDurationMs, kind: t.kind === 'mortar' ? 'normal' : t.kind, slab: 0 });
+    this.notices.push('shot');
+    return true;
   }
 
   /** Tuiles posées et ordinaires (ni spéciales, ni mortier), tirées au hasard. */
@@ -370,6 +384,28 @@ export class Game {
     if (cfg.slide) this.stepSlides();
     if (this.level > this.stats.maxLevel) this.stats.maxLevel = this.level;
 
+    // Mistral : la tuile du haut de chaque colonne s'envole.
+    if (cfg.mistralEveryS > 0) {
+      if (this.mistralIn <= 0) this.mistralIn = cfg.mistralEveryS;
+      this.mistralIn -= dtS;
+      if (this.mistralIn <= 0) {
+        this.mistralIn = cfg.mistralEveryS;
+        let any = false;
+        for (let c = 0; c < g.cols; c++) {
+          for (let r = 0; r < g.rows; r++) {
+            const t = g.get(c, r);
+            if (!t) continue;
+            if (t.state === 'idle' && !t.special) {
+              Object.assign(t, { state: 'clearing', timer: cfg.clearDurationMs });
+              any = true;
+            }
+            break;
+          }
+        }
+        if (any) this.notices.push('mistral');
+      }
+    }
+
     // Dalles de mortier : une de temps en temps à partir du niveau prévu.
     if (cfg.mortarEveryS > 0 && this.level >= cfg.mortarFromLevel) {
       this.mortarIn -= dtS;
@@ -517,11 +553,47 @@ export class Game {
     }
     const tiles = cells.map(({ c, r }) => g.get(c, r)!);
     if (tiles.some((t) => t.chain)) this.chain++;
+    // Feu d'artifice (carte d'Expédition) : une chaîne ×3 ou plus emporte aussi les tuiles autour.
+    if (cfg.fireworks && this.chain >= 3 && !gold) {
+      const extra: Cell[] = [];
+      for (const { c, r } of cells) {
+        for (const dir of ALL_DIRS) {
+          const n = neighbor(c, r, dir);
+          const t = g.get(n.c, n.r);
+          if (!t || t.state !== 'idle' || t.special || t.kind === 'mortar' || seen.has(key(n))) continue;
+          seen.add(key(n));
+          extra.push(n);
+        }
+      }
+      if (extra.length) {
+        cells.push(...extra);
+        tiles.push(...extra.map(({ c, r }) => g.get(c, r)!));
+        this.notices.push('fireworks');
+      }
+    }
     for (const t of tiles) {
       t.state = 'clearing';
       t.timer = cfg.clearDurationMs;
     }
     for (const k of rosaces) g.get(k.center.c, k.center.r)!.special = true;
+    // Rosace arc-en-ciel (carte d'Expédition) : des tuiles autour de l'anneau deviennent des jokers.
+    if (cfg.rosaceJokers > 0 && rosaces.length) {
+      let left = Math.round(cfg.rosaceJokers) * rosaces.length;
+      for (const k of rosaces) {
+        for (const { c, r } of k.ring) {
+          for (const dir of ALL_DIRS) {
+            if (left <= 0) break;
+            const n = neighbor(c, r, dir);
+            const t = g.get(n.c, n.r);
+            if (t && t.state === 'idle' && t.kind === 'normal' && !t.special) {
+              t.kind = 'joker';
+              left--;
+            }
+          }
+        }
+      }
+      this.notices.push('rainbow');
+    }
     // Un clear répare les tomettes fêlées, libère les tuiles scellées et fait tomber en tuiles les dalles voisines.
     const slabs = new Set<number>();
     for (const { c, r } of cells) {

@@ -1,4 +1,4 @@
-import { RUN_STAGES } from '../core/expedition';
+import { cardById, CARDS, RUN_STAGES } from '../core/expedition';
 import { Key, t } from '../i18n';
 import { el } from './dom';
 import { Screen } from './screens';
@@ -30,13 +30,44 @@ export function saveExp(score: number, stage: number): boolean {
 
 const cardName = (id: string) => t(`card.${id}.name` as Key);
 
-/** Carte : nom, bonus (vert) et contrepartie (rouge). */
+const cardIcon = (id: string) => cardById(id)?.icon ?? '🃏';
+
+/** Pictogramme d'une carte dans une tomette colorée. */
+export function cardBadge(id: string, small = false): HTMLElement {
+  const i = Math.max(0, CARDS.findIndex((c) => c.id === id));
+  return el('span', { class: `card-badge${small ? ' small' : ''}`, style: `--c:var(--t${i % 6})`, title: cardName(id) }, [cardIcon(id)]);
+}
+
+/** Carte : pictogramme, nom, bonus (vert) et contrepartie (rouge). */
 export function cardView(id: string, tag: 'button' | 'div' = 'div'): HTMLElement {
   return el(tag as 'div', { class: 'exp-card', ...(tag === 'button' ? { type: 'button' } : {}) }, [
-    el('strong', {}, [cardName(id)]),
-    el('span', { class: 'plus' }, [`+ ${t(`card.${id}.plus` as Key)}`]),
-    el('span', { class: 'minus' }, [`− ${t(`card.${id}.minus` as Key)}`]),
+    cardBadge(id),
+    el('span', { class: 'exp-card-text' }, [
+      el('strong', {}, [cardName(id)]),
+      el('span', { class: 'plus' }, [`+ ${t(`card.${id}.plus` as Key)}`]),
+      el('span', { class: 'minus' }, [`− ${t(`card.${id}.minus` as Key)}`]),
+    ]),
   ]);
+}
+
+/** Rappel des cartes en jeu : liste détaillée (écran de pause). */
+export function activeCards(ids: readonly string[]): HTMLElement {
+  const counts = new Map<string, number>();
+  for (const id of ids) counts.set(id, (counts.get(id) ?? 0) + 1);
+  return el(
+    'div',
+    { class: 'exp-mini-list' },
+    [...counts].map(([id, n]) =>
+      el('div', { class: 'exp-mini' }, [
+        cardBadge(id, true),
+        el('span', {}, [
+          el('strong', {}, [`${cardName(id)}${n > 1 ? ` ×${n}` : ''}`]),
+          el('small', { class: 'plus' }, [t(`card.${id}.plus` as Key)]),
+          el('small', { class: 'minus' }, [t(`card.${id}.minus` as Key)]),
+        ]),
+      ]),
+    ),
+  );
 }
 
 /** Écran de choix d'une carte entre deux manches. */
@@ -59,9 +90,7 @@ export function cardsScreen(onPick: (id: string) => void): Screen & { open(stage
           return b;
         }),
       );
-      active.replaceChildren(
-        ...(taken.length ? [el('h3', {}, [t('exp.active')]), el('p', { class: 'exp-taken' }, [taken.map(cardName).join(' · ')])] : []),
-      );
+      active.replaceChildren(...(taken.length ? [el('h3', {}, [t('exp.active')]), activeCards(taken)] : []));
       screen.root.scrollTop = 0;
       screen.show();
     },

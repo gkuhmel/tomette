@@ -28,32 +28,44 @@ export interface Mods {
   mortarEarly: boolean;
   orderBonus: number;
   pauses: number;
+  shots: number;
+  mistral: boolean;
+  fireworks: boolean;
+  rainbow: boolean;
 }
 
 export function emptyMods(): Mods {
   return {
     colors: 0, rowTime: 1, joker: 1, cracked: 1, sealed: 1, grace: 0, goal: 0, shields: 0, score: 1,
     initialRows: 0, mortarNarrow: false, mortarEvery: 1, rosace4: false, mortarEarly: false, orderBonus: 1, pauses: 1,
+    shots: 0, mistral: false, fireworks: false, rainbow: false,
   };
 }
 
 export interface Card {
   /** Textes : card.<id>.name, card.<id>.plus, card.<id>.minus. */
   id: string;
+  /** Pictogramme de la carte. */
+  icon: string;
   apply: (m: Mods) => void;
 }
 
 export const CARDS: Card[] = [
-  { id: 'palette', apply: (m) => ((m.colors -= 1), (m.rowTime /= 1.2)) },
-  { id: 'joker', apply: (m) => ((m.joker *= 3), (m.cracked *= 2)) },
-  { id: 'grace', apply: (m) => ((m.grace += 2), (m.goal += 2)) },
-  { id: 'shield', apply: (m) => ((m.shields += 1), (m.rowTime /= 1.15)) },
-  { id: 'points', apply: (m) => ((m.score *= 1.5), (m.initialRows += 1)) },
-  { id: 'slow', apply: (m) => ((m.rowTime *= 1.2), (m.sealed *= 2)) },
-  { id: 'mortar', apply: (m) => ((m.mortarNarrow = true), (m.mortarEvery *= 0.5)) },
-  { id: 'rosace', apply: (m) => ((m.rosace4 = true), (m.mortarEarly = true), (m.mortarEvery *= 0.75)) },
-  { id: 'orders', apply: (m) => ((m.orderBonus *= 2), (m.grace -= 1)) },
-  { id: 'pauses', apply: (m) => ((m.pauses *= 1.5), (m.colors += 1)) },
+  { id: 'palette', icon: '🎨', apply: (m) => ((m.colors -= 1), (m.rowTime /= 1.2)) },
+  { id: 'joker', icon: '🃏', apply: (m) => ((m.joker *= 3), (m.cracked *= 2)) },
+  { id: 'grace', icon: '⏳', apply: (m) => ((m.grace += 2), (m.goal += 2)) },
+  { id: 'shield', icon: '🛡️', apply: (m) => ((m.shields += 1), (m.rowTime /= 1.15)) },
+  { id: 'points', icon: '💰', apply: (m) => ((m.score *= 1.5), (m.initialRows += 1)) },
+  { id: 'slow', icon: '😴', apply: (m) => ((m.rowTime *= 1.2), (m.sealed *= 2)) },
+  { id: 'mortar', icon: '🧱', apply: (m) => ((m.mortarNarrow = true), (m.mortarEvery *= 0.5)) },
+  { id: 'rosace', icon: '🌸', apply: (m) => ((m.rosace4 = true), (m.mortarEarly = true), (m.mortarEvery *= 0.75)) },
+  { id: 'orders', icon: '🧺', apply: (m) => ((m.orderBonus *= 2), (m.grace -= 1)) },
+  { id: 'pauses', icon: '☕', apply: (m) => ((m.pauses *= 1.5), (m.colors += 1)) },
+  { id: 'carreau', icon: '🎯', apply: (m) => ((m.shots += 1), (m.initialRows += 1)) },
+  { id: 'mistral', icon: '🌬️', apply: (m) => ((m.mistral = true), (m.pauses *= 0.5)) },
+  { id: 'fireworks', icon: '🎆', apply: (m) => ((m.fireworks = true), (m.score *= 0.8)) },
+  { id: 'rainbow', icon: '🌈', apply: (m) => ((m.rainbow = true), (m.joker = 0)) },
+  { id: 'pastis', icon: '🎲', apply: (m) => ((m.score *= 2), (m.goal += 3), (m.grace -= 1)) },
 ];
 
 export const cardById = (id: string) => CARDS.find((c) => c.id === id);
@@ -100,6 +112,9 @@ export function runStage(n: number, cfg: Config, mods: Mods): { spec: StageSpec;
     comboPausePerExtraTileS: cfg.comboPausePerExtraTileS * mods.pauses,
     rosacePauseS: cfg.rosacePauseS * mods.pauses,
     orderPauseS: cfg.orderPauseS * mods.pauses,
+    fireworks: mods.fireworks ? 1 : 0,
+    mistralEveryS: mods.mistral ? 25 : 0,
+    rosaceJokers: mods.rainbow ? 3 : 0,
   };
   return { spec, cfg: out, goal: spec.goal + mods.goal };
 }
