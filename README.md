@@ -36,6 +36,13 @@ Déploiement manuel possible : `npm run deploy` (après `npx wrangler login`).
 - **Rosace** : au moins 5 des 6 voisines d'une tuile de la même autre couleur.
   L'anneau disparaît et le centre devient une **tomette d'or** ; l'échanger avec
   une voisine fait disparaître toute la couleur de cette voisine.
+- **Losange** : 4 tuiles d'une couleur en losange (deux triangles accolés),
+  construit par le joueur (une des tuiles vient de bouger) : bonus, et la
+  voisine la plus haute devient un joker.
+- **Commandes de motifs** (Classique, Contre-la-montre, Mosaïque, Express) : un
+  motif à réaliser est affiché à droite du score (triangle, losange ou arc
+  d'une couleur, rosace, combo de 5, chaîne ×3). Réussi : bonus, pause de la
+  pile, et une tomette d'or toutes les 3 commandes.
 - **Tuiles spéciales** : fêlée (ne s'aligne pas, réparée par un alignement
   voisin), scellée (non déplaçable, libérée par un alignement voisin), joker
   (toutes les couleurs).

@@ -43,6 +43,7 @@ const MALUS_ICON = { night: '🌙', freeze: '❄', crack: '⚡', quake: '〰' } 
 import { drawMini } from './render/mini';
 import { loadDuel, recordDuel } from './ui/duel';
 import { duelResult } from './ui/duel-result';
+import { orderChip } from './ui/order-chip';
 import { resultBlock } from './ui/result';
 import { gameOverScreen, homeScreen, pauseScreen, rotateScreen } from './ui/screens';
 import { load, loadBest, loadDifficulty, save, saveBest, saveDifficulty } from './ui/storage';
@@ -72,7 +73,9 @@ function boot(): void {
   pauseBtn.innerHTML = icon('pause');
   const incoming = el('div', { class: 'incoming' });
   const mini = el('canvas', { id: 'duel-mini' });
-  const hud = el('header', { id: 'hud' }, [badge.root, el('div', { class: 'hud-score' }, [hudScore, hudSub, incoming]), mini, pauseBtn]);
+  const chip = orderChip();
+  chip.root.hidden = true;
+  const hud = el('header', { id: 'hud' }, [badge.root, el('div', { class: 'hud-score' }, [hudScore, hudSub, incoming]), chip.root, mini, pauseBtn]);
   const canvas = el('canvas', { id: 'board' });
   const stage = el('main', { id: 'stage' }, [canvas]);
   const raise = el('button', { id: 'raise', type: 'button' }, [t('common.raise')]);
@@ -173,7 +176,7 @@ function boot(): void {
       hudRecLabel.textContent = t('hud.cpu');
       incoming.replaceChildren();
       incoming.dataset.key = '';
-    } else game = new Game(withDifficulty(config, difficulty), seed, { mode });
+    } else game = new Game(withDifficulty(config, difficulty), seed, { mode, orders: true });
     input.release();
     renderer.reset();
     if (prev.cols !== game.grid.cols || prev.rows !== game.grid.rows) relayout();
@@ -679,6 +682,7 @@ function boot(): void {
     // Jauge de la pastille : temps restant (modes chronométrés) ou avancée dans le niveau.
     const limit = game.mode.timeLimitS(game.cfg);
     const dur = Math.max(1e-6, game.cfg.levelDurationS);
+    chip.set(game.order);
     if (duel && cpu) setText(1, hudBest, String(cpu.score));
     else if (game.goalRows > 0) {
       // Campagne : rangées avant l'arrivée de la ligne, puis tuiles encore au-dessus.
@@ -798,7 +802,8 @@ function boot(): void {
     }
     game.signals.length = 0;
     for (const n of game.notices) {
-      if (n === 'shield' || n === 'blocked' || n === 'counter') sound.repair();
+      if (n === 'order' || n === 'orderGold') sound.rosace();
+      else if (n === 'shield' || n === 'blocked' || n === 'counter') sound.repair();
       else sound.mortar();
     }
     for (const e of game.events) {

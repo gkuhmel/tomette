@@ -9,6 +9,8 @@ import { findRosaces, Rosace } from './rosace';
 import { activatePreview, fillInitial, generatePreview, levelAt, secondsPerRow } from './rise';
 import { Rng } from './rng';
 import { Mode, modeById, ModeId } from './modes';
+import { nextOrder, Order } from './orders';
+import { findShapes, Shape } from './shapes';
 
 /** Pas de la logique (60 Hz). */
 export const STEP_MS = 1000 / 60;
@@ -23,12 +25,14 @@ export interface ClearEvent {
   rosaces: number;
   /** Clear déclenché par une tomette d'or. */
   gold: boolean;
+  /** Forme particulière : losange, ou motif d'une commande. */
+  shape?: 'losange' | 'order';
 }
 
 export type GameEvent = ClearEvent;
 
 /** Effet de duel à annoncer à l'écran (malus reçu, bouclier, contre-attaque). */
-export type Notice = 'night' | 'freeze' | 'crack' | 'quake' | 'shield' | 'blocked' | 'counter';
+export type Notice = 'night' | 'freeze' | 'crack' | 'quake' | 'shield' | 'blocked' | 'counter' | 'order' | 'orderGold';
 
 /** Petits signaux pour le son (échange, atterrissage, réparation). */
 export type Signal = 'swap' | 'land' | 'repair' | 'slide' | 'mortar' | 'crumble';
@@ -90,6 +94,12 @@ export class Game {
   /** Signaux sonores depuis la dernière lecture. */
   signals: Signal[] = [];
   readonly stats: GameStats = { maxChain: 1, maxCombo: 0, tilesCleared: 0, goldUsed: 0, repairs: 0, alertSaves: 0, maxLevel: 1, slabsBroken: 0 };
+  /** Commande de motif en cours (null : pas de commandes dans ce mode). */
+  order: Order | null = null;
+  /** Commandes réalisées pendant la partie. */
+  ordersDone = 0;
+  /** Tuiles qui viennent de bouger (échange, chute, glissement) pendant ce pas : les formes doivent en contenir une. */
+  private fresh = new Set<number>();
   /** Duel : « nuit tombée » restante (s) ; les tuiles perdent leurs couleurs à l'affichage. */
   nightLeft = 0;
   /** Prochaine dalle de mortier dans (s). */
@@ -100,7 +110,11 @@ export class Game {
 
   private rng: Rng;
 
-  constructor(cfg: Config, seed: number, options: { empty?: boolean; mode?: ModeId; startLevel?: number; goalRows?: number } = {}) {
+  constructor(
+    cfg: Config,
+    seed: number,
+    options: { empty?: boolean; mode?: ModeId; startLevel?: number; goalRows?: number; orders?: boolean } = {},
+  ) {
     this.cfg = cfg;
     this.mode = modeById(options.mode ?? 'endless');
     this.time = ((options.startLevel ?? this.mode.startLevel(cfg)) - 1) * cfg.levelDurationS;
@@ -114,6 +128,7 @@ export class Game {
     if (!options.empty) fillInitial(this.grid, this.rng, this.colors, clampInt(cfg.initialRows, 0, rows - 2));
     this.preview = generatePreview(this.grid, this.rng, this.colors, this.kindChances());
     this.mortarIn = this.nextMortarDelay();
+    if (options.orders) this.order = nextOrder(this.rng, this.colors, null);
   }
 
   /** Délai avant la prochaine dalle : l'intervalle moyen, à ±40 %. */
@@ -334,7 +349,10 @@ export class Game {
     g.forEach((t, c, r) => {
       if (t.state === 'swapping') {
         t.timer -= dtMs;
-        if (t.timer <= 0) Object.assign(t, { state: 'idle', timer: 0, swapDc: 0, swapDr: 0 });
+        if (t.timer <= 0) {
+          Object.assign(t, { state: 'idle', timer: 0, swapDc: 0, swapDr: 0 });
+          this.fresh.add(t.id);
+        }
       } else if (t.state === 'clearing') {
         t.timer -= dtMs;
         if (t.timer <= 0) removed.push({ c, r });
@@ -344,7 +362,9 @@ export class Game {
     for (const { c, r } of removed) markChainAbove(g, c, r);
 
     // 2. Gravité.
-    if (stepGravity(g, cfg, dtMs).length > 0) this.signals.push('land');
+    const landed = stepGravity(g, cfg, dtMs);
+    if (landed.length > 0) this.signals.push('land');
+    for (const t of landed) this.fresh.add(t.id);
     if (cfg.slide) this.stepSlides();
     if (this.level > this.stats.maxLevel) this.stats.maxLevel = this.level;
 
@@ -364,6 +384,16 @@ export class Game {
     const matched = findMatches(g);
     const rosaces = cfg.rosace ? findRosaces(g, cfg.rosaceMin) : [];
     if (matched.length > 0 || rosaces.length > 0) this.startClear(matched, rosaces);
+    // Formes construites par le joueur : losange (toujours), triangle ou arc (s'ils sont commandés).
+    if (this.fresh.size) {
+      if (cfg.losange) for (const s of findShapes(g, 'losange', this.fresh)) this.clearShape(s, 'losange');
+      const o = this.order;
+      if (o && (o.kind === 'triangle' || o.kind === 'arc')) {
+        const s = findShapes(g, o.kind, this.fresh).find((x) => x.color === o.color);
+        if (s) this.clearShape(s, 'order');
+      }
+      this.fresh.clear();
+    }
 
     // 4. Une tuile posée qui ne participe pas à un clear perd son drapeau chain.
     g.forEach((t) => {
@@ -427,7 +457,50 @@ export class Game {
     this.signals.push('slide');
   }
 
-  private startClear(matched: Cell[], rosaces: Rosace[] = [], gold = false): void {
+  /** Fait disparaître une forme (si aucune de ses tuiles n'est déjà en train de disparaître). */
+  private clearShape(s: Shape, kind: 'losange' | 'order'): void {
+    const g = this.grid;
+    if (s.cells.some(({ c, r }) => g.get(c, r)?.state !== 'idle')) return;
+    this.startClear(s.cells, [], false, kind, s.color);
+    if (kind !== 'losange') return;
+    // La voisine la plus haute du losange devient un joker.
+    let best: Tile | null = null;
+    let bestR = Infinity;
+    for (const { c, r } of s.cells) {
+      for (const dir of ALL_DIRS) {
+        const n = neighbor(c, r, dir);
+        const t = g.get(n.c, n.r);
+        if (t && t.state === 'idle' && t.kind === 'normal' && !t.special && n.r < bestR) {
+          best = t;
+          bestR = n.r;
+        }
+      }
+    }
+    if (best) best.kind = 'joker';
+  }
+
+  /** Commande réalisée : bonus, pause, une tomette d'or toutes les 3 commandes, puis une nouvelle commande. */
+  private completeOrder(): void {
+    const o = this.order;
+    if (!o) return;
+    this.ordersDone++;
+    this.score += this.cfg.orderBonus;
+    this.stopTime = Math.max(this.stopTime, this.cfg.orderPauseS);
+    this.notices.push('order');
+    if (this.ordersDone % 3 === 0) {
+      const pool: Tile[] = [];
+      this.grid.forEach((t) => {
+        if (t.state === 'idle' && t.kind === 'normal' && !t.special) pool.push(t);
+      });
+      if (pool.length) {
+        pool[this.rng.int(pool.length)].special = true;
+        this.notices.push('orderGold');
+      }
+    }
+    this.order = nextOrder(this.rng, this.colors, o.kind);
+  }
+
+  private startClear(matched: Cell[], rosaces: Rosace[] = [], gold = false, shape?: 'losange' | 'order', shapeColor = -1): void {
     const cfg = this.cfg;
     const g = this.grid;
     const key = ({ c, r }: Cell) => r * g.cols + c;
@@ -465,7 +538,8 @@ export class Game {
     this.rosaceCount += rosaces.length;
 
     const size = cells.length;
-    const points = pointsFor(cfg, this.chain, size) + rosaces.length * cfg.rosaceBonus * this.chain;
+    const points =
+      pointsFor(cfg, this.chain, size) + rosaces.length * cfg.rosaceBonus * this.chain + (shape === 'losange' ? cfg.losangeBonus * this.chain : 0);
     this.score += points;
     const pause = Math.max(stopTimeFor(cfg, this.chain, size), rosaces.length ? cfg.rosacePauseS : 0);
     this.stopTime = Math.max(this.stopTime, pause);
@@ -479,7 +553,18 @@ export class Game {
     this.alert = false;
     this.graceLeft = 0;
     const where = rosaces.length ? rosaces.map((k) => k.center) : gold ? [cells[0]] : cells;
-    this.events.push({ kind: 'clear', cells: where, chain: this.chain, size, points, rosaces: rosaces.length, gold });
+    this.events.push({ kind: 'clear', cells: where, chain: this.chain, size, points, rosaces: rosaces.length, gold, ...(shape ? { shape } : {}) });
+    // Commandes réalisées par ce clear.
+    const o = this.order;
+    if (o) {
+      const done =
+        shape === 'order' ||
+        (o.kind === 'losange' && shape === 'losange' && shapeColor === o.color) ||
+        (o.kind === 'rosace' && rosaces.length > 0) ||
+        (o.kind === 'combo5' && size >= 5) ||
+        (o.kind === 'chain3' && this.chain >= 3);
+      if (done) this.completeOrder();
+    }
   }
 
   /** La tomette d'or en `at` et toutes les tuiles posées de la couleur `color` disparaissent. */
