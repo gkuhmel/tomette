@@ -87,7 +87,7 @@ export function cardView(id: string, tag: 'button' | 'div' = 'div'): HTMLElement
   return el(tag as 'div', { class: 'exp-card', ...(tag === 'button' ? { type: 'button' } : {}) }, [
     cardBadge(id),
     el('span', { class: 'exp-card-text' }, [
-      el('strong', {}, [cardName(id)]),
+      el('strong', {}, [cardName(id), el('small', { class: `exp-tag${cardById(id)?.unique ? ' unique' : ''}` }, [t(cardById(id)?.unique ? 'exp.unique' : 'exp.stack')])]),
       el('span', { class: 'plus' }, [`+ ${t(`card.${id}.plus` as Key)}`]),
       el('span', { class: 'minus' }, [`− ${t(`card.${id}.minus` as Key)}`]),
     ]),

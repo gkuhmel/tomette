@@ -6,7 +6,7 @@ import { Rng } from '../src/core/rng';
 import { emptyGame } from './helpers';
 
 describe('expédition', () => {
-  it('8 manches de plus en plus dures', () => {
+  it('20 manches de plus en plus dures', () => {
     expect(RUN_STAGES).toBe(20);
     let prev = runStage(1, defaultConfig, emptyMods());
     for (let n = 2; n <= RUN_STAGES; n++) {
@@ -36,17 +36,29 @@ describe('expédition', () => {
     expect(s.cfg.initialRows).toBeLessThan(defaultConfig.rows - 2);
   });
 
-  it('3 cartes distinctes, de préférence pas encore prises', () => {
+  it('3 cartes distinctes ; une carte unique prise ne revient pas, une cumulable si', () => {
     const rng = new Rng(5);
-    const cards = drawCards(rng, ['palette', 'joker']);
-    expect(new Set(cards).size).toBe(3);
-    expect(cards).not.toContain('palette');
-    expect(cards).not.toContain('joker');
+    let seenJoker = false;
+    for (let i = 0; i < 50; i++) {
+      const cards = drawCards(rng, ['palette', 'joker']);
+      expect(new Set(cards).size).toBe(3);
+      expect(cards).not.toContain('palette');
+      seenJoker ||= cards.includes('joker');
+    }
+    expect(seenJoker).toBe(true);
     expect(drawCards(rng, CARDS.map((c) => c.id))).toHaveLength(3);
   });
 
+  it('rosace dès 4 voisines : pile plus rapide et plus de pause de rosace', () => {
+    const base = runStage(10, defaultConfig, emptyMods());
+    const s = runStage(10, defaultConfig, modsFor(['rosace', 'pauses']));
+    expect(s.cfg.rosaceMin).toBe(4);
+    expect(s.cfg.baseSecondsPerRow).toBeLessThan(base.cfg.baseSecondsPerRow * 1.2);
+    expect(s.cfg.rosacePauseS).toBe(0);
+  });
+
   it('points de manche', () => {
-    expect(stagePoints(3, 1000, modsFor(['points']), true)).toBe(1500 + 3000);
+    expect(stagePoints(3, 1000, modsFor(['points']), true)).toBe(1250 + 3000);
     expect(stagePoints(3, 1000, emptyMods(), false)).toBe(1000);
   });
 

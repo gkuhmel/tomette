@@ -25,7 +25,8 @@ export interface Mods {
   mortarNarrow: boolean;
   mortarEvery: number;
   rosace4: boolean;
-  mortarEarly: boolean;
+  /** Multiplicateur de la pause après une rosace (en plus de `pauses`). */
+  rosacePause: number;
   orderBonus: number;
   pauses: number;
   shots: number;
@@ -37,7 +38,7 @@ export interface Mods {
 export function emptyMods(): Mods {
   return {
     colors: 0, rowTime: 1, joker: 1, cracked: 1, sealed: 1, grace: 0, goal: 0, shields: 0, score: 1,
-    initialRows: 0, mortarNarrow: false, mortarEvery: 1, rosace4: false, mortarEarly: false, orderBonus: 1, pauses: 1,
+    initialRows: 0, mortarNarrow: false, mortarEvery: 1, rosace4: false, rosacePause: 1, orderBonus: 1, pauses: 1,
     shots: 0, mistral: false, fireworks: false, rainbow: false,
   };
 }
@@ -47,25 +48,35 @@ export interface Card {
   id: string;
   /** Pictogramme de la carte. */
   icon: string;
+  /** Carte forte, prise une seule fois ; les autres sont de petits échanges qui se cumulent. */
+  unique?: boolean;
   apply: (m: Mods) => void;
 }
 
+/**
+ * Deux familles :
+ * - les cartes cumulables, de petits échanges (un peu de ceci contre un peu de cela),
+ *   qui peuvent revenir et s'empiler ;
+ * - les cartes uniques, qui changent la partie, avec une contrepartie lourde.
+ */
 export const CARDS: Card[] = [
-  { id: 'palette', icon: '🎨', apply: (m) => ((m.colors -= 1), (m.rowTime /= 1.2)) },
-  { id: 'joker', icon: '🃏', apply: (m) => ((m.joker *= 3), (m.cracked *= 2)) },
-  { id: 'grace', icon: '⏳', apply: (m) => ((m.grace += 2), (m.goal += 2)) },
-  { id: 'shield', icon: '🛡️', apply: (m) => ((m.shields += 1), (m.rowTime /= 1.15)) },
-  { id: 'points', icon: '💰', apply: (m) => ((m.score *= 1.5), (m.initialRows += 1)) },
-  { id: 'slow', icon: '😴', apply: (m) => ((m.rowTime *= 1.2), (m.sealed *= 2)) },
-  { id: 'mortar', icon: '🧱', apply: (m) => ((m.mortarNarrow = true), (m.mortarEvery *= 0.5)) },
-  { id: 'rosace', icon: '🌸', apply: (m) => ((m.rosace4 = true), (m.mortarEarly = true), (m.mortarEvery *= 0.75)) },
-  { id: 'orders', icon: '🧺', apply: (m) => ((m.orderBonus *= 2), (m.grace -= 1)) },
-  { id: 'pauses', icon: '☕', apply: (m) => ((m.pauses *= 1.5), (m.colors += 1)) },
-  { id: 'carreau', icon: '🎯', apply: (m) => ((m.shots += 1), (m.initialRows += 1)) },
-  { id: 'mistral', icon: '🌬️', apply: (m) => ((m.mistral = true), (m.pauses *= 0.5)) },
-  { id: 'fireworks', icon: '🎆', apply: (m) => ((m.fireworks = true), (m.score *= 0.8)) },
-  { id: 'rainbow', icon: '🌈', apply: (m) => ((m.rainbow = true), (m.joker = 0)) },
-  { id: 'pastis', icon: '🎲', apply: (m) => ((m.score *= 2), (m.goal += 3), (m.grace -= 1)) },
+  // Cumulables.
+  { id: 'slow', icon: '😴', apply: (m) => ((m.rowTime *= 1.1), (m.score *= 0.85)) },
+  { id: 'points', icon: '💰', apply: (m) => ((m.score *= 1.25), (m.rowTime /= 1.1)) },
+  { id: 'grace', icon: '⏳', apply: (m) => ((m.grace += 0.5), (m.goal += 1)) },
+  { id: 'joker', icon: '🃏', apply: (m) => ((m.joker *= 1.5), (m.cracked *= 1.5)) },
+  { id: 'pauses', icon: '☕', apply: (m) => ((m.pauses *= 1.2), (m.rowTime /= 1.1)) },
+  { id: 'orders', icon: '🧺', apply: (m) => ((m.orderBonus *= 1.5), (m.grace -= 0.25)) },
+  { id: 'pastis', icon: '🎲', apply: (m) => ((m.score *= 1.4), (m.goal += 1)) },
+  // Uniques.
+  { id: 'palette', icon: '🎨', unique: true, apply: (m) => ((m.colors -= 1), (m.rowTime /= 1.25), (m.score *= 0.8)) },
+  { id: 'rosace', icon: '🌸', unique: true, apply: (m) => ((m.rosace4 = true), (m.rowTime /= 1.15), (m.rosacePause = 0)) },
+  { id: 'shield', icon: '🛡️', unique: true, apply: (m) => ((m.shields += 1), (m.rowTime /= 1.15)) },
+  { id: 'mortar', icon: '🧱', unique: true, apply: (m) => ((m.mortarNarrow = true), (m.mortarEvery *= 0.5)) },
+  { id: 'carreau', icon: '🎯', unique: true, apply: (m) => ((m.shots += 1), (m.initialRows += 1)) },
+  { id: 'mistral', icon: '🌬️', unique: true, apply: (m) => ((m.mistral = true), (m.pauses *= 0.5)) },
+  { id: 'fireworks', icon: '🎆', unique: true, apply: (m) => ((m.fireworks = true), (m.score *= 0.8)) },
+  { id: 'rainbow', icon: '🌈', unique: true, apply: (m) => ((m.rainbow = true), (m.joker = 0)) },
 ];
 
 export const cardById = (id: string) => CARDS.find((c) => c.id === id);
@@ -77,10 +88,9 @@ export function modsFor(cards: readonly string[]): Mods {
   return m;
 }
 
-/** 3 cartes au hasard parmi celles pas encore prises (les cartes déjà prises peuvent revenir s'il n'en reste pas assez). */
+/** 3 cartes distinctes au hasard ; une carte unique déjà prise ne revient pas. */
 export function drawCards(rng: Rng, taken: readonly string[], n = 3): string[] {
-  const fresh = CARDS.map((c) => c.id).filter((id) => !taken.includes(id));
-  const pool = fresh.length >= n ? fresh : CARDS.map((c) => c.id);
+  const pool = CARDS.filter((c) => !(c.unique && taken.includes(c.id))).map((c) => c.id);
   const out: string[] = [];
   while (out.length < n && pool.length) out.push(pool.splice(rng.int(pool.length), 1)[0]);
   return out;
@@ -90,7 +100,7 @@ export function drawCards(rng: Rng, taken: readonly string[], n = 3): string[] {
 export function runStage(n: number, cfg: Config, mods: Mods): { spec: StageSpec; cfg: Config; goal: number } {
   const spec = stageSpec(Math.round(2 + ((n - 1) * 28) / (RUN_STAGES - 1)), cfg);
   const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
-  const mortarEvery = spec.mortarEveryS > 0 ? spec.mortarEveryS : mods.mortarEarly ? 30 : 0;
+  const mortarEvery = spec.mortarEveryS;
   const out: Config = {
     ...cfg,
     colors: clamp(spec.colors + mods.colors, 3, 6),
@@ -110,7 +120,7 @@ export function runStage(n: number, cfg: Config, mods: Mods): { spec: StageSpec;
     chainPauseBaseS: cfg.chainPauseBaseS * mods.pauses,
     chainPausePerLinkS: cfg.chainPausePerLinkS * mods.pauses,
     comboPausePerExtraTileS: cfg.comboPausePerExtraTileS * mods.pauses,
-    rosacePauseS: cfg.rosacePauseS * mods.pauses,
+    rosacePauseS: cfg.rosacePauseS * mods.pauses * mods.rosacePause,
     orderPauseS: cfg.orderPauseS * mods.pauses,
     fireworks: mods.fireworks ? 1 : 0,
     mistralEveryS: mods.mistral ? 25 : 0,

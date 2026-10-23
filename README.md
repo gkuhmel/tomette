@@ -62,7 +62,11 @@ Déploiement manuel possible : `npm run deploy` (après `npx wrangler login`).
   20 manches (difficulté de l'accueil) à ligne d'arrivée, une seule vie. L'expédition en
   cours est sauvegardée (`tomettes.run`) : on la reprend (une manche interrompue repart
   de son début, un choix de carte en attente propose les mêmes cartes) ou on l'abandonne. Après chaque manche réussie, 1 carte parmi 3 (bonus +
-  contrepartie, cumulés jusqu'à la fin) ; le Bouclier sauve une fois d'un
+  contrepartie, cumulés jusqu'à la fin). Deux familles : 7 cartes **cumulables**,
+  petits échanges qui peuvent revenir et s'empiler (ex. Sieste : pile −10 % de
+  vitesse, points −15 %) ; 8 cartes **uniques**, fortes, avec une contrepartie
+  lourde (Palette : 1 couleur de moins ; Rosace facile : rosace dès 4 voisines, mais
+  pile +15 % et plus de pause de rosace). Le Bouclier sauve une fois d'un
   débordement. 15 cartes (dont Carreau : tirer une tuile d'un double-tap,
   Mistral, Feu d'artifice, Arc-en-ciel, Pastis), chacune avec son pictogramme,
   rappelées sous le score et détaillées dans la pause. Score de run, record et
