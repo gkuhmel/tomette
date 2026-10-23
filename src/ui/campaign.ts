@@ -2,7 +2,6 @@ import { STAGE_COUNT, stageOpen } from '../core/campaign';
 import { t } from '../i18n';
 import { el } from './dom';
 import { Screen } from './screens';
-import { expeditionBlock } from './expedition';
 import { load, save } from './storage';
 
 const KEY = 'tomettes.campaign';
@@ -33,15 +32,13 @@ export const totalStars = (list = loadStars()) => list.reduce((n, s) => n + (s |
 export const starText = (n: number) => '★'.repeat(n) + '☆'.repeat(3 - n);
 
 /** Écran Campagne : les 30 manches en nid d'abeille, avec leurs étoiles. */
-export function campaignScreen(onPick: (stage: number) => void, onBack: () => void, onExpedition: () => void): Screen & { refresh(): void } {
-  const exp = expeditionBlock(onExpedition);
+export function campaignScreen(onPick: (stage: number) => void, onBack: () => void): Screen & { refresh(): void } {
   const total = el('p', { class: 'campaign-total' });
   const grid = el('div', { class: 'stage-grid' });
   const back = el('button', { type: 'button', class: 'btn primary' }, [t('common.back')]);
   back.addEventListener('click', onBack);
   const screen = new Screen('screen-campaign', [
     el('div', { class: 'panel' }, [
-      exp.root,
       el('h2', {}, [t('mode.campaign.name')]),
       el('p', { class: 'campaign-intro' }, [t('camp.intro')]),
       total,
@@ -50,7 +47,6 @@ export function campaignScreen(onPick: (stage: number) => void, onBack: () => vo
     ]),
   ]);
   const refresh = () => {
-    exp.refresh();
     const stars = loadStars();
     total.textContent = t('camp.total', { n: totalStars(stars), total: STAGE_COUNT * 3 });
     grid.replaceChildren(

@@ -1256,10 +1256,9 @@ button.exp-card:active {
 /* --- Campagne ------------------------------------------------------------ */
 
 .tool-row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  max-width: calc(100vw - 24px);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: min(100%, 340px);
   gap: 8px;
   margin: -2px 0 12px;
 }
@@ -1267,6 +1266,7 @@ button.exp-card:active {
 .tool-btn {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   padding: 8px 12px;
   border: 0;

@@ -30,14 +30,17 @@ export class Screen {
 export interface HomeScreen {
   screen: Screen;
   difficulty: HTMLElement;
-  /** Rosace : les modes de jeu (et les missions). */
+  /** Rosace : tous les modes de jeu. */
   play: HexButtonParts;
   timeAttack: HexButtonParts;
   mosaic: HexButtonParts;
   express: HexButtonParts;
   campaign: HexButtonParts;
   duel: HexButtonParts;
-  missions: HexButtonParts;
+  expedition: HexButtonParts;
+  /** Sous la rosace : missions (avec le compte du jour). */
+  missions: HTMLElement;
+  missionsCount: HTMLElement;
   /** Sous la rosace : ce qui n'est pas un mode de jeu. */
   howto: HTMLElement;
   progress: HTMLElement;
@@ -62,7 +65,7 @@ export function homeScreen(): HomeScreen {
   const duel = hexButton('var(--t0)', 'swords', modeName('duel'));
   const timeAttack = hexButton('var(--t5)', 'clock', modeName('timeAttack'));
   const mosaic = hexButton('var(--t4)', 'flower', modeName('mosaic'));
-  const missions = hexButton('var(--t3)', 'target', t('missions.title'));
+  const expedition = hexButton('var(--t3)', 'compass', t('mode.expedition.name'));
   const campaign = hexButton('var(--t1)', 'flag', modeName('campaign'));
   const express = hexButton('var(--t2)', 'bolt', modeName('express'));
   // « Tutoriel » : rejoue le tutoriel pas à pas (les règles détaillées sont dans les Réglages).
@@ -70,18 +73,20 @@ export function homeScreen(): HomeScreen {
   const progressCount = el('small');
   const progress = toolButton('trophy', t('common.achievements'), progressCount);
   const settings = toolButton('gear', t('common.settings'));
+  const missionsCount = el('small');
+  const missions = toolButton('target', t('missions.title'), missionsCount);
   const playerLevel = el('span', { class: 'pb-level' });
   const player = el('button', { type: 'button', class: 'player-bar' }, [playerLevel]);
-  const rosace = rosaceMenu(play, [duel, timeAttack, mosaic, missions, campaign, express]);
+  const rosace = rosaceMenu(play, [duel, timeAttack, mosaic, expedition, campaign, express]);
   const screen = new Screen('screen-home', [
     el('div', { class: 'home-top' }, [el('h1', { class: 'title' }, ['Tomettes']), el('small', { class: 'tagline' }, [t('home.tagline')])]),
     rosace,
-    el('div', { class: 'tool-row' }, [howto, progress, settings]),
+    el('div', { class: 'tool-row' }, [howto, progress, missions, settings]),
     difficulty,
     player,
   ]);
   autoFitRosace(rosace);
-  return { screen, difficulty, play, timeAttack, mosaic, express, campaign, duel, missions, howto, progress, progressCount, settings, player, playerLevel };
+  return { screen, difficulty, play, timeAttack, mosaic, express, campaign, duel, expedition, missions, missionsCount, howto, progress, progressCount, settings, player, playerLevel };
 }
 
 export function gameOverScreen(): {

@@ -1,4 +1,4 @@
-import { cardById, CARDS, RUN_STAGES } from '../core/expedition';
+import { cardById, CARDS } from '../core/expedition';
 import { Key, t } from '../i18n';
 import { el } from './dom';
 import { Screen } from './screens';
@@ -95,24 +95,4 @@ export function cardsScreen(onPick: (id: string) => void): Screen & { open(stage
       screen.show();
     },
   });
-}
-
-/** Bloc Expédition en tête de l'écran Campagne. */
-export function expeditionBlock(onStart: () => void): { root: HTMLElement; refresh(): void } {
-  const best = el('small', { class: 'exp-best' });
-  const start = el('button', { type: 'button', class: 'btn primary' }, [t('exp.start')]);
-  start.addEventListener('click', onStart);
-  const root = el('div', { class: 'exp-block' }, [
-    el('strong', {}, [t('mode.expedition.name')]),
-    el('p', {}, [t('exp.intro')]),
-    best,
-    start,
-  ]);
-  return {
-    root,
-    refresh() {
-      const r = loadExp();
-      best.textContent = r.best ? t('exp.best', { n: r.best, s: Math.min(r.bestStage, RUN_STAGES) }) : '';
-    },
-  };
 }

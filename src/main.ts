@@ -608,7 +608,9 @@ function boot(): void {
     const lv = missions.level;
     home.playerLevel.replaceChildren(el('strong', {}, [t('player.level', { n: lv.level })]), bar(lv.into, lv.need), el('small', {}, [t('player.xp', { n: lv.into, need: lv.need })]));
     const daily = missions.state.daily;
-    home.missions.rec.textContent = `${daily.filter((m) => m.done).length}/${daily.length}`;
+    home.missionsCount.textContent = `${daily.filter((m) => m.done).length}/${daily.length}`;
+    const exp = loadExp();
+    home.expedition.rec.textContent = exp.best ? `${exp.bestStage}/${RUN_STAGES}` : '—';
     home.campaign.rec.textContent = `★ ${totalStars()}/${STAGE_COUNT * 3}`;
     home.duel.rec.textContent = t('duel.wins', { n: loadDuel()[aiSkill()].wins });
     over.screen.hide();
@@ -783,10 +785,6 @@ function boot(): void {
       campaignView.hide();
       showHome();
     },
-    () => {
-      campaignView.hide();
-      startExpedition();
-    },
   );
   home.duel.button.addEventListener('click', () => {
     duelMenu.setCpuLabel(t(`diff.${difficulty}` as Key));
@@ -811,7 +809,8 @@ function boot(): void {
     missionsView.show();
   };
   home.player.addEventListener('click', openMissions);
-  home.missions.button.addEventListener('click', openMissions);
+  home.missions.addEventListener('click', openMissions);
+  home.expedition.button.addEventListener('click', () => startExpedition());
   home.progress.addEventListener('click', () => {
     progressView.refresh();
     progressView.root.scrollTop = 0;

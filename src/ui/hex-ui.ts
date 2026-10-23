@@ -17,6 +17,7 @@ const ICONS = {
   up: '<path d="M6 14.5 12 8.5l6 6"/>',
   swords: '<path d="M4 4l9 9M4 4h4M4 4v4M20 4l-9 9M20 4h-4M20 4v4"/><path d="M7 14l3 3M17 14l-3 3M5 19l3-3M19 19l-3-3"/>',
   target: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle class="f" cx="12" cy="12" r="1.4"/>',
+  compass: '<circle cx="12" cy="12" r="9"/><path class="f" d="M15.5 8.5l-2 5-5 2 2-5z"/>',
   flag: '<path d="M6 21V4"/><path class="f" d="M6 4h12l-2.5 4L18 12H6z"/>',
 } as const;
 
