@@ -5,7 +5,7 @@ import type { Cell } from './hex';
 /** Une étape du tutoriel : grille préparée, geste conseillé et condition de réussite. */
 export interface TutorialStep {
   /** Textes : clés tuto.<id>.title / tuto.<id>.text. */
-  id: 'swap' | 'diagonal' | 'combo' | 'chain' | 'rise' | 'cracked' | 'rosace' | 'gold' | 'losange';
+  id: 'swap' | 'diagonal' | 'combo' | 'chain' | 'rise' | 'cracked' | 'rosace' | 'gold';
   build: (cfg: Config) => Game;
   /** Tuile à déplacer et case de destination conseillées. */
   hint?: { from: Cell; to: Cell };
@@ -34,7 +34,6 @@ export function tutorialConfig(cfg: Config): Config {
     mortarEveryS: 0,
     rosace: 1,
     rosaceMin: 5,
-    losange: 1,
   };
 }
 
@@ -155,20 +154,5 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     },
     hint: { from: { c: 3, r: 9 }, to: { c: 4, r: 9 } },
     done: (g) => g.stats.goldUsed >= 1,
-  },
-  {
-    id: 'losange',
-    build: (cfg) => {
-      // Deux triangles accolés de même couleur : le losange disparaît et une voisine devient joker.
-      const g = base(cfg, [9, 10]);
-      put(g, 4, 9, A);
-      g.grid.place(3, 8, A);
-      g.grid.place(4, 8, A);
-      g.grid.place(5, 8, X);
-      g.grid.place(6, 8, A);
-      return g;
-    },
-    hint: { from: { c: 6, r: 8 }, to: { c: 5, r: 8 } },
-    done: (_g, ev) => ev.some((e) => e.shape === 'losange'),
   },
 ];

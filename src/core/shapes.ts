@@ -5,10 +5,9 @@ import { Grid, Tile } from './grid';
  * Formes de couleur qui ne contiennent jamais 3 tuiles en ligne (sinon l'alignement
  * les casserait avant qu'elles soient finies) :
  * - triangle : 3 tuiles voisines deux à deux ;
- * - losange : 2 triangles accolés (4 tuiles) ;
  * - arc : 4 voisines consécutives autour d'une case vide ou d'une tuile d'une autre couleur.
  */
-export type ShapeKind = 'triangle' | 'losange' | 'arc';
+export type ShapeKind = 'triangle' | 'arc';
 
 export interface Shape {
   kind: ShapeKind;
@@ -69,13 +68,7 @@ export function findShapes(grid: Grid, kind: ShapeKind, fresh: ReadonlySet<numbe
       const a = ring[i];
       const b = ring[(i + 1) % 6];
       if (colorAt(a) !== color || colorAt(b) !== color) continue;
-      if (kind === 'triangle') {
-        push([here, a, b], color);
-        continue;
-      }
-      // Losange : le triangle (ici, a, b) et le triangle voisin de l'autre côté de (ici, b).
-      const d = ring[(i + 2) % 6];
-      if (colorAt(d) === color) push([here, a, b, d], color);
+      push([here, a, b], color);
     }
   });
   return out;

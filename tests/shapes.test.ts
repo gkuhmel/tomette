@@ -16,14 +16,13 @@ function star(game: ReturnType<typeof emptyGame>, c: number, r: number, color: n
 }
 
 describe('formes', () => {
-  it('losange : 4 tuiles, sans alignement de 3', () => {
+  it('triangle : 3 tuiles voisines deux à deux, sans alignement de 3', () => {
     const game = emptyGame();
-    star(game, 3, 6, A, [0, 1, 2]);
+    star(game, 3, 6, A, [0, 1]);
     expect(findMatches(game.grid)).toHaveLength(0);
-    const l = findShapes(game.grid, 'losange', null);
-    expect(l).toHaveLength(1);
-    expect(l[0].cells).toHaveLength(4);
-    expect(findShapes(game.grid, 'triangle', null).length).toBeGreaterThanOrEqual(2);
+    const tri = findShapes(game.grid, 'triangle', null);
+    expect(tri).toHaveLength(1);
+    expect(tri[0].cells).toHaveLength(3);
   });
 
   it('arc : 4 voisines consécutives d\'une autre couleur que le centre', () => {
@@ -55,15 +54,15 @@ describe('formes', () => {
 
   it('une forme doit contenir une tuile qui vient de bouger', () => {
     const game = emptyGame();
-    star(game, 3, 6, A, [0, 1, 2]);
-    expect(findShapes(game.grid, 'losange', new Set())).toHaveLength(0);
+    star(game, 3, 6, A, [0, 1]);
+    expect(findShapes(game.grid, 'triangle', new Set())).toHaveLength(0);
     const id = game.grid.get(3, 6)!.id;
-    expect(findShapes(game.grid, 'losange', new Set([id]))).toHaveLength(1);
+    expect(findShapes(game.grid, 'triangle', new Set([id]))).toHaveLength(1);
   });
 });
 
-describe('losange en jeu', () => {
-  it('construit par un échange : disparaît avec bonus, la voisine la plus haute devient joker', () => {
+describe('plus de losange', () => {
+  it('4 tuiles en losange construites par un échange ne disparaissent pas', () => {
     const game = emptyGame();
     const g = game.grid;
     const bottom = g.rows - 1;
@@ -86,9 +85,8 @@ describe('losange en jeu', () => {
     expect(findMatches(g)).toHaveLength(0);
     expect(game.trySwap(from.c, from.r, last.c, last.r)).toBe(true);
     for (let i = 0; i < 12; i++) game.tick();
-    const ev = game.events.find((e) => e.shape === 'losange');
-    expect(ev).toBeDefined();
-    expect(game.grid.some((t) => t.kind === 'joker')).toBe(true);
+    expect(game.events.some((e) => e.kind === 'clear')).toBe(false);
+    expect(game.grid.some((t) => t.kind === 'joker')).toBe(false);
     settle(game);
   });
 });

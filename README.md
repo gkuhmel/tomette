@@ -36,15 +36,12 @@ Déploiement manuel possible : `npm run deploy` (après `npx wrangler login`).
 - **Rosace** : au moins 5 des 6 voisines d'une tuile de la même autre couleur.
   L'anneau disparaît et le centre devient une **tomette d'or** ; l'échanger avec
   une voisine fait disparaître toute la couleur de cette voisine.
-- **Tutoriel** : 9 étapes jouées sur le plateau (échange, en biais, combo,
-  chaîne, monter, tuile fêlée, rosace, tomette d'or, losange), avec une main
+- **Tutoriel** : 8 étapes jouées sur le plateau (échange, en biais, combo,
+  chaîne, monter, tuile fêlée, rosace, tomette d'or), avec une main
   animée qui montre le geste. Lancé à la première partie, rejouable par le
   bouton « Tutoriel » de l'accueil ; les règles détaillées sont dans Réglages.
-- **Losange** : 4 tuiles d'une couleur en losange (deux triangles accolés),
-  construit par le joueur (une des tuiles vient de bouger) : bonus, et la
-  voisine la plus haute devient un joker.
 - **Commandes de motifs** (Classique, Contre-la-montre, Mosaïque, Express) : un
-  motif à réaliser est affiché à droite du score (triangle, losange ou arc
+  motif à réaliser est affiché à droite du score (triangle ou arc
   d'une couleur, rosace, combo de 5, chaîne ×3). Réussi : bonus, pause de la
   pile, et une tomette d'or toutes les 3 commandes.
 - **Tuiles spéciales** : fêlée (ne s'aligne pas, réparée par un alignement
@@ -64,10 +61,9 @@ Déploiement manuel possible : `npm run deploy` (après `npx wrangler login`).
   de son début, un choix de carte en attente propose les mêmes cartes) ou on l'abandonne. Après chaque manche réussie, 1 carte parmi 3 (bonus +
   contrepartie, cumulés jusqu'à la fin). Deux familles : 7 cartes **cumulables**,
   petits échanges qui peuvent revenir et s'empiler (ex. Sieste : pile −10 % de
-  vitesse, points −15 %) ; 8 cartes **uniques**, fortes, avec une contrepartie
-  lourde (Palette : 1 couleur de moins ; Rosace facile : rosace dès 4 voisines, mais
-  pile +15 % et plus de pause de rosace). Le Bouclier sauve une fois d'un
-  débordement. 15 cartes (dont Carreau : tirer une tuile d'un double-tap,
+  vitesse, points −15 %) ; 7 cartes **uniques**, fortes, avec une contrepartie
+  lourde (ex. Palette : 1 couleur de moins, pile +25 %, points −20 %). Le Bouclier
+  sauve une fois d'un débordement. 14 cartes (dont Carreau : tirer une tuile d'un double-tap,
   Mistral, Feu d'artifice, Arc-en-ciel, Pastis), chacune avec son pictogramme,
   rappelées sous le score et détaillées dans la pause. Score de run, record et
   3 succès dédiés.

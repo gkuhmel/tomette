@@ -24,9 +24,6 @@ export interface Mods {
   initialRows: number;
   mortarNarrow: boolean;
   mortarEvery: number;
-  rosace4: boolean;
-  /** Multiplicateur de la pause après une rosace (en plus de `pauses`). */
-  rosacePause: number;
   orderBonus: number;
   pauses: number;
   shots: number;
@@ -38,7 +35,7 @@ export interface Mods {
 export function emptyMods(): Mods {
   return {
     colors: 0, rowTime: 1, joker: 1, cracked: 1, sealed: 1, grace: 0, goal: 0, shields: 0, score: 1,
-    initialRows: 0, mortarNarrow: false, mortarEvery: 1, rosace4: false, rosacePause: 1, orderBonus: 1, pauses: 1,
+    initialRows: 0, mortarNarrow: false, mortarEvery: 1,  orderBonus: 1, pauses: 1,
     shots: 0, mistral: false, fireworks: false, rainbow: false,
   };
 }
@@ -70,7 +67,6 @@ export const CARDS: Card[] = [
   { id: 'pastis', icon: '🎲', apply: (m) => ((m.score *= 1.4), (m.goal += 1)) },
   // Uniques.
   { id: 'palette', icon: '🎨', unique: true, apply: (m) => ((m.colors -= 1), (m.rowTime /= 1.25), (m.score *= 0.8)) },
-  { id: 'rosace', icon: '🌸', unique: true, apply: (m) => ((m.rosace4 = true), (m.rowTime /= 1.15), (m.rosacePause = 0)) },
   { id: 'shield', icon: '🛡️', unique: true, apply: (m) => ((m.shields += 1), (m.rowTime /= 1.15)) },
   { id: 'mortar', icon: '🧱', unique: true, apply: (m) => ((m.mortarNarrow = true), (m.mortarEvery *= 0.5)) },
   { id: 'carreau', icon: '🎯', unique: true, apply: (m) => ((m.shots += 1), (m.initialRows += 1)) },
@@ -115,12 +111,11 @@ export function runStage(n: number, cfg: Config, mods: Mods): { spec: StageSpec;
     mortarFromLevel: 1,
     mortarMaxW: mods.mortarNarrow ? Math.max(1, cfg.mortarMaxW - 2) : cfg.mortarMaxW,
     mortarMinW: mods.mortarNarrow ? 1 : cfg.mortarMinW,
-    rosaceMin: mods.rosace4 ? 4 : cfg.rosaceMin,
     orderBonus: cfg.orderBonus * mods.orderBonus,
     chainPauseBaseS: cfg.chainPauseBaseS * mods.pauses,
     chainPausePerLinkS: cfg.chainPausePerLinkS * mods.pauses,
     comboPausePerExtraTileS: cfg.comboPausePerExtraTileS * mods.pauses,
-    rosacePauseS: cfg.rosacePauseS * mods.pauses * mods.rosacePause,
+    rosacePauseS: cfg.rosacePauseS * mods.pauses,
     orderPauseS: cfg.orderPauseS * mods.pauses,
     fireworks: mods.fireworks ? 1 : 0,
     mistralEveryS: mods.mistral ? 25 : 0,

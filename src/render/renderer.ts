@@ -138,9 +138,9 @@ export class Renderer {
       x = x / e.cells.length + L.x0;
       y = y / e.cells.length + L.y0 - game.riseOffset * L.h;
       this.effects.onClear(x, y, e.chain, e.size, e.rosaces, e.gold, L.R, this.theme, now);
-      if (e.chain < 2 && e.size < 4 && !e.rosaces && !e.gold && e.shape !== 'losange') continue;
+      if (e.chain < 2 && e.size < 4 && !e.rosaces && !e.gold) continue;
       this.popups.push({
-        text: e.rosaces ? t('pop.rosace') : e.gold ? t('pop.gold') : e.shape === 'losange' ? t('pop.losange') : e.chain >= 2 ? `×${e.chain}` : `${e.size}`,
+        text: e.rosaces ? t('pop.rosace') : e.gold ? t('pop.gold') : e.chain >= 2 ? `×${e.chain}` : `${e.size}`,
         sub: e.rosaces
           ? e.chain >= 2 ? t('pop.chainN', { n: e.chain }) : `+${e.points}`
           : e.gold ? t('pop.goldTiles', { n: e.size - 1 })

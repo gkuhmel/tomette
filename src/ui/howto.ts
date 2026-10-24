@@ -361,7 +361,7 @@ const jokerScene: Scene = {
   ],
 };
 
-const losangeScene: Scene = {
+const orderScene: Scene = {
   R: 22,
   cols: 3,
   rows: 3,
@@ -369,8 +369,7 @@ const losangeScene: Scene = {
     { c: 1, r: 1, color: BLUE, ring: true },
     { c: 1, r: 0, color: BLUE, ring: true },
     { c: 2, r: 1, color: BLUE, ring: true },
-    { c: 2, r: 2, color: BLUE, ring: true },
-    ...filler([[0, 1, YELLOW], [0, 2, GREEN], [1, 2, RED_], [2, 0, PURPLE]]),
+    ...filler([[0, 1, YELLOW], [0, 2, GREEN], [1, 2, RED_], [2, 0, PURPLE], [2, 2, GREEN]]),
   ],
 };
 
@@ -435,7 +434,7 @@ export function howToScreen(onPlay: () => void, onBack: () => void, onTutorial: 
       ),
       section('howto.s6.title', fig(rosaceBefore, '→', rosaceAfter), ...tx('howto.s6.p1', 'howto.s6.p2', 'howto.s6.p3')),
       section('', fig(goldUse), t('howto.s6.p4')),
-      section('', fig(losangeScene), t('howto.s6.p5'), t('howto.s6.p6')),
+      section('', fig(orderScene), t('howto.s6.p6')),
       section('howto.s7.title', fig(specialsScene), ...tx('howto.s7.p1', 'howto.s7.p2', 'howto.s7.p3')),
       section('', fig(jokerScene), t('howto.s7.p4')),
       section('', fig(mortarBefore, '→', mortarAfter), t('howto.s7.p5')),

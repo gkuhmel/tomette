@@ -30,9 +30,6 @@ export const defaultConfig = {
   rosaceMin: 5,
   rosaceBonus: 500,
   rosacePauseS: 3,
-  /** Losange : 4 tuiles d'une couleur en losange disparaissent (1 = activé) et la voisine la plus haute devient un joker. */
-  losange: 1,
-  losangeBonus: 200,
   /** Commandes de motifs (modes Classique, Contre-la-montre, Mosaïque, Express) : bonus et pause de la pile. */
   orderBonus: 400,
   orderPauseS: 2,

@@ -49,14 +49,6 @@ describe('expédition', () => {
     expect(drawCards(rng, CARDS.map((c) => c.id))).toHaveLength(3);
   });
 
-  it('rosace dès 4 voisines : pile plus rapide et plus de pause de rosace', () => {
-    const base = runStage(10, defaultConfig, emptyMods());
-    const s = runStage(10, defaultConfig, modsFor(['rosace', 'pauses']));
-    expect(s.cfg.rosaceMin).toBe(4);
-    expect(s.cfg.baseSecondsPerRow).toBeLessThan(base.cfg.baseSecondsPerRow * 1.2);
-    expect(s.cfg.rosacePauseS).toBe(0);
-  });
-
   it('points de manche', () => {
     expect(stagePoints(3, 1000, modsFor(['points']), true)).toBe(1250 + 3000);
     expect(stagePoints(3, 1000, emptyMods(), false)).toBe(1000);
@@ -64,7 +56,8 @@ describe('expédition', () => {
 
   it('chaque carte a une icône', () => {
     for (const c of CARDS) expect(c.icon.length).toBeGreaterThan(0);
-    expect(CARDS.length).toBe(15);
+    expect(CARDS.length).toBe(14);
+    expect(CARDS.some((c) => c.id === 'rosace')).toBe(false);
   });
 
   it('carreau : un tir fait disparaître une tuile, même scellée', () => {

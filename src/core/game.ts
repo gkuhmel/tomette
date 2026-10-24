@@ -25,8 +25,8 @@ export interface ClearEvent {
   rosaces: number;
   /** Clear déclenché par une tomette d'or. */
   gold: boolean;
-  /** Forme particulière : losange, ou motif d'une commande. */
-  shape?: 'losange' | 'order';
+  /** Motif d'une commande. */
+  shape?: 'order';
 }
 
 export type GameEvent = ClearEvent;
@@ -338,7 +338,7 @@ export class Game {
   forceRise(): boolean {
     if (this.grid.topRowOccupied()) return false;
     activatePreview(this.grid, this.preview, this.rng, this.colors);
-    // La rangée qui entre en jeu compte comme « déplacée » : un losange ou une forme commandée qu'elle complète compte.
+    // La rangée qui entre en jeu compte comme « déplacée » : une forme commandée qu'elle complète compte.
     for (const t of this.preview) this.fresh.add(t.id);
     this.preview = generatePreview(this.grid, this.rng, this.colors, this.kindChances());
     this.riseOffset = 0;
@@ -424,13 +424,12 @@ export class Game {
     const matched = findMatches(g);
     const rosaces = cfg.rosace ? findRosaces(g, cfg.rosaceMin) : [];
     if (matched.length > 0 || rosaces.length > 0) this.startClear(matched, rosaces);
-    // Formes construites par le joueur : losange (toujours), triangle ou arc (s'ils sont commandés).
+    // Formes construites par le joueur : triangle ou arc, s'ils sont commandés.
     if (this.fresh.size) {
-      if (cfg.losange) for (const s of findShapes(g, 'losange', this.fresh)) this.clearShape(s, 'losange');
       const o = this.order;
       if (o && (o.kind === 'triangle' || o.kind === 'arc')) {
         const s = findShapes(g, o.kind, this.fresh).find((x) => x.color === o.color);
-        if (s) this.clearShape(s, 'order');
+        if (s) this.clearShape(s);
       }
       this.fresh.clear();
     }
@@ -498,25 +497,10 @@ export class Game {
   }
 
   /** Fait disparaître une forme (si aucune de ses tuiles n'est déjà en train de disparaître). */
-  private clearShape(s: Shape, kind: 'losange' | 'order'): void {
+  private clearShape(s: Shape): void {
     const g = this.grid;
     if (s.cells.some(({ c, r }) => g.get(c, r)?.state !== 'idle')) return;
-    this.startClear(s.cells, [], false, kind, s.color);
-    if (kind !== 'losange') return;
-    // La voisine la plus haute du losange devient un joker.
-    let best: Tile | null = null;
-    let bestR = Infinity;
-    for (const { c, r } of s.cells) {
-      for (const dir of ALL_DIRS) {
-        const n = neighbor(c, r, dir);
-        const t = g.get(n.c, n.r);
-        if (t && t.state === 'idle' && t.kind === 'normal' && !t.special && n.r < bestR) {
-          best = t;
-          bestR = n.r;
-        }
-      }
-    }
-    if (best) best.kind = 'joker';
+    this.startClear(s.cells, [], false, 'order');
   }
 
   /** Commande réalisée : bonus, pause, une tomette d'or toutes les 3 commandes, puis une nouvelle commande. */
@@ -540,7 +524,7 @@ export class Game {
     this.order = nextOrder(this.rng, this.colors, o.kind);
   }
 
-  private startClear(matched: Cell[], rosaces: Rosace[] = [], gold = false, shape?: 'losange' | 'order', shapeColor = -1): void {
+  private startClear(matched: Cell[], rosaces: Rosace[] = [], gold = false, shape?: 'order'): void {
     const cfg = this.cfg;
     const g = this.grid;
     const key = ({ c, r }: Cell) => r * g.cols + c;
@@ -616,7 +600,7 @@ export class Game {
 
     const size = cells.length;
     const points =
-      pointsFor(cfg, this.chain, size) + rosaces.length * cfg.rosaceBonus * this.chain + (shape === 'losange' ? cfg.losangeBonus * this.chain : 0);
+      pointsFor(cfg, this.chain, size) + rosaces.length * cfg.rosaceBonus * this.chain;
     this.score += points;
     const pause = Math.max(stopTimeFor(cfg, this.chain, size), rosaces.length ? cfg.rosacePauseS : 0);
     this.stopTime = Math.max(this.stopTime, pause);
@@ -636,7 +620,6 @@ export class Game {
     if (o) {
       const done =
         shape === 'order' ||
-        (o.kind === 'losange' && shape === 'losange' && shapeColor === o.color) ||
         (o.kind === 'rosace' && rosaces.length > 0) ||
         (o.kind === 'combo5' && size >= 5) ||
         (o.kind === 'chain3' && this.chain >= 3);

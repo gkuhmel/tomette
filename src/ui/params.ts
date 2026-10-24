@@ -88,8 +88,6 @@ export const PARAM_SECTIONS: ParamSection[] = [
     params: [
       { key: 'crackedChance', label: 'Tomettes fêlées', help: 'Probabilité qu\'une tuile d\'une nouvelle rangée soit fêlée : elle ne s\'aligne pas tant qu\'un alignement voisin ne l\'a pas réparée. 0 = jamais.', min: 0, max: 0.3, step: 0.01 },
       { key: 'sealedChance', label: 'Tuiles scellées', help: 'Probabilité d\'une tuile scellée : impossible à déplacer tant qu\'un alignement voisin ne l\'a pas libérée. 0 = jamais.', min: 0, max: 0.3, step: 0.01 },
-      { key: 'losange', label: 'Losange', help: '4 tuiles d\'une même couleur en losange (deux triangles accolés), construit par le joueur : elles disparaissent avec un bonus et la tuile voisine la plus haute devient un joker.', min: 0, max: 1, step: 1, toggle: true },
-      { key: 'losangeBonus', label: 'Bonus du losange', help: 'Points du losange (multipliés par la chaîne en cours).', min: 0, max: 1000, step: 50 },
       { key: 'orderBonus', label: 'Bonus de commande', help: 'Points gagnés quand on réalise le motif commandé (affiché sous le score).', min: 0, max: 2000, step: 50 },
       { key: 'orderPauseS', label: 'Pause de commande', help: 'Pause de la pile quand une commande est réalisée.', unit: 's', min: 0, max: 6, step: 0.5 },
       { key: 'fireworks', label: 'Feu d\'artifice', help: 'Une chaîne ×3 ou plus fait aussi exploser les tuiles autour de la série (carte d\'Expédition).', min: 0, max: 1, step: 1, toggle: true },

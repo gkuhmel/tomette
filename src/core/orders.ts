@@ -3,12 +3,12 @@ import { Rng } from './rng';
 /**
  * Commandes de motifs : un motif à réaliser est proposé au joueur ; le réussir
  * rapporte un bonus (points, pause de la pile, une tomette d'or toutes les 3 commandes).
- * - triangle, losange, arc : la forme, dans la couleur demandée, construite par le joueur ;
+ * - triangle, arc : la forme, dans la couleur demandée, construite par le joueur ;
  * - rosace : une rosace de n'importe quelle couleur ;
  * - combo5 : 5 tuiles ou plus d'un coup ;
  * - chain3 : une chaîne ×3.
  */
-export type OrderKind = 'triangle' | 'losange' | 'arc' | 'rosace' | 'combo5' | 'chain3';
+export type OrderKind = 'triangle' | 'arc' | 'rosace' | 'combo5' | 'chain3';
 
 export interface Order {
   kind: OrderKind;
@@ -18,7 +18,6 @@ export interface Order {
 
 const KINDS: { kind: OrderKind; weight: number; colored: boolean }[] = [
   { kind: 'triangle', weight: 3, colored: true },
-  { kind: 'losange', weight: 3, colored: true },
   { kind: 'arc', weight: 2, colored: true },
   { kind: 'combo5', weight: 2, colored: false },
   { kind: 'chain3', weight: 1, colored: false },

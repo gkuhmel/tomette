@@ -54,11 +54,13 @@ export function loadRun(): SavedRun | null {
     const r = JSON.parse(raw) as SavedRun;
     const ok =
       Number.isInteger(r.stage) && r.stage >= 1 && r.stage <= RUN_STAGES &&
-      Array.isArray(r.cards) && r.cards.every((id) => cardById(id)) &&
+      Array.isArray(r.cards) &&
       typeof r.score === 'number' && typeof r.seed === 'number' && DIFFICULTIES.includes(r.difficulty);
     if (!ok) return null;
-    const choices = Array.isArray(r.choices) && r.choices.every((id) => cardById(id)) ? r.choices : undefined;
-    return { ...r, shields: r.shields || 0, time: r.time || 0, choices };
+    const choices = Array.isArray(r.choices) ? r.choices.filter((id) => cardById(id)) : undefined;
+    // Une carte retirée du jeu (ex. Rosace facile) disparaît de l'expédition en cours.
+    const cards = r.cards.filter((id) => cardById(id));
+    return { ...r, cards, shields: r.shields || 0, time: r.time || 0, choices: choices?.length === 3 ? choices : undefined };
   } catch {
     return null;
   }
