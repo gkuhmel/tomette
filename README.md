@@ -156,3 +156,8 @@ installée est séparé de celui de Safari.
 
 `tools/video/` filme le jeu en mode capture (`?capture=1`) et monte des vidéos
 courtes au format vertical (voir `tools/video/README.md`).
+
+## Stores
+
+Fiches App Store et Google Play (textes en 6 langues, âge, confidentialité,
+visuels à envoyer) : `docs/store/README.md`. Visuels et icônes : `tools/store/`.

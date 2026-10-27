@@ -10,6 +10,7 @@ jouable à la souris et au clavier.
 - `README.md` : règles, modes, réglages, déploiement, variables d'environnement.
 - `docs/NATIF-CAPACITOR.md` : plan du passage en application native (en attente du feu vert).
 - `tools/video/README.md` : vidéos de promotion filmées en mode capture (`?capture=1`).
+- `docs/store/` : fiches App Store et Google Play (textes en 6 langues, réglages) ; visuels produits par `tools/store/`.
 
 ## Stack et contraintes
 

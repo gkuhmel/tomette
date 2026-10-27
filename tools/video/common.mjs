@@ -13,9 +13,9 @@ async function loadPlaywright() {
 const { chromium } = await loadPlaywright();
 const CHROMIUM = process.env.CHROMIUM_PATH || '/opt/pw-browsers/chromium';
 const URL_GAME = process.env.TOMETTES_URL || 'http://127.0.0.1:4173';
-export async function open({ lang = 'fr', theme } = {}) {
+export async function open({ lang = 'fr', theme, width = 360, height = 640, scale = 3 } = {}) {
   const b = await chromium.launch({ executablePath: CHROMIUM });
-  const ctx = await b.newContext({ viewport: { width: 360, height: 640 }, deviceScaleFactor: 3 });
+  const ctx = await b.newContext({ viewport: { width, height }, deviceScaleFactor: scale });
   await ctx.addInitScript(([lang, theme]) => {
     localStorage.setItem('tomettes.config', JSON.stringify({ music: 0, sound: 0, ...(theme !== undefined ? { theme } : {}) }));
     localStorage.setItem('tomettes.lang', lang); localStorage.setItem('tomettes.tutorial', '1');

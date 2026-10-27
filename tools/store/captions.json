@@ -1,0 +1,212 @@
+{
+  "fr": {
+    "1-chaine5": [
+      "Le puzzle des tomettes",
+      "Échange · aligne · enchaîne"
+    ],
+    "2-biais": [
+      "Échange en biais",
+      "Aligne 3 couleurs ou plus"
+    ],
+    "3-chaine7": [
+      "Déclenche des chaînes",
+      "Les tuiles retombent… et ça repart !"
+    ],
+    "4-rosace": [
+      "Forme des rosaces",
+      "et gagne la tomette d'or"
+    ],
+    "5-duel": [
+      "Défie l'ordi ou tes amis",
+      "Tes combos envoient des dalles"
+    ],
+    "6-modes": [
+      "7 façons de jouer",
+      "Classique, Express, Campagne, Expédition…"
+    ],
+    "7-expedition": [
+      "Pars en expédition",
+      "20 manches, 1 vie, des cartes à choisir"
+    ],
+    "feature": [
+      "Le puzzle provençal",
+      "Échange · aligne · enchaîne"
+    ],
+    "badge": "Sans pub · sans compte"
+  },
+  "en": {
+    "1-chaine5": [
+      "The tile puzzle from Provence",
+      "Swap · match · chain"
+    ],
+    "2-biais": [
+      "Swap tiles diagonally",
+      "Match 3 colours or more"
+    ],
+    "3-chaine7": [
+      "Trigger chain reactions",
+      "Tiles fall… and it keeps going!"
+    ],
+    "4-rosace": [
+      "Build rosettes",
+      "and win the golden tile"
+    ],
+    "5-duel": [
+      "Take on the CPU or friends",
+      "Your combos send slabs"
+    ],
+    "6-modes": [
+      "7 ways to play",
+      "Classic, Express, Campaign, Expedition…"
+    ],
+    "7-expedition": [
+      "Set off on an expedition",
+      "20 stages, 1 life, cards to pick"
+    ],
+    "feature": [
+      "The tile puzzle from Provence",
+      "Swap · match · chain"
+    ],
+    "badge": "No ads · no account"
+  },
+  "es": {
+    "1-chaine5": [
+      "El puzle de baldosas de Provenza",
+      "Intercambia · alinea · encadena"
+    ],
+    "2-biais": [
+      "Intercambia en diagonal",
+      "Alinea 3 colores o más"
+    ],
+    "3-chaine7": [
+      "Desata reacciones en cadena",
+      "Las baldosas caen… ¡y sigue!"
+    ],
+    "4-rosace": [
+      "Forma rosetones",
+      "y gana la baldosa de oro"
+    ],
+    "5-duel": [
+      "Reta a la CPU o a tus amigos",
+      "Tus combos envían losas"
+    ],
+    "6-modes": [
+      "7 formas de jugar",
+      "Clásico, Exprés, Campaña, Expedición…"
+    ],
+    "7-expedition": [
+      "Parte de expedición",
+      "20 fases, 1 vida, cartas para elegir"
+    ],
+    "feature": [
+      "El puzle de baldosas de Provenza",
+      "Intercambia · alinea · encadena"
+    ],
+    "badge": "Sin anuncios · sin cuenta"
+  },
+  "de": {
+    "1-chaine5": [
+      "Das Fliesen-Puzzle aus der Provence",
+      "Tauschen · auflösen · verketten"
+    ],
+    "2-biais": [
+      "Tausche Fliesen schräg",
+      "Verbinde 3 oder mehr Farben"
+    ],
+    "3-chaine7": [
+      "Löse Kettenreaktionen aus",
+      "Fliesen fallen … und es geht weiter!"
+    ],
+    "4-rosace": [
+      "Baue Rosetten",
+      "und gewinne die Goldfliese"
+    ],
+    "5-duel": [
+      "Fordere CPU oder Freunde heraus",
+      "Deine Kombos schicken Platten"
+    ],
+    "6-modes": [
+      "7 Arten zu spielen",
+      "Klassisch, Express, Kampagne, Expedition …"
+    ],
+    "7-expedition": [
+      "Brich zur Expedition auf",
+      "20 Runden, 1 Leben, Karten zur Wahl"
+    ],
+    "feature": [
+      "Das Fliesen-Puzzle aus der Provence",
+      "Tauschen · auflösen · verketten"
+    ],
+    "badge": "Ohne Werbung · ohne Konto"
+  },
+  "it": {
+    "1-chaine5": [
+      "Il puzzle di piastrelle provenzali",
+      "Scambia · allinea · concatena"
+    ],
+    "2-biais": [
+      "Scambia in diagonale",
+      "Allinea 3 colori o più"
+    ],
+    "3-chaine7": [
+      "Scatena reazioni a catena",
+      "Le piastrelle cadono… e si riparte!"
+    ],
+    "4-rosace": [
+      "Forma rosoni",
+      "e vinci la piastrella d'oro"
+    ],
+    "5-duel": [
+      "Sfida la CPU o gli amici",
+      "Le tue combo inviano lastre"
+    ],
+    "6-modes": [
+      "7 modi di giocare",
+      "Classica, Express, Campagna, Spedizione…"
+    ],
+    "7-expedition": [
+      "Parti in spedizione",
+      "20 manche, 1 vita, carte da scegliere"
+    ],
+    "feature": [
+      "Il puzzle delle piastrelle provenzali",
+      "Scambia · allinea · concatena"
+    ],
+    "badge": "Senza pubblicità · senza account"
+  },
+  "zh": {
+    "1-chaine5": [
+      "普罗旺斯花砖消除",
+      "交换 · 消除 · 连锁"
+    ],
+    "2-biais": [
+      "斜向交换花砖",
+      "3 块或更多同色相连即可消除"
+    ],
+    "3-chaine7": [
+      "触发连锁反应",
+      "花砖落下……连消不停！"
+    ],
+    "4-rosace": [
+      "拼出花窗",
+      "赢得金花砖"
+    ],
+    "5-duel": [
+      "挑战电脑或好友",
+      "连消会向对手投下砂浆板"
+    ],
+    "6-modes": [
+      "7 种玩法",
+      "经典、快车、闯关、远征……"
+    ],
+    "7-expedition": [
+      "踏上远征",
+      "20 关、1 条命、自选卡牌"
+    ],
+    "feature": [
+      "普罗旺斯花砖消除",
+      "交换 · 消除 · 连锁"
+    ],
+    "badge": "无广告 · 无需注册"
+  }
+}
