@@ -9,7 +9,17 @@ export function isPhone(): boolean {
 
 export function isDevMode(): boolean {
   try {
-    return new URLSearchParams(location.search).get('dev') === '1';
+    const q = new URLSearchParams(location.search);
+    return q.get('dev') === '1' || isCaptureMode();
+  } catch {
+    return false;
+  }
+}
+
+/** Mode capture (?capture=1) : mode développeur sans bouton de debug, pour filmer le jeu. */
+export function isCaptureMode(): boolean {
+  try {
+    return new URLSearchParams(location.search).get('capture') === '1';
   } catch {
     return false;
   }

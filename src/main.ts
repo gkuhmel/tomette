@@ -8,7 +8,8 @@ import './style.css';
 import { Sound } from './audio/sound';
 import { bucket, initTelemetry, track } from './telemetry';
 import { config } from './config';
-import { ClearEvent, Game, STEP_MS } from './core/game';
+import { ClearEvent, Game, GameEvent, STEP_MS } from './core/game';
+import { cellCenter } from './core/hex';
 import { TUTORIAL_STEPS } from './core/tutorial';
 import { modeById, ModeId } from './core/modes';
 import { DIFFICULTIES, Difficulty, withDifficulty } from './core/difficulty';
@@ -22,7 +23,7 @@ import { attachLongPress, DebugPanel, loadSavedConfig, setConfigValue } from './
 import { hexBadge, HexButtonParts, icon } from './ui/hex-ui';
 import { ACHIEVEMENTS } from './core/progress';
 import { el, formatTime } from './ui/dom';
-import { isDevMode, isPhone } from './ui/guard';
+import { isCaptureMode, isDevMode, isPhone } from './ui/guard';
 import { Key, lang, t } from './i18n';
 import { achName, longText, missionText, modeName, modeTag, tutoText as tutoText_, tutoTitle as tutoTitle_ } from './ui/text';
 import { howToScreen } from './ui/howto';
@@ -38,7 +39,7 @@ import { campaignScreen, saveStars, totalStars } from './ui/campaign';
 import { drawCards, modsFor, RUN_STAGES, runStage, stagePoints } from './core/expedition';
 import { activeCards, cardBadge, cardsScreen, clearRun, expIntroScreen, loadExp, loadRun, saveExp, saveRun, SavedRun } from './ui/expedition';
 import { Rng } from './core/rng';
-import { Ai, AI_PROFILES, AiSkill } from './core/ai';
+import { Ai, AI_PROFILES, AiProfile, AiSkill } from './core/ai';
 import { Duel, duelConfig } from './core/duel';
 
 /** Pictogramme d'un malus en approche (au-dessus de la grille du joueur). */
@@ -276,7 +277,7 @@ function boot(): void {
   });
   attachLongPress(corner, 1000, () => debug.open());
   // Bouton de debug visible seulement avec ?dev=1 (sinon : appui long en haut à gauche).
-  if (dev) {
+  if (dev && !isCaptureMode()) {
     const gear = el('button', { id: 'debug-gear', type: 'button', 'aria-label': 'Debug' });
     gear.innerHTML = icon('gear');
     gear.addEventListener('click', () => (debug.isOpen ? debug.close() : debug.open()));
@@ -1115,20 +1116,99 @@ function boot(): void {
     }
   }
 
+  // --- Mode capture (développeur) : piloter une partie depuis un script --------
+  /** Joueur automatique sur la partie du joueur (mode capture). */
+  let autoAi: Ai | null = null;
+  /** Mode capture : la boucle n'avance que du nombre de pas demandé par le script (une image = n pas exacts). */
+  let driven = false;
+  let drivenSteps = 0;
+  if (dev) {
+    const capture = {
+      get game() {
+        return game;
+      },
+      get cpu() {
+        return cpu;
+      },
+      get state() {
+        return state;
+      },
+      setDifficulty(d: Difficulty) {
+        difficulty = d;
+      },
+      start(seed: number, m: ModeId) {
+        autoAi = null;
+        startGame(seed, m);
+      },
+      autoplay(skill: AiSkill | null, seed = 1, overrides: Partial<AiProfile> = {}) {
+        autoAi = skill ? new Ai(game, { ...AI_PROFILES[skill], ...overrides }, seed) : null;
+      },
+      /** Centre d'une case à l'écran (px CSS, coordonnées de la page). */
+      cellOnScreen(c: number, r: number) {
+        const box = canvas.getBoundingClientRect();
+        const L = layout;
+        if (!L) return null;
+        // Le plateau peut être zoomé (transform CSS) pendant une capture.
+        const k = box.width / (canvas.clientWidth || box.width);
+        const p = cellCenter(c, r, L.R);
+        return { x: box.left + (L.x0 + p.x) * k, y: box.top + (L.y0 + p.y - game.riseOffset * L.h) * k, R: L.R * k };
+      },
+      /** Un pas de logique, dans le même ordre que la boucle ; renvoie les événements du joueur. */
+      step(): GameEvent[] {
+        autoAi?.update(STEP_MS);
+        game.tick(STEP_MS);
+        if (duel && cpu && ai) {
+          ai.update(STEP_MS);
+          cpu.tick(STEP_MS);
+          duel.step(STEP_MS / 1000);
+          cpu.events.length = 0;
+          cpu.signals.length = 0;
+          cpu.notices.length = 0;
+          duel.eventsCleared(1);
+        }
+        const ev = game.events.slice();
+        game.events.length = 0;
+        game.signals.length = 0;
+        game.notices.length = 0;
+        duel?.eventsCleared(0);
+        return ev;
+      },
+      /** Une image pilotée : `steps` pas de logique puis le dessin (0 = image figée). */
+      frame(steps: number) {
+        driven = true;
+        drivenSteps = steps;
+        frame(performance.now(), true);
+      },
+      /** Rend la main à la boucle normale. */
+      release() {
+        driven = false;
+      },
+      /** Avance rapide sans dessin, jusqu'à `steps` pas ou la fin de la partie. */
+      skip(steps: number) {
+        for (let i = 0; i < steps && !game.over && !(duel && duel.winner !== null); i++) capture.step();
+      },
+    };
+    Object.assign(window, { tomettes: capture });
+  }
+
   // --- Boucle à pas fixe ---------------------------------------------------
   let liveCheck = 0;
   let last = performance.now();
   let acc = 0;
-  function frame(now: number): void {
+  function frame(now: number, once = false): void {
     const dt = Math.min(250, now - last);
     last = now;
     if (dt > 0) fps = fps * 0.95 + (1000 / dt) * 0.05;
 
     if ((state === 'playing' || state === 'tutorial') && !debugOpen) {
-      acc += dt;
+      if (driven) {
+        acc = drivenSteps * STEP_MS + 1e-6;
+        drivenSteps = 0;
+      } else acc += dt;
       if (state === 'playing' && ++liveCheck % 30 === 0) progress.checkLive(game);
       while (acc >= STEP_MS) {
         input.update();
+        autoAi?.update(STEP_MS);
         game.tick(STEP_MS);
         if (duel && cpu && ai) {
           // Duel : l'ordinateur joue, puis les dalles s'échangent.
@@ -1151,6 +1231,7 @@ function boot(): void {
           break;
         }
       }
+      if (driven) acc = 0;
     } else {
       acc = 0;
     }
@@ -1189,7 +1270,7 @@ function boot(): void {
     }
     renderer.draw(game, input.heldId, now);
     updateHud();
-    requestAnimationFrame(frame);
+    if (!once) requestAnimationFrame((t) => frame(t));
   }
 
   // Lien d'invitation (?room=ABCD) : on rejoint directement la salle de l'ami.
@@ -1201,7 +1282,7 @@ function boot(): void {
 
   updateOrientation();
   if (typeof ResizeObserver !== 'undefined') new ResizeObserver(relayout).observe(stage);
-  requestAnimationFrame(frame);
+  requestAnimationFrame((t) => frame(t));
 }
 
 boot();
