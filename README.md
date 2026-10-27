@@ -151,3 +151,8 @@ installée est séparé de celui de Safari.
   occupée à la reprise, une nouvelle alerte (grâce complète) démarre.
 - Les nouvelles rangées ne créent jamais d'alignement ni de rosace d'elles-mêmes
   (vérifié à la génération puis à l'activation, jokers compris).
+
+## Vidéos de promotion
+
+`tools/video/` filme le jeu en mode capture (`?capture=1`) et monte des vidéos
+courtes au format vertical (voir `tools/video/README.md`).

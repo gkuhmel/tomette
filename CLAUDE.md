@@ -9,6 +9,7 @@ jouable à la souris et au clavier.
 
 - `README.md` : règles, modes, réglages, déploiement, variables d'environnement.
 - `docs/NATIF-CAPACITOR.md` : plan du passage en application native (en attente du feu vert).
+- `tools/video/README.md` : vidéos de promotion filmées en mode capture (`?capture=1`).
 
 ## Stack et contraintes
 
