@@ -197,7 +197,8 @@ export class Effects {
 
     this.rings = this.rings.filter((r) => now - r.born < r.life);
     for (const r of this.rings) {
-      const k = (now - r.born) / r.life;
+      // Un effet né un instant après l'horodatage de l'image donnerait un rayon négatif.
+      const k = Math.max(0, Math.min(1, (now - r.born) / r.life));
       ctx.globalAlpha = 1 - k;
       ctx.lineWidth = Math.max(2, L.R * 0.25 * (1 - k));
       ctx.strokeStyle = r.color;
