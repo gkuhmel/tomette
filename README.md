@@ -75,6 +75,13 @@ Déploiement manuel possible : `npm run deploy` (après `npx wrangler login`).
   créer, « 🤖 Faire venir un robot ». Le robot est un vrai second joueur : il passe par
   le serveur, joue sa partie (IA du duel), envoie attaques et grille, accepte les revanches
   (`src/net/robot.ts`).
+- **Garde-fous du serveur** (`worker/index.ts`) : au-delà de 30 messages par seconde, le
+  surplus est ignoré, et la connexion coupée au-delà de 100 (un joueur en envoie environ 5) ;
+  une connexion à une salle dure au plus 30 minutes ; au plus 30 recherches de joueur au
+  hasard par minute et par adresse IP (seule une empreinte de l'adresse est gardée, en
+  mémoire, une minute). En complément, une règle de limitation de débit Cloudflare
+  (gratuite) sur `/api/` est conseillée : tableau de bord Cloudflare → Security → WAF →
+  Rate limiting rules (chemin commençant par `/api/`, 20 requêtes par 10 s et par IP).
 - **Expédition** (tuile de l'accueil, qui ouvre un écran de présentation) : roguelite de
   20 manches (difficulté de l'accueil) à ligne d'arrivée, une seule vie. L'expédition en
   cours est sauvegardée (`tomettes.run`) : on la reprend (une manche interrompue repart
