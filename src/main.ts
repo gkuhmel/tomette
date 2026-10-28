@@ -35,7 +35,7 @@ import { bar, Missions, missionsScreen, playerLevel } from './ui/missions';
 import { longMission } from './core/missions';
 import { unlocksBetween } from './core/unlocks';
 import { STAGE_COUNT, stageConfig, stageSpec, starsFor } from './core/campaign';
-import { campaignScreen, saveStars, totalStars } from './ui/campaign';
+import { campaignScreen, loadStars, saveStars, totalStars } from './ui/campaign';
 import { drawCards, modsFor, RUN_STAGES, runStage, stagePoints } from './core/expedition';
 import { activeCards, cardBadge, cardsScreen, clearRun, expIntroScreen, loadExp, loadRun, saveExp, saveRun, SavedRun } from './ui/expedition';
 import { Rng } from './core/rng';
@@ -439,6 +439,8 @@ function boot(): void {
       const w = duel.winner;
       const result = w === 0 ? 'win' : w === 1 ? 'lose' : 'draw';
       const rec = recordDuel(aiSkill(), result)[aiSkill()];
+      const strong = aiSkill() === 'hard' || aiSkill() === 'extreme';
+      progress.grant([...(result === 'win' && aiSkill() === 'extreme' ? ['duelExtreme'] : []), ...(strong && rec.streak >= 5 ? ['duelStreak'] : [])]);
       block = duelResult({
         result,
         level: diffName,
@@ -458,7 +460,12 @@ function boot(): void {
       const done = game.won && run.stage >= RUN_STAGES;
       clearRun();
       const better = saveExp(run.score, done ? RUN_STAGES : run.stage);
-      const grants = [...(run.stage >= 10 ? ['expHalf'] : []), ...(done ? ['exp1'] : []), ...(done && !run.cards.includes('shield') ? ['expNoShield'] : [])];
+      const grants = [
+        ...(run.stage >= 10 ? ['expHalf'] : []),
+        ...(done ? ['exp1'] : []),
+        ...(done && !run.cards.includes('shield') ? ['expNoShield'] : []),
+        ...(done && (run.difficulty === 'hard' || run.difficulty === 'extreme') ? ['expExpert'] : []),
+      ];
       if (grants.length) progress.grant(grants);
       block = resultBlock({
         tone: done ? 'gold' : 'grey',
@@ -489,6 +496,11 @@ function boot(): void {
       if (game.won) {
         const stars = starsFor(spec, game.elapsed);
         const better = saveStars(stageNo, stars);
+        const all = loadStars();
+        progress.grant([
+          ...(all.filter((n) => n > 0).length >= STAGE_COUNT ? ['camp30'] : []),
+          ...(totalStars(all) >= STAGE_COUNT * 3 ? ['camp90'] : []),
+        ]);
         block = resultBlock({
           tone: 'gold',
           art: 'flag',

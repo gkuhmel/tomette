@@ -88,6 +88,27 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'expHalf', check: () => false },
   { id: 'exp1', check: () => false },
   { id: 'expNoShield', check: () => false },
+  // Succès difficiles : pour les joueurs qui ont déjà tout le reste.
+  { id: 'chain7', check: (t) => t.bestChain >= 7 },
+  { id: 'combo10', check: (t) => t.bestCombo >= 10 },
+  { id: 'rosace10g', check: (t) => t.bestRosaces >= 10 },
+  { id: 'rosace100', check: (t) => t.rosaces >= 100 },
+  { id: 'gold25', check: (t) => t.gold >= 25 },
+  { id: 'saves25', check: (t) => t.alertSaves >= 25 },
+  { id: 'score100k', check: (_t, g) => !!g && g.score >= 100000 },
+  { id: 'level15', check: (t) => t.bestLevel >= 15 },
+  { id: 'survive15', check: (_t, g) => inMode(g, 'endless') && g!.elapsed >= 900 },
+  { id: 'express10', check: (_t, g) => inMode(g, 'express') && g!.elapsed >= 600 },
+  { id: 'chrono6k', check: (_t, g) => inMode(g, 'timeAttack') && g!.score >= 6000 },
+  { id: 'tiles10k', check: (t) => t.tiles >= 10000 },
+  { id: 'games250', check: (t) => t.games >= 250 },
+  { id: 'hours10', check: (t) => t.timeS >= 36000 },
+  // Débloqués par l'interface : campagne, duel, expédition.
+  { id: 'camp30', check: () => false },
+  { id: 'camp90', check: () => false },
+  { id: 'duelExtreme', check: () => false },
+  { id: 'duelStreak', check: () => false },
+  { id: 'expExpert', check: () => false },
 ];
 
 /** Succès nouvellement obtenus. */
