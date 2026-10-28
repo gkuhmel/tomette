@@ -1,4 +1,4 @@
-import { isRoomCode, randomRoomCode } from '../core/net';
+import { cleanName, isRoomCode, randomRoomCode } from '../core/net';
 import { t } from '../i18n';
 import { el } from './dom';
 import { icon } from './hex-ui';
@@ -6,6 +6,40 @@ import { Screen } from './screens';
 import { load, save } from './storage';
 
 const KEY = 'tomettes.online';
+const PLAYER_KEY = 'tomettes.player';
+
+/** Noms proposés au premier lancement (le joueur peut changer le sien). */
+const NAMES = ['Cigale', 'Mistral', 'Lavande', 'Calisson', 'Santon', 'Olivier', 'Tomette', 'Garrigue', 'Farigoule', 'Navette', 'Pétanque', 'Cyprès', 'Sardine', 'Fougasse', 'Tapenade', 'Galet'];
+
+/** Pseudo du joueur, sans inscription : un nom et un numéro tiré une fois pour toutes. */
+export interface Player {
+  name: string;
+  tag: string;
+}
+
+export function loadPlayer(): Player {
+  try {
+    const raw = load(PLAYER_KEY);
+    const p = raw ? (JSON.parse(raw) as Partial<Player>) : null;
+    if (p && typeof p.name === 'string' && /^\d{4}$/.test(p.tag ?? '')) return { name: cleanName(p.name).replace(/#/g, '') || NAMES[0], tag: p.tag! };
+  } catch {
+    /* pseudo illisible : on en tire un nouveau */
+  }
+  const fresh = { name: NAMES[Math.floor(Math.random() * NAMES.length)], tag: String(Math.floor(1000 + Math.random() * 9000)) };
+  save(PLAYER_KEY, JSON.stringify(fresh));
+  return fresh;
+}
+
+export function savePlayerName(name: string): Player {
+  const p = loadPlayer();
+  const clean = cleanName(name).replace(/#/g, '').slice(0, 14);
+  if (clean) p.name = clean;
+  save(PLAYER_KEY, JSON.stringify(p));
+  return p;
+}
+
+/** Pseudo affiché : « Cigale#2741 ». */
+export const playerLabel = (p: Player = loadPlayer()) => `${p.name}#${p.tag}`;
 
 export function loadOnline(): { wins: number; losses: number } {
   try {
@@ -35,15 +69,32 @@ export function duelMenuScreen(handlers: {
   create: (code: string) => void;
   join: (code: string) => void;
   back: () => void;
+  /** Joueur au hasard : file d'attente commune. */
+  random: () => void;
   /** Mode développeur : un robot crée une salle et attend qu'on la rejoigne. */
   robotHost?: (code: string) => void;
 }): Screen & {
   setCpuLabel(s: string): void;
+  /** Message sous le bouton « joueur au hasard » (personne trouvé…). */
+  notice(s: string): void;
 } {
   const cpuSub = el('small');
   const cpu = el('button', { type: 'button', class: 'duel-choice' }, [el('strong', {}, [t('online.vsCpu')]), cpuSub]);
   cpu.insertAdjacentHTML('afterbegin', icon('swords'));
   cpu.addEventListener('click', handlers.cpu);
+  // Joueur au hasard, avec le pseudo du joueur (modifiable).
+  const randomSub = el('small', {}, [t('online.randomHelp')]);
+  const random = el('button', { type: 'button', class: 'duel-choice random-choice' }, [el('strong', {}, [t('online.random')]), randomSub]);
+  random.insertAdjacentHTML('afterbegin', icon('compass'));
+  random.addEventListener('click', handlers.random);
+  const randomNotice = el('p', { class: 'room-error' });
+  const player = loadPlayer();
+  const nameInput = el('input', { class: 'name-input', maxlength: '14', autocomplete: 'off', spellcheck: 'false', 'aria-label': t('online.nameLabel') });
+  nameInput.value = player.name;
+  const tag = el('span', { class: 'name-tag' }, [`#${player.tag}`]);
+  nameInput.addEventListener('keydown', (e) => e.stopPropagation());
+  nameInput.addEventListener('change', () => (nameInput.value = savePlayerName(nameInput.value).name));
+  const nameRow = el('label', { class: 'name-row' }, [el('span', {}, [t('online.nameLabel')]), nameInput, tag]);
   const create = el('button', { type: 'button', class: 'btn primary' }, [t('online.create')]);
   create.addEventListener('click', () => handlers.create(randomRoomCode()));
   const input = el('input', { class: 'room-input', maxlength: '4', autocomplete: 'off', autocapitalize: 'characters', spellcheck: 'false', placeholder: 'ABCD', 'aria-label': t('online.code') });
@@ -78,6 +129,9 @@ export function duelMenuScreen(handlers: {
     el('div', { class: 'panel' }, [
       el('h2', {}, [t('mode.duel.name')]),
       cpu,
+      random,
+      randomNotice,
+      nameRow,
       el('div', { class: 'friend-box' }, [
         el('strong', {}, [t('online.friend')]),
         el('p', {}, [t('online.friendHelp')]),
@@ -89,7 +143,10 @@ export function duelMenuScreen(handlers: {
       el('div', { class: 'home-buttons' }, [back]),
     ]),
   ]);
-  return Object.assign(screen, { setCpuLabel: (s: string) => (cpuSub.textContent = s) });
+  return Object.assign(screen, {
+    setCpuLabel: (s: string) => (cpuSub.textContent = s),
+    notice: (s: string) => (randomNotice.textContent = s),
+  });
 }
 
 /** Écran d'attente d'une salle : code, partage du lien, état. */
@@ -132,6 +189,44 @@ export function roomScreen(onCancel: () => void, onRobot?: (code: string) => voi
     },
     status(s: string) {
       status.textContent = s;
+    },
+  });
+}
+
+/** Recherche d'un joueur au hasard : compte à rebours, adversaire trouvé, annulation. */
+export function searchScreen(onCancel: () => void, onRobot?: () => void): Screen & { open(): void; tick(left: number): void; found(name: string): void } {
+  const count = el('div', { class: 'room-code search-count' });
+  const status = el('p', { class: 'room-status' });
+  const cancel = el('button', { type: 'button', class: 'btn' }, [t('common.cancel')]);
+  cancel.addEventListener('click', onCancel);
+  // Mode développeur : un robot entre dans la file pour tester sans autre joueur.
+  const robot = el('button', { type: 'button', class: 'btn robot-btn' }, [t('online.robotQueue')]);
+  robot.hidden = !onRobot;
+  robot.addEventListener('click', () => {
+    robot.hidden = true;
+    onRobot?.();
+  });
+  const screen = new Screen('screen-search', [
+    el('div', { class: 'panel room-panel' }, [el('h2', {}, [t('online.random')]), el('p', { class: 'room-label' }, [playerLabel()]), count, status, robot, cancel]),
+  ]);
+  const label = screen.root.querySelector('.room-label')!;
+  return Object.assign(screen, {
+    open() {
+      label.textContent = playerLabel();
+      status.textContent = t('online.searching');
+      count.textContent = '30';
+      robot.hidden = !onRobot;
+      cancel.hidden = false;
+      screen.show();
+    },
+    tick(left: number) {
+      count.textContent = String(Math.max(0, Math.ceil(left)));
+    },
+    found(name: string) {
+      count.textContent = '⚔️';
+      status.textContent = t('online.found', { name });
+      robot.hidden = true;
+      cancel.hidden = true;
     },
   });
 }

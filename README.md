@@ -61,7 +61,14 @@ Déploiement manuel possible : `npm run deploy` (après `npx wrangler login`).
   Chacun fait tourner sa propre partie ; un petit Worker Cloudflare (une salle
   = un Durable Object, `worker/index.ts`) relaie attaques et aperçu de la pile.
   Rien n'est stocké côté serveur.
-  **Tester sans ami** (mode développeur, `?dev=1`) : dans Duel, « 🤖 Un robot crée une
+- **Joueur au hasard** (dans Duel) : file d'attente commune (`/api/lobby`, un seul Durable
+  Object `Lobby`). Dès que deux joueurs attendent, la file leur donne un code de salle et
+  le pseudo de l'autre, puis la partie se joue dans une salle normale. Personne en
+  30 secondes : retour à l'écran Duel. Sans inscription : un **pseudo** libre et un
+  numéro tiré une fois (« Cigale#2741 », stocké sur l'appareil), échangé au début de
+  chaque partie en ligne et affiché dans le HUD et à la fin.
+  **Tester sans ami** (mode développeur, `?dev=1`) : « 🤖 Un robot entre dans la file »
+  sur l'écran de recherche ; dans Duel, « 🤖 Un robot crée une
   salle » (le robot attend, on rejoint avec son code), ou dans la salle qu'on vient de
   créer, « 🤖 Faire venir un robot ». Le robot est un vrai second joueur : il passe par
   le serveur, joue sa partie (IA du duel), envoie attaques et grille, accepte les revanches

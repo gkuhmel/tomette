@@ -62,7 +62,8 @@ Ce que fait le jeu :
 - parties, records, réglages : **sur l'appareil uniquement**, pas de compte ;
 - mesure d'audience **anonyme, sans cookie** (Umami) et **rapports d'erreurs**
   (Sentry), seulement si leurs identifiants sont fournis au build ;
-- duel en ligne : l'état des grilles transite par Cloudflare, **rien n'est enregistré** ;
+- duel en ligne (ami ou joueur au hasard) : le pseudo choisi librement et l'état des grilles
+  transitent par Cloudflare, **rien n'est enregistré** ;
 - pas de publicité, pas de suivi entre applications, pas d'identifiant publicitaire.
 
 **App Store — « Confidentialité de l'app »** (si Umami et Sentry sont activés dans l'app) :

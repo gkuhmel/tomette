@@ -69,6 +69,7 @@ export class RobotFriend {
         this.last = this.playFrom;
         window.clearInterval(this.timer);
         this.timer = window.setInterval(() => this.tick(), 50);
+        this.client.send({ t: 'hello', name: 'Robot#0000' });
         break;
       case 'attack':
         this.linked?.receive(m.a);

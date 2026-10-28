@@ -23,7 +23,7 @@ jouable à la souris et au clavier.
   italien, chinois. Tout nouveau texte visible reçoit ses traductions le jour même ;
   `tests/i18n.test.ts` vérifie que chaque langue a toutes les clés.
 - Déploiement : **Cloudflare** (`wrangler.jsonc` : site statique servi depuis `dist/`, plus un
-  Worker `worker/index.ts` pour le duel en ligne, routes `/api/*`, salles en Durable Objects),
+  Worker `worker/index.ts` pour le duel en ligne, routes `/api/*`, salles et file du « joueur au hasard » en Durable Objects),
   branché sur le dépôt GitHub. Build : `npm run build` ; déploiement : `npx wrangler deploy`.
   Chaque push sur `main` part en production. `base: './'` dans Vite, `.nvmrc` à `22`.
 - Le développeur teste surtout sur la version déployée, depuis son iPhone.

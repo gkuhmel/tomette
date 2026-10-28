@@ -65,6 +65,7 @@ body,
 #screen-exp,
 #screen-duel,
 #screen-room,
+#screen-search,
 #screen-rotate {
   background:
     linear-gradient(180deg, var(--sky1) 0%, var(--sky2) 40%, color-mix(in srgb, var(--sky3) 55%, transparent) 78%, transparent 100%),
@@ -416,7 +417,8 @@ body.alert .hud-badge .prog {
 #screen-campaign,
 #screen-exp,
 #screen-duel,
-#screen-room {
+#screen-room,
+#screen-search {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
@@ -1332,6 +1334,49 @@ button.exp-card:active {
 .duel-choice small {
   font-weight: 800;
   opacity: 0.9;
+}
+
+.duel-choice.random-choice {
+  margin-bottom: 6px;
+  background: var(--t3);
+}
+
+.random-choice + .room-error:empty {
+  display: none;
+}
+
+/* Pseudo du joueur (sans inscription) : un nom modifiable et son numéro. */
+.name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 14px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.name-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 2px solid var(--card);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--fg);
+  font: 800 16px/1 var(--font-title);
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.name-tag {
+  font-family: var(--font-title);
+  font-size: 16px;
+  color: var(--fg);
+}
+
+.search-count {
+  font-variant-numeric: tabular-nums;
 }
 
 .friend-box {

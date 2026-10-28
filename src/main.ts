@@ -45,10 +45,11 @@ import { Duel, duelConfig } from './core/duel';
 /** Pictogramme d'un malus en approche (au-dessus de la grille du joueur). */
 const MALUS_ICON = { night: '🌙', freeze: '❄', crack: '⚡', quake: '〰' } as const;
 import { drawMini } from './render/mini';
-import { BoardView, isRoomCode, LinkedDuel, NetStats, packView, ServerMsg } from './core/net';
+import { BoardView, cleanName, isRoomCode, LinkedDuel, NetStats, packView, ServerMsg } from './core/net';
 import { OnlineClient } from './net/client';
+import { LobbyClient } from './net/lobby';
 import { RobotFriend } from './net/robot';
-import { duelMenuScreen, recordOnline, roomScreen } from './ui/online';
+import { duelMenuScreen, playerLabel, recordOnline, roomScreen, searchScreen } from './ui/online';
 import { loadDuel, recordDuel } from './ui/duel';
 import { duelResult } from './ui/duel-result';
 import { orderChip } from './ui/order-chip';
@@ -115,6 +116,9 @@ function boot(): void {
   let remoteOver: NetStats | null = null;
   let rematchAsked = false;
   let lastStateSent = 0;
+  /** Pseudo de l'adversaire en ligne (« Ami » tant qu'on ne le connaît pas). */
+  let opponentName = '';
+  const opponentLabel = () => opponentName || t('online.opponent');
   const emptyStats = (): NetStats => ({ score: 0, sent: 0, chain: 1, rosaces: 0 });
   const myStats = (): NetStats => ({ score: game.score, sent: linked?.sent ?? 0, chain: game.stats.maxChain, rosaces: game.rosaceCount });
   function leaveOnline(): void {
@@ -123,16 +127,18 @@ function boot(): void {
     linked = null;
     remote = null;
   }
-  /** Ouvre (ou rejoint) une salle ; le créateur partage le code. */
-  function openRoom(code: string, creator: boolean): void {
+  /** Ouvre (ou rejoint) une salle ; le créateur partage le code. `matched` : salle donnée par la file du joueur au hasard. */
+  function openRoom(code: string, creator: boolean, matched = ''): void {
     leaveOnline();
     duelMenu.hide();
     home.screen.hide();
-    roomView.open(code, creator);
+    opponentName = matched;
+    if (!matched) roomView.open(code, creator);
     net = new OnlineClient(code, onNet, () => {
       if (state === 'playing' || state === 'paused') {
         remoteOver = remoteOver ?? remote?.stats ?? emptyStats();
-      } else roomView.status(t('online.dropped'));
+      } else if (searchView.visible) searchFailed(t('online.dropped'));
+      else roomView.status(t('online.dropped'));
     });
     net.connect();
   }
@@ -150,6 +156,8 @@ function boot(): void {
         remoteOver = null;
         rematchAsked = false;
         roomView.hide();
+        searchView.hide();
+        net?.send({ t: 'hello', name: playerLabel() });
         over.screen.hide();
         startGame(m.seed, 'online');
         // Compte à rebours commun avant le départ.
@@ -161,6 +169,10 @@ function boot(): void {
       case 'state':
         remote = { view: m.view, stats: m.stats, pending: m.pending };
         break;
+      case 'hello':
+        opponentName = cleanName(m.name);
+        if (mode === 'online') hudRecLabel.textContent = opponentLabel();
+        break;
       case 'attack':
         linked?.receive(m.a);
         break;
@@ -168,7 +180,8 @@ function boot(): void {
         remoteOver = m.stats;
         break;
       case 'left':
-        if (state === 'over' || roomView.visible) {
+        if (searchView.visible) searchFailed(t('online.left'));
+        else if (state === 'over' || roomView.visible) {
           roomView.status(t('online.left'));
           over.replay.hidden = true;
         } else remoteOver = remoteOver ?? remote?.stats ?? emptyStats();
@@ -197,8 +210,52 @@ function boot(): void {
       duelMenu.hide();
       showHome();
     },
+    random: startSearch,
     robotHost: dev ? callRobot : undefined,
   });
+  // Joueur au hasard : 30 s dans la file commune, puis on abandonne.
+  const SEARCH_S = 30;
+  let lobby: LobbyClient | null = null;
+  let searchTimer = 0;
+  function stopSearch(): void {
+    window.clearInterval(searchTimer);
+    lobby?.close();
+    lobby = null;
+  }
+  function searchFailed(message: string): void {
+    stopSearch();
+    leaveOnline();
+    searchView.hide();
+    duelMenu.notice(message);
+    duelMenu.show();
+  }
+  function startSearch(): void {
+    stopSearch();
+    duelMenu.notice('');
+    duelMenu.hide();
+    searchView.open();
+    const until = performance.now() + SEARCH_S * 1000;
+    searchTimer = window.setInterval(() => {
+      const left = (until - performance.now()) / 1000;
+      searchView.tick(left);
+      if (left <= 0) searchFailed(t('online.nobody'));
+    }, 250);
+    lobby = new LobbyClient(
+      playerLabel(),
+      (code, opponent, host) => {
+        window.clearInterval(searchTimer);
+        lobby = null;
+        searchView.found(opponent);
+        // L'hôte crée la salle un instant avant que l'autre la rejoigne.
+        window.setTimeout(() => openRoom(code, host, opponent), host ? 300 : 700);
+      },
+      () => searchFailed(t('online.dropped')),
+    );
+    lobby.connect();
+  }
+  /** Mode développeur : un robot entre dans la file, puis joue dans la salle qu'elle lui donne. */
+  const robotInQueue = () => new LobbyClient('Robot#0000', (code) => callRobot(code), () => {}).connect();
+  const searchView = searchScreen(() => searchFailed(''), dev ? robotInQueue : undefined);
   const roomView = roomScreen(
     () => {
       leaveOnline();
@@ -336,7 +393,7 @@ function boot(): void {
       game = new Game(duelConfig(config), seed, { mode });
       linked = new LinkedDuel(game);
       remote = null;
-      hudRecLabel.textContent = t('online.opponent');
+      hudRecLabel.textContent = opponentLabel();
       incoming.replaceChildren();
       incoming.dataset.key = '';
     } else if (mode === 'duel') {
@@ -432,14 +489,14 @@ function boot(): void {
       const rec = recordOnline(result);
       block = duelResult({
         result,
-        level: t('online.opponent'),
+        level: opponentLabel(),
         time,
         me: { score: game.score, sent: linked.sent, chain: game.stats.maxChain, rosaces: game.rosaceCount },
         cpu: opp,
         wins: rec.wins,
         losses: rec.losses,
         streak: 0,
-        opponent: t('online.opponent'),
+        opponent: opponentLabel(),
         sub: t('online.sub', { time }),
         footer: [`${t('online.record')} : `, el('span', { class: 'w' }, [t('duel.winsN', { n: rec.wins })]), ' · ', el('span', { class: 'l' }, [t('duel.lossesN', { n: rec.losses })])],
       });
