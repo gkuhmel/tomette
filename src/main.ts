@@ -47,6 +47,7 @@ const MALUS_ICON = { night: '🌙', freeze: '❄', crack: '⚡', quake: '〰' } 
 import { drawMini } from './render/mini';
 import { BoardView, isRoomCode, LinkedDuel, NetStats, packView, ServerMsg } from './core/net';
 import { OnlineClient } from './net/client';
+import { RobotFriend } from './net/robot';
 import { duelMenuScreen, recordOnline, roomScreen } from './ui/online';
 import { loadDuel, recordDuel } from './ui/duel';
 import { duelResult } from './ui/duel-result';
@@ -178,6 +179,13 @@ function boot(): void {
         break;
     }
   }
+  /** Ami robot (mode développeur) : teste le duel en ligne sans ami. */
+  let robot: RobotFriend | null = null;
+  const callRobot = (code: string) => {
+    robot?.stop();
+    robot = new RobotFriend(code, config, 3 * COUNT_STEP_MS);
+    robot.start();
+  };
   const duelMenu = duelMenuScreen({
     cpu: () => {
       duelMenu.hide();
@@ -189,12 +197,16 @@ function boot(): void {
       duelMenu.hide();
       showHome();
     },
+    robotHost: dev ? callRobot : undefined,
   });
-  const roomView = roomScreen(() => {
-    leaveOnline();
-    roomView.hide();
-    showHome();
-  });
+  const roomView = roomScreen(
+    () => {
+      leaveOnline();
+      roomView.hide();
+      showHome();
+    },
+    dev ? callRobot : undefined,
+  );
   /** Expédition en cours (null hors expédition). */
   let run: SavedRun | null = null;
   function startExpedition(): void {

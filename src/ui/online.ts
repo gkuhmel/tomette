@@ -30,7 +30,14 @@ export function roomLink(code: string): string {
 }
 
 /** Écran Duel : contre l'ordinateur, ou défier un ami (créer / rejoindre une salle). */
-export function duelMenuScreen(handlers: { cpu: () => void; create: (code: string) => void; join: (code: string) => void; back: () => void }): Screen & {
+export function duelMenuScreen(handlers: {
+  cpu: () => void;
+  create: (code: string) => void;
+  join: (code: string) => void;
+  back: () => void;
+  /** Mode développeur : un robot crée une salle et attend qu'on la rejoigne. */
+  robotHost?: (code: string) => void;
+}): Screen & {
   setCpuLabel(s: string): void;
 } {
   const cpuSub = el('small');
@@ -59,6 +66,14 @@ export function duelMenuScreen(handlers: { cpu: () => void; create: (code: strin
   });
   const back = el('button', { type: 'button', class: 'btn primary' }, [t('common.back')]);
   back.addEventListener('click', handlers.back);
+  const robot = el('button', { type: 'button', class: 'btn robot-btn' }, [t('online.robotHost')]);
+  robot.hidden = !handlers.robotHost;
+  robot.addEventListener('click', () => {
+    const code = randomRoomCode();
+    handlers.robotHost?.(code);
+    input.value = code;
+    error.textContent = t('online.robotWaiting', { code });
+  });
   const screen = new Screen('screen-duel', [
     el('div', { class: 'panel' }, [
       el('h2', {}, [t('mode.duel.name')]),
@@ -69,6 +84,7 @@ export function duelMenuScreen(handlers: { cpu: () => void; create: (code: strin
         create,
         el('div', { class: 'join-row' }, [input, join]),
         error,
+        robot,
       ]),
       el('div', { class: 'home-buttons' }, [back]),
     ]),
@@ -77,13 +93,19 @@ export function duelMenuScreen(handlers: { cpu: () => void; create: (code: strin
 }
 
 /** Écran d'attente d'une salle : code, partage du lien, état. */
-export function roomScreen(onCancel: () => void): Screen & { open(code: string, creator: boolean): void; status(s: string): void } {
+export function roomScreen(onCancel: () => void, onRobot?: (code: string) => void): Screen & { open(code: string, creator: boolean): void; status(s: string): void } {
   const code = el('div', { class: 'room-code' });
   const status = el('p', { class: 'room-status' });
   const share = el('button', { type: 'button', class: 'btn primary' }, [t('online.share')]);
   const cancel = el('button', { type: 'button', class: 'btn' }, [t('common.cancel')]);
   cancel.addEventListener('click', onCancel);
   let current = '';
+  // Mode développeur : un robot rejoint la salle à la place d'un ami.
+  const robot = el('button', { type: 'button', class: 'btn robot-btn' }, [t('online.robotJoin')]);
+  robot.addEventListener('click', () => {
+    robot.hidden = true;
+    onRobot?.(current);
+  });
   share.addEventListener('click', async () => {
     const url = roomLink(current);
     try {
@@ -97,13 +119,14 @@ export function roomScreen(onCancel: () => void): Screen & { open(code: string, 
     }
   });
   const screen = new Screen('screen-room', [
-    el('div', { class: 'panel room-panel' }, [el('h2', {}, [t('online.friend')]), el('p', { class: 'room-label' }, [t('online.code')]), code, status, share, cancel]),
+    el('div', { class: 'panel room-panel' }, [el('h2', {}, [t('online.friend')]), el('p', { class: 'room-label' }, [t('online.code')]), code, status, share, robot, cancel]),
   ]);
   return Object.assign(screen, {
     open(c: string, creator: boolean) {
       current = c;
       code.textContent = c;
       share.hidden = !creator;
+      robot.hidden = !creator || !onRobot;
       status.textContent = t('online.connecting');
       screen.show();
     },

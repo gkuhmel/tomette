@@ -55,6 +55,11 @@ Déploiement manuel possible : `npm run deploy` (après `npx wrangler login`).
   Chacun fait tourner sa propre partie ; un petit Worker Cloudflare (une salle
   = un Durable Object, `worker/index.ts`) relaie attaques et aperçu de la pile.
   Rien n'est stocké côté serveur.
+  **Tester sans ami** (mode développeur, `?dev=1`) : dans Duel, « 🤖 Un robot crée une
+  salle » (le robot attend, on rejoint avec son code), ou dans la salle qu'on vient de
+  créer, « 🤖 Faire venir un robot ». Le robot est un vrai second joueur : il passe par
+  le serveur, joue sa partie (IA du duel), envoie attaques et grille, accepte les revanches
+  (`src/net/robot.ts`).
 - **Expédition** (tuile de l'accueil, qui ouvre un écran de présentation) : roguelite de
   20 manches (difficulté de l'accueil) à ligne d'arrivée, une seule vie. L'expédition en
   cours est sauvegardée (`tomettes.run`) : on la reprend (une manche interrompue repart
