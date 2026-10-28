@@ -45,6 +45,7 @@ import { Duel, duelConfig } from './core/duel';
 /** Pictogramme d'un malus en approche (au-dessus de la grille du joueur). */
 const MALUS_ICON = { night: '🌙', freeze: '❄', crack: '⚡', quake: '〰' } as const;
 import { drawMini } from './render/mini';
+import { safeName } from './core/names';
 import { BoardView, cleanName, isRoomCode, LinkedDuel, NetStats, packView, ServerMsg } from './core/net';
 import { OnlineClient } from './net/client';
 import { LobbyClient } from './net/lobby';
@@ -118,7 +119,9 @@ function boot(): void {
   let lastStateSent = 0;
   /** Pseudo de l'adversaire en ligne (« Ami » tant qu'on ne le connaît pas). */
   let opponentName = '';
-  const opponentLabel = () => opponentName || t('online.opponent');
+  /** Adversaire trouvé par la file du joueur au hasard (et non un ami). */
+  let randomMatch = false;
+  const opponentLabel = () => opponentName || (randomMatch ? t('online.player') : t('online.opponent'));
   const emptyStats = (): NetStats => ({ score: 0, sent: 0, chain: 1, rosaces: 0 });
   const myStats = (): NetStats => ({ score: game.score, sent: linked?.sent ?? 0, chain: game.stats.maxChain, rosaces: game.rosaceCount });
   function leaveOnline(): void {
@@ -132,7 +135,9 @@ function boot(): void {
     leaveOnline();
     duelMenu.hide();
     home.screen.hide();
-    opponentName = matched;
+    // Joueur au hasard : `matched` est son pseudo (une espace si son pseudo a été refusé par le filtre).
+    randomMatch = matched !== '';
+    opponentName = matched.trim();
     if (!matched) roomView.open(code, creator);
     net = new OnlineClient(code, onNet, () => {
       if (state === 'playing' || state === 'paused') {
@@ -170,7 +175,7 @@ function boot(): void {
         remote = { view: m.view, stats: m.stats, pending: m.pending };
         break;
       case 'hello':
-        opponentName = cleanName(m.name);
+        opponentName = safeName(cleanName(m.name), '');
         if (mode === 'online') hudRecLabel.textContent = opponentLabel();
         break;
       case 'attack':
@@ -245,9 +250,9 @@ function boot(): void {
       (code, opponent, host) => {
         window.clearInterval(searchTimer);
         lobby = null;
-        searchView.found(opponent);
+        searchView.found(opponent || t('online.player'));
         // L'hôte crée la salle un instant avant que l'autre la rejoigne.
-        window.setTimeout(() => openRoom(code, host, opponent), host ? 300 : 700);
+        window.setTimeout(() => openRoom(code, host, opponent || ' '), host ? 300 : 700);
       },
       () => searchFailed(t('online.dropped')),
     );

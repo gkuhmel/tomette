@@ -1,3 +1,4 @@
+import { isOffensive } from '../core/names';
 import { cleanName, isRoomCode, randomRoomCode } from '../core/net';
 import { t } from '../i18n';
 import { el } from './dom';
@@ -21,7 +22,7 @@ export function loadPlayer(): Player {
   try {
     const raw = load(PLAYER_KEY);
     const p = raw ? (JSON.parse(raw) as Partial<Player>) : null;
-    if (p && typeof p.name === 'string' && /^\d{4}$/.test(p.tag ?? '')) return { name: cleanName(p.name).replace(/#/g, '') || NAMES[0], tag: p.tag! };
+    if (p && typeof p.name === 'string' && /^\d{4}$/.test(p.tag ?? '') && !isOffensive(p.name)) return { name: cleanName(p.name).replace(/#/g, '') || NAMES[0], tag: p.tag! };
   } catch {
     /* pseudo illisible : on en tire un nouveau */
   }
@@ -30,12 +31,14 @@ export function loadPlayer(): Player {
   return fresh;
 }
 
-export function savePlayerName(name: string): Player {
+/** Change le nom ; `refused` : pseudo grossier, l'ancien est gardé. */
+export function savePlayerName(name: string): Player & { refused: boolean } {
   const p = loadPlayer();
   const clean = cleanName(name).replace(/#/g, '').slice(0, 14);
+  if (clean && isOffensive(clean)) return { ...p, refused: true };
   if (clean) p.name = clean;
   save(PLAYER_KEY, JSON.stringify(p));
-  return p;
+  return { ...p, refused: false };
 }
 
 /** Pseudo affiché : « Cigale#2741 ». */
@@ -93,7 +96,11 @@ export function duelMenuScreen(handlers: {
   nameInput.value = player.name;
   const tag = el('span', { class: 'name-tag' }, [`#${player.tag}`]);
   nameInput.addEventListener('keydown', (e) => e.stopPropagation());
-  nameInput.addEventListener('change', () => (nameInput.value = savePlayerName(nameInput.value).name));
+  nameInput.addEventListener('change', () => {
+    const p = savePlayerName(nameInput.value);
+    nameInput.value = p.name;
+    randomNotice.textContent = p.refused ? t('online.nameRefused') : '';
+  });
   const nameRow = el('label', { class: 'name-row' }, [el('span', {}, [t('online.nameLabel')]), nameInput, tag]);
   const create = el('button', { type: 'button', class: 'btn primary' }, [t('online.create')]);
   create.addEventListener('click', () => handlers.create(randomRoomCode()));

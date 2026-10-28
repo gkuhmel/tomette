@@ -200,6 +200,8 @@ export const fr = {
   'online.friendHelp': 'En ligne : crée une partie et envoie le code (ou le lien) à ton ami, ou saisis le code qu\'il t\'a donné.',
   'online.create': 'Créer une partie',
   'online.join': 'Rejoindre',
+  'online.player': 'Joueur',
+  'online.nameRefused': 'Ce pseudo n\'est pas autorisé : choisis-en un autre.',
   'online.random': 'Joueur au hasard',
   'online.randomHelp': 'Affronte un autre joueur en attente',
   'online.nameLabel': 'Ton pseudo',

@@ -1,5 +1,6 @@
 import { DurableObject } from 'cloudflare:workers';
 import { cleanName, isRoomCode, randomRoomCode } from '../src/core/net';
+import { safeName } from '../src/core/names';
 
 /**
  * Serveur du duel en ligne (« Défier un ami »).
@@ -90,7 +91,13 @@ export class Room extends DurableObject<Env> {
       else other?.send(JSON.stringify({ t: 'rematchAsked' }));
       return;
     }
-    if (msg.t === 'state' || msg.t === 'attack' || msg.t === 'over' || msg.t === 'hello') other?.send(message);
+    if (msg.t === 'hello') {
+      // Le pseudo est filtré ici aussi : un jeu modifié ne peut pas imposer un pseudo grossier.
+      const name = safeName(cleanName(String((msg as { name?: unknown }).name ?? '')), '');
+      other?.send(JSON.stringify({ t: 'hello', name }));
+      return;
+    }
+    if (msg.t === 'state' || msg.t === 'attack' || msg.t === 'over') other?.send(message);
   }
 
   async webSocketClose(ws: WebSocket): Promise<void> {
@@ -114,7 +121,8 @@ type Waiting = { name: string; since: number };
  */
 export class Lobby extends DurableObject<Env> {
   async fetch(req: Request): Promise<Response> {
-    const name = cleanName(new URL(req.url).searchParams.get('name') ?? '') || '?';
+    // Pseudo grossier : remplacé par un pseudo vide (le jeu affiche alors « Joueur »).
+    const name = safeName(cleanName(new URL(req.url).searchParams.get('name') ?? ''), '');
     const pair = new WebSocketPair();
     const client = pair[0];
     const server = pair[1];

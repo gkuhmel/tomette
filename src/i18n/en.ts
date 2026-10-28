@@ -201,6 +201,8 @@ export const en: Dict = {
   'online.friendHelp': 'Online: create a game and send the code (or link) to your friend, or enter the code they gave you.',
   'online.create': 'Create a game',
   'online.join': 'Join',
+  'online.player': 'Player',
+  'online.nameRefused': 'That name isn\'t allowed: pick another one.',
   'online.random': 'Random player',
   'online.randomHelp': 'Face another player who is waiting',
   'online.nameLabel': 'Your name',

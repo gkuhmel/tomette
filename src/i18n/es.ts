@@ -201,6 +201,8 @@ export const es: Dict = {
   'online.friendHelp': 'En línea: crea una partida y envía el código (o el enlace) a tu amigo, o escribe el código que te dio.',
   'online.create': 'Crear partida',
   'online.join': 'Unirse',
+  'online.player': 'Jugador',
+  'online.nameRefused': 'Ese apodo no está permitido: elige otro.',
   'online.random': 'Jugador al azar',
   'online.randomHelp': 'Enfréntate a otro jugador que espera',
   'online.nameLabel': 'Tu apodo',

@@ -66,7 +66,9 @@ Déploiement manuel possible : `npm run deploy` (après `npx wrangler login`).
   le pseudo de l'autre, puis la partie se joue dans une salle normale. Personne en
   30 secondes : retour à l'écran Duel. Sans inscription : un **pseudo** libre et un
   numéro tiré une fois (« Cigale#2741 », stocké sur l'appareil), échangé au début de
-  chaque partie en ligne et affiché dans le HUD et à la fin.
+  chaque partie en ligne et affiché dans le HUD et à la fin. Pseudos filtrés
+  (`src/core/names.ts`, grossièretés et insultes dans les 6 langues, même déguisées : « C0nn4rd »,
+  « f.u.c.k ») : refusés à la saisie, et remplacés par « Joueur » par le serveur.
   **Tester sans ami** (mode développeur, `?dev=1`) : « 🤖 Un robot entre dans la file »
   sur l'écran de recherche ; dans Duel, « 🤖 Un robot crée une
   salle » (le robot attend, on rejoint avec son code), ou dans la salle qu'on vient de

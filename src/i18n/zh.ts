@@ -202,6 +202,8 @@ export const zh: Dict = {
   'online.friendHelp': '在线：创建一局并把代码（或链接）发给好友，或输入好友给你的代码。',
   'online.create': '创建对局',
   'online.join': '加入',
+  'online.player': '玩家',
+  'online.nameRefused': '该昵称不可用，请换一个。',
   'online.random': '随机匹配',
   'online.randomHelp': '和另一位正在等待的玩家对战',
   'online.nameLabel': '你的昵称',
