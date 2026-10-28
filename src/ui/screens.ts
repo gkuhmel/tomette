@@ -149,7 +149,8 @@ export function pauseScreen(): PauseScreen {
   const menu = hexButton('var(--t0)', 'home', t('common.menu'));
   const stats = el('small', { class: 'tagline' });
   const pauseRosace = rosaceMenu(resume, [restart, settings, sound, music, howto, menu]);
-  const cards = el('div', { class: 'pause-cards' });
+  // Sous la rosace, hors calcul de sa taille : on y accède en faisant défiler.
+  const cards = el('div', { class: 'pause-cards', 'data-nofit': '' });
   const screen = new Screen('screen-pause', [
     el('div', { class: 'home-top' }, [el('h1', { class: 'title' }, [t('common.pause')]), stats]),
     pauseRosace,

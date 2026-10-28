@@ -494,7 +494,9 @@ body.alert .hud-badge .prog {
   align-items: center;
   gap: 1px;
   max-width: calc(var(--r) * 1.5);
-  font-size: max(11px, calc(var(--r) * 0.205));
+  /* Le texte suit la taille de la tomette : il n'en déborde jamais, même sur petit écran. */
+  font-size: max(9px, calc(var(--r) * 0.205));
+  overflow-wrap: anywhere;
   font-weight: 900;
   line-height: 1.05;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
@@ -508,7 +510,7 @@ body.alert .hud-badge .prog {
 
 .hex-btn.big .hex-lab {
   font-family: var(--font-title);
-  font-size: max(15px, calc(var(--r) * 0.3));
+  font-size: max(12px, calc(var(--r) * 0.3));
   font-weight: 600;
 }
 

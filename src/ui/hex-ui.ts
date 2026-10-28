@@ -127,6 +127,8 @@ export function fitRosace(menu: HTMLElement): void {
   let count = 0;
   for (const child of Array.from(screen.children)) {
     if (child === menu || !(child instanceof HTMLElement) || child.offsetParent === null) continue;
+    // Contenu placé sous la rosace, qu'on atteint en faisant défiler (cartes de l'expédition en pause).
+    if (child.dataset.nofit !== undefined) continue;
     if (getComputedStyle(child).position === 'absolute') continue;
     const m = getComputedStyle(child);
     others += child.offsetHeight + parseFloat(m.marginTop) + parseFloat(m.marginBottom);
