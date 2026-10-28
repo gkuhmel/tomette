@@ -54,7 +54,7 @@ IDEAS POR DESCUBRIR
 
 Y ADEMÁS
 • Misiones diarias y nivel de jugador
-• 25 logros, estadísticas, temas y juegos de iconos por desbloquear
+• 44 logros, estadísticas, temas y juegos de iconos por desbloquear
 • Se juega sin conexión (salvo el duelo en línea)
 • Sin anuncios y sin cuenta: tus partidas se quedan en tu teléfono
 

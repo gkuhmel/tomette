@@ -54,7 +54,7 @@ DES IDÉES À DÉCOUVRIR
 
 ET AUSSI
 • Missions du jour et niveau de joueur
-• 25 succès, des statistiques, des thèmes et des jeux de pictogrammes à débloquer
+• 44 succès, des statistiques, des thèmes et des jeux de pictogrammes à débloquer
 • Jouable hors ligne (sauf le duel en ligne)
 • Sans publicité, sans compte : tes parties restent sur ton téléphone
 

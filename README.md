@@ -76,7 +76,10 @@ Déploiement manuel possible : `npm run deploy` (après `npx wrangler login`).
   miniature dans le HUD.
 - **Missions et niveau joueur** : 3 missions du jour (nouvelles à minuit) et
   une mission au long cours. Parties et missions rapportent de l'XP ; le
-  niveau débloque 4 thèmes et 4 jeux de pictogrammes.
+  niveau débloque 8 thèmes et 4 jeux de pictogrammes. Thèmes aux palettes variées
+  (Bonbon, Océan, Automne, Néon) et, au niveau 20, le thème ultime **Tomettes** : vraies
+  tomettes de faïence émaillée (tranche de terre cuite, nuances, craquelures, reflet, 4
+  formes faites main), joint de chaux et décor de Provence (village perché, cyprès, lavande).
 - **Dalles de mortier** : à partir du niveau 3, une dalle de 2 à 4 tuiles tombe
   du haut de temps en temps. Ni déplaçable ni alignable ; un alignement qui la
   touche la transforme entièrement en tuiles normales, qui peuvent prolonger la
@@ -91,7 +94,7 @@ Déploiement manuel possible : `npm run deploy` (après `npx wrangler login`).
 
 Modes : Classique (sans fin), Contre-la-montre (2 min), Mosaïque (un max de
 rosaces en 3 min), Express (départ au niveau 8). Difficultés Détente / Normal /
-Expert, un record par mode et par difficulté, 22 succès, statistiques, tutoriel
+Expert, un record par mode et par difficulté, 44 succès (dont 19 difficiles : chaîne ×7, campagne à 90 étoiles, Extrême…), statistiques, tutoriel
 guidé au premier lancement. Langues : français, anglais, espagnol, allemand,
 italien, chinois (`src/i18n/`).
 

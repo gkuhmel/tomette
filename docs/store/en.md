@@ -54,7 +54,7 @@ IDEAS TO DISCOVER
 
 AND ALSO
 • Daily missions and a player level
-• 25 achievements, statistics, themes and icon sets to unlock
+• 44 achievements, statistics, themes and icon sets to unlock
 • Plays offline (except the online duel)
 • No ads, no account: your games stay on your phone
 
