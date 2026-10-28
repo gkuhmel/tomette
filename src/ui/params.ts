@@ -90,6 +90,7 @@ export const PARAM_SECTIONS: ParamSection[] = [
       { key: 'sealedChance', label: 'Tuiles scellées', help: 'Probabilité d\'une tuile scellée : impossible à déplacer tant qu\'un alignement voisin ne l\'a pas libérée. 0 = jamais.', min: 0, max: 0.3, step: 0.01 },
       { key: 'farandole', label: 'Farandole', help: '5 tuiles d\'une même couleur qui se suivent en file, sans embranchement, formées par le joueur : elles disparaissent ; 5 tuiles donnent un joker à la voisine la plus haute, 6 et plus une cigale (qui efface sa rangée quand elle disparaît).', min: 0, max: 1, step: 1, toggle: true },
       { key: 'farandoleBonus', label: 'Bonus de farandole', help: 'Points d\'une farandole de 5 (multipliés par la chaîne en cours), +50 % par tuile en plus.', min: 0, max: 1500, step: 50 },
+      { key: 'farandoleCicadaMin', label: 'Farandole à cigale', help: 'Longueur de farandole qui donne une cigale au lieu d\'un joker (5 avec la carte Cigale de l\'Expédition).', min: 5, max: 8, step: 1 },
       { key: 'farandolePauseS', label: 'Pause de farandole', help: 'Pause de la pile après une farandole.', unit: 's', min: 0, max: 6, step: 0.5 },
       { key: 'orderBonus', label: 'Bonus de commande', help: 'Points gagnés quand on réalise le motif commandé (affiché sous le score).', min: 0, max: 2000, step: 50 },
       { key: 'orderPauseS', label: 'Pause de commande', help: 'Pause de la pile quand une commande est réalisée.', unit: 's', min: 0, max: 6, step: 0.5 },

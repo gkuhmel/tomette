@@ -34,6 +34,8 @@ export const defaultConfig = {
   farandole: 1,
   farandoleBonus: 300,
   farandolePauseS: 2,
+  /** Longueur de farandole à partir de laquelle on obtient une cigale plutôt qu'un joker. */
+  farandoleCicadaMin: 6,
   /** Commandes de motifs (modes Classique, Contre-la-montre, Mosaïque, Express) : bonus et pause de la pile. */
   orderBonus: 400,
   orderPauseS: 2,

@@ -30,13 +30,14 @@ export interface Mods {
   mistral: boolean;
   fireworks: boolean;
   rainbow: boolean;
+  cicada: boolean;
 }
 
 export function emptyMods(): Mods {
   return {
     colors: 0, rowTime: 1, joker: 1, cracked: 1, sealed: 1, grace: 0, goal: 0, shields: 0, score: 1,
     initialRows: 0, mortarNarrow: false, mortarEvery: 1,  orderBonus: 1, pauses: 1,
-    shots: 0, mistral: false, fireworks: false, rainbow: false,
+    shots: 0, mistral: false, fireworks: false, rainbow: false, cicada: false,
   };
 }
 
@@ -66,13 +67,13 @@ export const CARDS: Card[] = [
   { id: 'orders', icon: '🧺', apply: (m) => ((m.orderBonus *= 1.5), (m.grace -= 0.25)) },
   { id: 'pastis', icon: '🎲', apply: (m) => ((m.score *= 1.4), (m.goal += 1)) },
   // Uniques.
-  { id: 'palette', icon: '🎨', unique: true, apply: (m) => ((m.colors -= 1), (m.rowTime /= 1.25), (m.score *= 0.8)) },
   { id: 'shield', icon: '🛡️', unique: true, apply: (m) => ((m.shields += 1), (m.rowTime /= 1.15)) },
   { id: 'mortar', icon: '🧱', unique: true, apply: (m) => ((m.mortarNarrow = true), (m.mortarEvery *= 0.5)) },
   { id: 'carreau', icon: '🎯', unique: true, apply: (m) => ((m.shots += 1), (m.initialRows += 1)) },
   { id: 'mistral', icon: '🌬️', unique: true, apply: (m) => ((m.mistral = true), (m.pauses *= 0.5)) },
   { id: 'fireworks', icon: '🎆', unique: true, apply: (m) => ((m.fireworks = true), (m.score *= 0.8)) },
   { id: 'rainbow', icon: '🌈', unique: true, apply: (m) => ((m.rainbow = true), (m.joker = 0)) },
+  { id: 'cicada', icon: '🦗', unique: true, apply: (m) => ((m.cicada = true), (m.rowTime /= 1.15)) },
 ];
 
 export const cardById = (id: string) => CARDS.find((c) => c.id === id);
@@ -120,6 +121,7 @@ export function runStage(n: number, cfg: Config, mods: Mods): { spec: StageSpec;
     fireworks: mods.fireworks ? 1 : 0,
     mistralEveryS: mods.mistral ? 25 : 0,
     rosaceJokers: mods.rainbow ? 3 : 0,
+    farandoleCicadaMin: mods.cicada ? 5 : cfg.farandoleCicadaMin,
   };
   return { spec, cfg: out, goal: spec.goal + mods.goal };
 }

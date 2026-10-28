@@ -89,9 +89,9 @@ Déploiement manuel possible : `npm run deploy` (après `npx wrangler login`).
   contrepartie, cumulés jusqu'à la fin). Deux familles : 7 cartes **cumulables**,
   petits échanges qui peuvent revenir et s'empiler (ex. Sieste : pile −10 % de
   vitesse, points −15 %) ; 7 cartes **uniques**, fortes, avec une contrepartie
-  lourde (ex. Palette : 1 couleur de moins, pile +25 %, points −20 %). Le Bouclier
+  lourde (ex. Cigale : une farandole de 5 donne une cigale, pile +15 %). Le Bouclier
   sauve une fois d'un débordement. 14 cartes (dont Carreau : tirer une tuile d'un double-tap,
-  Mistral, Feu d'artifice, Arc-en-ciel, Pastis), chacune avec son pictogramme,
+  Mistral, Feu d'artifice, Arc-en-ciel, Quitte ou double), chacune avec son pictogramme,
   rappelées sous le score et détaillées dans la pause. Score de run, record et
   3 succès dédiés.
 - **Duel** : contre l'ordinateur (niveau selon la difficulté choisie ; plus il

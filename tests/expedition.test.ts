@@ -40,9 +40,9 @@ describe('expédition', () => {
     const rng = new Rng(5);
     let seenJoker = false;
     for (let i = 0; i < 50; i++) {
-      const cards = drawCards(rng, ['palette', 'joker']);
+      const cards = drawCards(rng, ['cicada', 'joker']);
       expect(new Set(cards).size).toBe(3);
-      expect(cards).not.toContain('palette');
+      expect(cards).not.toContain('cicada');
       seenJoker ||= cards.includes('joker');
     }
     expect(seenJoker).toBe(true);

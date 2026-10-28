@@ -520,7 +520,7 @@ export class Game {
 
   /**
    * Farandole : la file disparaît (points et pause) et la voisine la plus haute devient
-   * un joker (5 tuiles) ou une cigale (6 et plus).
+   * un joker (5 tuiles) ou une cigale (6 et plus, ou dès 5 avec la carte Cigale).
    */
   private clearFarandole(f: Farandole): void {
     const g = this.grid;
@@ -541,7 +541,7 @@ export class Game {
     }
     this.startClear(f.cells, [], false, 'farandole', f.color);
     if (!best) return;
-    if (f.cells.length >= 6) {
+    if (f.cells.length >= this.cfg.farandoleCicadaMin) {
       best.cicada = true;
       this.notices.push('cicada');
     } else best.kind = 'joker';
