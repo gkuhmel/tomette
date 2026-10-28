@@ -39,3 +39,13 @@ describe('duel en ligne', () => {
     expect(g.grid.some((t) => t.kind === 'mortar')).toBe(true);
   });
 });
+
+describe('pseudos', () => {
+  it('nettoyage : lettres, chiffres, espaces, tirets et « # » ; 20 caractères au plus', async () => {
+    const { cleanName } = await import('../src/core/net');
+    expect(cleanName('  Cigale#2741 ')).toBe('Cigale#2741');
+    expect(cleanName('<b>Pétanque</b>')).toBe('bPétanqueb');
+    expect(cleanName('a'.repeat(40))).toHaveLength(20);
+    expect(cleanName('🤖 Robot#0000')).toBe('Robot#0000');
+  });
+});

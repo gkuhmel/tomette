@@ -1,5 +1,6 @@
 // Déploiement Cloudflare : le jeu (fichiers statiques de dist/) et un petit Worker
-// pour le duel en ligne (/api/room/…, une salle = un Durable Object).
+// pour le duel en ligne (/api/room/…, une salle = un Durable Object ; /api/lobby, la file
+// du « joueur au hasard »).
 // Cloudflare lance `npm run build` puis `npx wrangler deploy`.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
@@ -13,7 +14,13 @@
     "run_worker_first": ["/api/*"]
   },
   "durable_objects": {
-    "bindings": [{ "name": "ROOMS", "class_name": "Room" }]
+    "bindings": [
+      { "name": "ROOMS", "class_name": "Room" },
+      { "name": "LOBBY", "class_name": "Lobby" }
+    ]
   },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room"] }]
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["Room"] },
+    { "tag": "v2", "new_sqlite_classes": ["Lobby"] }
+  ]
 }

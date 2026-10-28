@@ -40,7 +40,9 @@ export type ClientMsg =
   | { t: 'state'; view: BoardView; stats: NetStats; pending: number }
   | { t: 'attack'; a: Attack[] }
   | { t: 'over'; stats: NetStats }
-  | { t: 'rematch' };
+  | { t: 'rematch' }
+  /** Pseudo du joueur, envoyé au début de chaque partie. */
+  | { t: 'hello'; name: string };
 
 /** Messages de la salle vers le joueur (les messages de l'autre joueur sont relayés tels quels). */
 export type ServerMsg =
@@ -50,6 +52,19 @@ export type ServerMsg =
   | { t: 'full' }
   | { t: 'rematchAsked' }
   | ClientMsg;
+
+/** Messages de la salle d'attente (« joueur au hasard »). */
+export type LobbyMsg = { t: 'queued' } | { t: 'match'; code: string; opponent: string; host: boolean };
+
+/** Pseudo propre : lettres, chiffres, espaces, tirets et « # » ; 20 caractères au plus. */
+export function cleanName(s: string): string {
+  return s
+    .normalize('NFC')
+    .replace(/[^\p{L}\p{N} _#-]/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 20);
+}
 
 /** Codes de salle : 4 lettres sans ambiguïté (pas de I, O, L…). */
 export const ROOM_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ';
