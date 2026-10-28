@@ -20,3 +20,17 @@ describe('traductions', () => {
     });
   }
 });
+
+describe('textes des succès et des thèmes', () => {
+  it('chaque succès a un nom et une description, chaque thème un nom', async () => {
+    const { ACHIEVEMENTS } = await import('../src/core/progress');
+    const { THEMES } = await import('../src/render/theme');
+    const keys = fr as Record<string, string>;
+    for (const a of ACHIEVEMENTS) {
+      expect(keys[`ach.${a.id}.name`], a.id).toBeTruthy();
+      expect(keys[`ach.${a.id}.desc`], a.id).toBeTruthy();
+    }
+    THEMES.forEach((_th, i) => expect(keys[`theme.${i}`], `theme.${i}`).toBeTruthy());
+    expect(new Set(ACHIEVEMENTS.map((a) => a.id)).size).toBe(ACHIEVEMENTS.length);
+  });
+});

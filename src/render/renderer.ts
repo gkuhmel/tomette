@@ -101,10 +101,29 @@ export class Renderer {
     c.height = Math.ceil(L.boardH * L.dpr) + 2;
     const ctx = c.getContext('2d')!;
     ctx.scale(L.dpr, L.dpr);
-    ctx.fillStyle = this.theme.css['--surface'];
-    ctx.globalAlpha = 0.45;
-    roundRect(ctx, 0, 0, L.boardW, L.boardH, Math.min(18, L.R * 0.6));
-    ctx.fill();
+    if (this.theme.style === 'tomette') {
+      // Vraies tomettes : elles reposent sur un joint de chaux grenu.
+      roundRect(ctx, 0, 0, L.boardW, L.boardH, Math.min(18, L.R * 0.6));
+      ctx.fillStyle = this.theme.bg;
+      ctx.globalAlpha = 0.94;
+      ctx.fill();
+      ctx.save();
+      ctx.clip();
+      let s = 11;
+      const rnd = () => ((s = (s * 9301 + 49297) % 233280) / 233280);
+      const n = Math.round((L.boardW * L.boardH) / 40);
+      for (let i = 0; i < n; i++) {
+        ctx.globalAlpha = 0.05 + rnd() * 0.1;
+        ctx.fillStyle = rnd() < 0.5 ? '#8f7d60' : '#ffffff';
+        ctx.fillRect(rnd() * L.boardW, rnd() * L.boardH, 1 + rnd() * 1.5, 1 + rnd() * 1.5);
+      }
+      ctx.restore();
+    } else {
+      ctx.fillStyle = this.theme.css['--surface'];
+      ctx.globalAlpha = 0.45;
+      roundRect(ctx, 0, 0, L.boardW, L.boardH, Math.min(18, L.R * 0.6));
+      ctx.fill();
+    }
     ctx.globalAlpha = 1;
     ctx.strokeStyle = this.theme.css['--muted'];
     ctx.globalAlpha = 0.55;
@@ -212,7 +231,7 @@ export class Renderer {
       const p = cellCenter(c, g.rows, R);
       const px = x0 + p.x - half;
       const py = y0 + p.y - rise - half;
-      ctx.drawImage(this.sprites.get(t.kind === 'joker' ? JOKER : t.color, 'dim'), px, py, size, size);
+      ctx.drawImage(this.sprites.get(t.kind === 'joker' ? JOKER : t.color, 'dim', t.id), px, py, size, size);
       if (t.kind === 'cracked' || t.kind === 'sealed') {
         const a = ctx.globalAlpha;
         ctx.globalAlpha = a * 0.55;
@@ -260,11 +279,11 @@ export class Renderer {
           const k = 1 - t.timer / Math.max(1, cfg.clearDurationMs);
           if (k < 0.65) {
             const flash = Math.floor(now / 70) % 2 === 0;
-            ctx.drawImage(this.sprites.get(color, flash ? 'flash' : lit), x - half, y - half, size, size);
+            ctx.drawImage(this.sprites.get(color, flash ? 'flash' : lit, t.id), x - half, y - half, size, size);
           } else {
             const s = Math.max(0, 1 - (k - 0.65) / 0.35);
             const sz = size * s;
-            ctx.drawImage(this.sprites.get(color, 'flash'), x - sz / 2, y - sz / 2, sz, sz);
+            ctx.drawImage(this.sprites.get(color, 'flash', t.id), x - sz / 2, y - sz / 2, sz, sz);
           }
           continue;
         }
@@ -272,23 +291,23 @@ export class Renderer {
         if (t.id === heldId) {
           held = { x, y };
           const sz = size * 1.1;
-          ctx.drawImage(this.sprites.get(color, lit), x - sz / 2, y - sz / 2, sz, sz);
+          ctx.drawImage(this.sprites.get(color, lit, t.id), x - sz / 2, y - sz / 2, sz, sz);
         } else {
           const sq = this.effects.squash(t.id, now);
           if (sq) {
             // Écrasé à l'atterrissage, posé sur sa base.
             const w = size * sq.sx;
             const hh = size * sq.sy;
-            ctx.drawImage(this.sprites.get(color, lit), x - w / 2, y + half - hh, w, hh);
+            ctx.drawImage(this.sprites.get(color, lit, t.id), x - w / 2, y + half - hh, w, hh);
           } else {
-            ctx.drawImage(this.sprites.get(color, lit), x - half, y - half, size, size);
+            ctx.drawImage(this.sprites.get(color, lit, t.id), x - half, y - half, size, size);
           }
         }
         const crumbled = this.crumbledAt.get(t.id);
         if (crumbled !== undefined) {
           // Dalle transformée : la tuile neuve sort d'un éclat blanc.
           ctx.globalAlpha = Math.max(0, 1 - (now - crumbled) / 450);
-          ctx.drawImage(this.sprites.get(color, 'flash'), x - half, y - half, size, size);
+          ctx.drawImage(this.sprites.get(color, 'flash', t.id), x - half, y - half, size, size);
           ctx.globalAlpha = 1;
         }
         if (t.kind === 'cracked' || t.kind === 'sealed') {
@@ -298,7 +317,7 @@ export class Renderer {
         if (activating > 0 && this.activatedIds.has(t.id)) {
           // La rangée qui devient jouable s'éclaire progressivement.
           ctx.globalAlpha = activating;
-          ctx.drawImage(this.sprites.get(color, 'dim'), x - half, y - half, size, size);
+          ctx.drawImage(this.sprites.get(color, 'dim', t.id), x - half, y - half, size, size);
           ctx.globalAlpha = 1;
         }
         if (t.special) {

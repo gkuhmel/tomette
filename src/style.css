@@ -68,7 +68,7 @@ body,
 #screen-rotate {
   background:
     linear-gradient(180deg, var(--sky1) 0%, var(--sky2) 40%, color-mix(in srgb, var(--sky3) 55%, transparent) 78%, transparent 100%),
-    var(--floor-img) center bottom / auto repeat,
+    var(--floor-img) center bottom / var(--floor-size, auto) var(--floor-repeat, repeat),
     var(--sky3);
   background-attachment: fixed;
 }

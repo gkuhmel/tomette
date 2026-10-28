@@ -1,8 +1,10 @@
 /** Thèmes graphiques : couleurs du plateau, des tuiles et de l'interface. */
 export interface Theme {
   name: string;
-  /** Rendu des tuiles : émail (dégradé + liseré) ou aplat arrondi. */
-  style: 'glaze' | 'flat';
+  /** Rendu des tuiles : émail (dégradé + liseré), aplat arrondi, ou vraie tomette de faïence. */
+  style: 'glaze' | 'flat' | 'tomette';
+  /** Décor de page (SVG) à la place du sol en tomettes répété. */
+  decor?: () => string;
   bg: string;
   slotA: string;
   slotB: string;
@@ -374,8 +376,233 @@ const nuit: Theme = {
   },
 };
 
+/** Bonbon : framboise, menthe, ciel, abricot, chocolat, réglisse. */
+const bonbon: Theme = {
+  name: 'Bonbon',
+  style: 'flat',
+  bg: '#fff3f6',
+  slotA: '#fbe3ea',
+  slotB: '#fbe3ea',
+  slotStroke: '#f3d2dd',
+  tiles: ['#ec5a97', '#2fb894', '#3d9be0', '#f58a3d', '#8a5a40', '#3b3346'],
+  glyph: 'rgba(255, 255, 255, 0.95)',
+  dimOverlay: 'rgba(255, 243, 246, 0.62)',
+  flashOverlay: 'rgba(255, 255, 255, 0.78)',
+  gold: { base: '#fff8e6', border: '#e0b44c', petals: '#e2a92e', heart: '#ec5a97' },
+  popupFill: '#ffffff',
+  popupSub: '#3b3346',
+  popupStroke: '#ec5a97',
+  held: 'rgba(59, 51, 70, 0.85)',
+  warn: '245, 138, 61',
+  alert: '220, 50, 80',
+  mortar: { base: '#e3d3d8', speck: '#c2a9b1', edge: '#a88f98' },
+  css: {
+    '--sky1': '#ffd9e6',
+    '--sky2': '#fff0f4',
+    '--sky3': '#fff8ef',
+    '--primary': '#3b3346',
+    '--surface': '#ffffff',
+    '--floor': 'rgba(236, 90, 151, 0.08)',
+    '--title': '#ffffff',
+    '--title-stroke': '#ec5a97',
+    '--title-shadow': '#f5a3c4',
+    '--blur': 'rgba(255, 240, 244, 0.82)',
+    '--bg': '#fff3f6',
+    '--fg': '#3b3346',
+    '--muted': '#8f7c8c',
+    '--accent': '#ec5a97',
+    '--terracotta': '#ec5a97',
+    '--button-shadow': '#3b3346',
+    '--button-active': '#ec5a97',
+    '--overlay': 'rgba(255, 240, 244, 0.88)',
+    '--card': '#fbe3ea',
+    '--danger': '#d6345a',
+  },
+};
+
+/** Océan : corail, sable doré, écume, lagon, bleu roi, coquillage, sur fond de nuit marine. */
+const ocean: Theme = {
+  name: 'Océan',
+  style: 'flat',
+  bg: '#0e2338',
+  slotA: '#142d47',
+  slotB: '#142d47',
+  slotStroke: '#1c3a5a',
+  tiles: ['#ff6f61', '#e0b25a', '#3cc9a4', '#19a7c4', '#4a6fe0', '#f08fb8'],
+  glyph: 'rgba(255, 255, 255, 0.94)',
+  dimOverlay: 'rgba(14, 35, 56, 0.6)',
+  flashOverlay: 'rgba(235, 250, 255, 0.75)',
+  gold: { base: '#fff8e6', border: '#e0b44c', petals: '#e2a92e', heart: '#ff6f61' },
+  popupFill: '#fff3d6',
+  popupSub: '#e8f6ff',
+  popupStroke: '#0e2338',
+  held: 'rgba(255, 255, 255, 0.9)',
+  warn: '240, 160, 70',
+  alert: '255, 100, 90',
+  mortar: { base: '#58708a', speck: '#3f566e', edge: '#33485e' },
+  css: {
+    '--sky1': '#123a5c',
+    '--sky2': '#0f2b45',
+    '--sky3': '#0b1f33',
+    '--primary': '#19a7c4',
+    '--surface': '#16314d',
+    '--floor': 'rgba(60, 201, 164, 0.07)',
+    '--title': '#e8f6ff',
+    '--title-stroke': '#19a7c4',
+    '--title-shadow': '#0d5b78',
+    '--blur': 'rgba(14, 35, 56, 0.78)',
+    '--bg': '#0e2338',
+    '--fg': '#e8f6ff',
+    '--muted': '#8fb1c9',
+    '--accent': '#3cc9a4',
+    '--terracotta': '#3cc9a4',
+    '--button-shadow': '#19a7c4',
+    '--button-active': '#3cc9a4',
+    '--overlay': 'rgba(14, 35, 56, 0.8)',
+    '--card': '#1c3a5a',
+    '--danger': '#ff8a80',
+  },
+};
+
+/** Automne : brique, potiron, moutarde, chocolat, ardoise, sauge. */
+const automne: Theme = {
+  name: 'Automne',
+  style: 'flat',
+  bg: '#f8f0e3',
+  slotA: '#efe2cd',
+  slotB: '#efe2cd',
+  slotStroke: '#e3d2b8',
+  tiles: ['#b8402e', '#e5792b', '#cf9f27', '#6a4630', '#4f6d8a', '#879e7f'],
+  glyph: 'rgba(255, 252, 244, 0.95)',
+  dimOverlay: 'rgba(248, 240, 227, 0.62)',
+  flashOverlay: 'rgba(255, 252, 244, 0.78)',
+  gold: { base: '#fff6e0', border: '#c99a2e', petals: '#d39a22', heart: '#b8402e' },
+  popupFill: '#fffaf0',
+  popupSub: '#3d2a1e',
+  popupStroke: '#b8402e',
+  held: 'rgba(61, 42, 30, 0.85)',
+  warn: '229, 121, 43',
+  alert: '200, 50, 35',
+  mortar: { base: '#d6c8b2', speck: '#b3a184', edge: '#9a8768' },
+  css: {
+    '--sky1': '#f5dcc0',
+    '--sky2': '#f8ebda',
+    '--sky3': '#fbf5ea',
+    '--primary': '#3d2a1e',
+    '--surface': '#fffaf0',
+    '--floor': 'rgba(184, 64, 46, 0.07)',
+    '--title': '#fffaf0',
+    '--title-stroke': '#c46a35',
+    '--title-shadow': '#e8a77a',
+    '--blur': 'rgba(248, 240, 227, 0.82)',
+    '--bg': '#f8f0e3',
+    '--fg': '#3d2a1e',
+    '--muted': '#8a7562',
+    '--accent': '#b8402e',
+    '--terracotta': '#b8402e',
+    '--button-shadow': '#3d2a1e',
+    '--button-active': '#b8402e',
+    '--overlay': 'rgba(248, 240, 227, 0.88)',
+    '--card': '#efe2cd',
+    '--danger': '#b8402e',
+  },
+};
+
+/** Néon : rose, cyan, citron vert, orange, bleu électrique, violet, sur fond noir. */
+const neon: Theme = {
+  name: 'Néon',
+  style: 'flat',
+  bg: '#0b0b14',
+  slotA: '#14141f',
+  slotB: '#14141f',
+  slotStroke: '#1e1e2d',
+  tiles: ['#ff2e9a', '#19e3ff', '#a6ff2e', '#ff8a1a', '#3d5bff', '#b14dff'],
+  glyph: 'rgba(10, 10, 20, 0.82)',
+  dimOverlay: 'rgba(11, 11, 20, 0.62)',
+  flashOverlay: 'rgba(255, 255, 255, 0.8)',
+  gold: { base: '#fff8e6', border: '#ffd23f', petals: '#ffb800', heart: '#ff2e9a' },
+  popupFill: '#ffffff',
+  popupSub: '#19e3ff',
+  popupStroke: '#ff2e9a',
+  held: 'rgba(255, 255, 255, 0.92)',
+  warn: '255, 138, 26',
+  alert: '255, 46, 100',
+  mortar: { base: '#3a3a4f', speck: '#26263a', edge: '#5a5a78' },
+  css: {
+    '--sky1': '#1a0b2e',
+    '--sky2': '#100c1f',
+    '--sky3': '#0b0b14',
+    '--primary': '#ff2e9a',
+    '--surface': '#16162a',
+    '--floor': 'rgba(25, 227, 255, 0.06)',
+    '--title': '#ffffff',
+    '--title-stroke': '#ff2e9a',
+    '--title-shadow': '#19e3ff',
+    '--blur': 'rgba(11, 11, 20, 0.8)',
+    '--bg': '#0b0b14',
+    '--fg': '#f2f2ff',
+    '--muted': '#9a9ac0',
+    '--accent': '#19e3ff',
+    '--terracotta': '#19e3ff',
+    '--button-shadow': '#ff2e9a',
+    '--button-active': '#19e3ff',
+    '--overlay': 'rgba(11, 11, 20, 0.84)',
+    '--card': '#1e1e2d',
+    '--danger': '#ff4d6d',
+  },
+};
+
+/**
+ * Tomettes (thème ultime) : vraies tomettes de faïence émaillée, posées sur un joint
+ * de chaux, et un décor de Provence (collines, village perché, cyprès, lavande).
+ */
+const tomettes: Theme = {
+  name: 'Tomettes',
+  style: 'tomette',
+  decor: provenceSvg,
+  bg: '#e9dfcb',
+  slotA: '#e2d6bf',
+  slotB: '#e2d6bf',
+  slotStroke: '#d3c4a8',
+  // Émaux traditionnels : cobalt, ocre, vert de cuivre, rouge sang-de-bœuf, turquoise, manganèse.
+  tiles: ['#b13f2c', '#2c4f9e', '#d99a2b', '#4e8a3a', '#6e3b52', '#2b9a9c'],
+  glyph: 'rgba(251, 243, 226, 0.92)',
+  dimOverlay: 'rgba(233, 223, 203, 0.62)',
+  flashOverlay: 'rgba(255, 250, 238, 0.8)',
+  gold: { base: '#e7c15a', border: '#a8781c', petals: '#fbf3e2', heart: '#b13f2c' },
+  popupFill: '#fffaf0',
+  popupSub: '#3a2a1e',
+  popupStroke: '#9c4a28',
+  held: 'rgba(58, 42, 30, 0.85)',
+  warn: '217, 120, 43',
+  alert: '190, 50, 35',
+  mortar: { base: '#d8ccb6', speck: '#b7a88c', edge: '#9d8d70' },
+  css: {
+    '--sky1': '#8fc8ec',
+    '--sky2': '#cfe6f2',
+    '--sky3': '#f7ecd6',
+    '--primary': '#2c4f9e',
+    '--surface': '#fffaf0',
+    '--floor': 'rgba(177, 63, 44, 0.08)',
+    '--title': '#fff8ec',
+    '--title-stroke': '#c0643d',
+    '--title-shadow': '#8a3e22',
+    '--blur': 'rgba(250, 243, 230, 0.82)',
+    '--bg': '#f7ecd6',
+    '--fg': '#3a2a1e',
+    '--muted': '#86705c',
+    '--accent': '#c0643d',
+    '--terracotta': '#c0643d',
+    '--button-shadow': '#1f3670',
+    '--button-active': '#4a6cc0',
+    '--overlay': 'rgba(250, 243, 230, 0.9)',
+    '--card': '#f1e6d2',
+    '--danger': '#b13f2c',
+  },
+};
+
 /** L'ordre compte : l'indice est le réglage `theme` mémorisé. */
-export const THEMES: Theme[] = [terre, pastelClair, pastelSombre, faience, lavande, calanques, ocre, nuit];
+export const THEMES: Theme[] = [terre, pastelClair, pastelSombre, faience, lavande, calanques, ocre, nuit, bonbon, ocean, automne, neon, tomettes];
 
 export function themeFor(index: number): Theme {
   return THEMES[Math.max(0, Math.min(THEMES.length - 1, Math.round(index) || 0))];
@@ -386,9 +613,12 @@ export function applyThemeCss(theme: Theme): void {
   const root = document.documentElement.style;
   for (const [k, v] of Object.entries(theme.css)) root.setProperty(k, v);
   theme.tiles.forEach((c, i) => root.setProperty(`--t${i}`, c));
-  root.setProperty('--floor-img', `url("data:image/svg+xml,${encodeURIComponent(floorSvg(theme.css['--floor']))}")`);
+  const decor = theme.decor?.();
+  root.setProperty('--floor-img', `url("data:image/svg+xml,${encodeURIComponent(decor ?? floorSvg(theme.css['--floor']))}")`);
+  root.setProperty('--floor-size', decor ? 'cover' : 'auto');
+  root.setProperty('--floor-repeat', decor ? 'no-repeat' : 'repeat');
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme.css['--sky1']);
-  document.documentElement.style.colorScheme = theme.style === 'flat' && theme.bg.startsWith('#f') ? 'light' : 'dark';
+  document.documentElement.style.colorScheme = theme.style !== 'glaze' && theme.bg.startsWith('#f') ? 'light' : 'dark';
 }
 
 /** Motif de sol en tomettes (hexagones à plat, joints fins), répété en fond de page. */
@@ -408,4 +638,52 @@ function floorSvg(fill: string): string {
   const centers = [[0, 0], [w, 0], [0, h], [w, h], [1.5 * R, h / 2]];
   const d = centers.map(([x, y]) => hex(x, y)).join('');
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h.toFixed(2)}" viewBox="0 0 ${w} ${h.toFixed(2)}"><path d="${d}" fill="${fill}" stroke-linejoin="round"/></svg>`;
+}
+
+/** Paysage de Provence (bas de page) : collines, village perché, cyprès et rangs de lavande. */
+function provenceSvg(): string {
+  const W = 1200;
+  const H = 900;
+  // Rangs de lavande qui fuient vers l'horizon : bandes fines, touffes rondes, herbe entre les rangs.
+  let rows = '';
+  const vx = 600;
+  const vy = 600;
+  for (let i = -30; i <= 30; i++) {
+    const x2 = vx + i * 46;
+    const d = Math.abs(i);
+    rows += `<path d="M${vx + i * 3} ${vy}L${x2 - 15} ${H}L${x2 + 15} ${H}L${vx + i * 3 + 1.5} ${vy}Z" fill="${d % 2 ? '#8b78c2' : '#9784cc'}"/>`;
+    // Touffes : de plus en plus grosses vers le premier plan.
+    for (let k = 1; k <= 9; k++) {
+      const t = (k / 9) ** 1.6;
+      const x = vx + i * 3 + (x2 - vx - i * 3) * t;
+      const y = vy + (H - vy) * t;
+      const rr = 2 + 15 * t;
+      rows += `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="${rr.toFixed(1)}" ry="${(rr * 0.7).toFixed(1)}" fill="${k % 2 ? '#a08fd6' : '#7d6ab6'}"/>`;
+    }
+  }
+  // Village perché : façades ocre et toits de tuiles.
+  const houses = [
+    [430, 438, 46, 34], [470, 428, 40, 44], [505, 440, 52, 32], [552, 424, 38, 48], [585, 436, 50, 36], [630, 444, 44, 28], [668, 432, 40, 40],
+  ];
+  let village = '';
+  houses.forEach(([x, y, w, h], i) => {
+    const wall = ['#ecc48a', '#e2ad74', '#f0d4a2', '#d99a62'][i % 4];
+    village += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${wall}"/>`;
+    village += `<path d="M${x - 4} ${y}L${x + w / 2} ${y - 12}L${x + w + 4} ${y}Z" fill="#b9542f"/>`;
+    village += `<rect x="${x + w * 0.3}" y="${y + h * 0.35}" width="${w * 0.16}" height="${h * 0.3}" fill="#6f8fa8"/>`;
+  });
+  village += `<rect x="560" y="378" width="18" height="54" fill="#e8bd84"/><path d="M556 378L569 360L582 378Z" fill="#a84a2a"/>`;
+  // Cyprès.
+  const cypress = (x: number, y: number, h: number) =>
+    `<path d="M${x} ${y - h}C${x + h * 0.16} ${y - h * 0.6} ${x + h * 0.14} ${y - h * 0.1} ${x} ${y}C${x - h * 0.14} ${y - h * 0.1} ${x - h * 0.16} ${y - h * 0.6} ${x} ${y - h}Z" fill="#3c5a36"/>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMax slice">
+<circle cx="980" cy="250" r="70" fill="#ffe7a6" opacity="0.8"/>
+<path d="M0 470C140 400 260 380 380 410C520 330 640 300 760 360C880 320 1020 350 1200 420L1200 900L0 900Z" fill="#b9b3d6" opacity="0.75"/>
+<path d="M0 520C160 470 300 470 420 470C520 440 640 430 760 460C900 450 1040 470 1200 500L1200 900L0 900Z" fill="#a8b77c"/>
+${village}
+<path d="M0 600C200 585 420 590 600 600C780 590 1000 585 1200 600L1200 900L0 900Z" fill="#7f9659"/>
+${rows}
+${cypress(330, 600, 150)}${cypress(370, 604, 110)}${cypress(860, 600, 170)}${cypress(900, 606, 120)}
+<path d="M0 820C300 800 900 800 1200 820L1200 900L0 900Z" fill="#7d6aa8" opacity="0.5"/>
+</svg>`;
 }

@@ -172,6 +172,134 @@ function drawSeal(ctx: CanvasRenderingContext2D, x: number, y: number, R: number
   }
 }
 
+/** Petit générateur pseudo-aléatoire : une tomette se dessine toujours pareil. */
+function seeded(seed: number): () => number {
+  let s = seed * 9301 + 49297;
+  return () => ((s = (s * 9301 + 49297) % 233280) / 233280);
+}
+
+/** Hexagone légèrement irrégulier (fait main), coins arrondis. */
+function handHexPath(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, k: number, rnd: () => number): void {
+  const pts = Array.from({ length: 6 }, (_, i) => {
+    const a = (Math.PI / 3) * i + (rnd() - 0.5) * 0.05;
+    const rr = r * (1 + (rnd() - 0.5) * 0.045);
+    return [x + rr * Math.cos(a), y + rr * Math.sin(a)];
+  });
+  ctx.beginPath();
+  const mid = (i: number) => [(pts[i][0] + pts[(i + 1) % 6][0]) / 2, (pts[i][1] + pts[(i + 1) % 6][1]) / 2];
+  const m0 = mid(5);
+  ctx.moveTo(m0[0], m0[1]);
+  for (let i = 0; i < 6; i++) {
+    const m = mid(i);
+    ctx.arcTo(pts[i][0], pts[i][1], m[0], m[1], k);
+  }
+  ctx.closePath();
+}
+
+/**
+ * Vraie tomette de faïence : tranche de terre cuite, émail qui s'épaissit sur les bords,
+ * nuances et mouchetures, fines craquelures, reflet, et un petit éclat au coin.
+ */
+function drawTomette(ctx: CanvasRenderingContext2D, cx: number, cy: number, R: number, base: string, shape: number, gold: boolean, mortar: boolean): void {
+  const r = R * 0.91;
+  const form = () => handHexPath(ctx, cx, cy, r, R * 0.13, seeded(shape * 17 + 3));
+  // Tranche : la terre cuite apparaît sous l'émail, en bas.
+  ctx.save();
+  ctx.translate(0, R * 0.07);
+  form();
+  ctx.shadowColor = 'rgba(60, 35, 20, 0.35)';
+  ctx.shadowBlur = R * 0.14;
+  ctx.shadowOffsetY = R * 0.05;
+  ctx.fillStyle = mortar ? '#9d8d70' : '#9b4a2c';
+  ctx.fill();
+  ctx.restore();
+  // Face émaillée : chaque cuisson donne une teinte un peu différente.
+  const tint = (shape - 1.5) * 0.045;
+  const glaze = (k: number) => shade(base, Math.max(-1, Math.min(1, k + tint)));
+  form();
+  const g = ctx.createRadialGradient(cx - r * 0.3, cy - r * 0.35, r * 0.05, cx, cy, r * 1.05);
+  g.addColorStop(0, glaze(mortar ? 0.12 : 0.22));
+  g.addColorStop(0.55, glaze(0));
+  g.addColorStop(1, glaze(mortar ? -0.12 : -0.24));
+  ctx.fillStyle = g;
+  ctx.fill();
+  ctx.save();
+  form();
+  ctx.clip();
+  const rnd = seeded(shape * 31 + base.length * 7 + parseInt(base.slice(1, 3), 16));
+  // Nuances de l'émail : grandes taches douces, plus claires ou plus sombres.
+  for (let i = 0; i < 7; i++) {
+    const a = rnd() * Math.PI * 2;
+    const d = rnd() * r * 0.7;
+    const rr = r * (0.25 + rnd() * 0.35);
+    const x = cx + Math.cos(a) * d;
+    const y = cy + Math.sin(a) * d;
+    const blot = ctx.createRadialGradient(x, y, 0, x, y, rr);
+    const light = rnd() < 0.5;
+    blot.addColorStop(0, light ? 'rgba(255, 248, 230, 0.16)' : 'rgba(40, 20, 10, 0.14)');
+    blot.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = blot;
+    ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
+  }
+  // Mouchetures (petites bulles de cuisson).
+  for (let i = 0; i < 26; i++) {
+    const a = rnd() * Math.PI * 2;
+    const d = Math.sqrt(rnd()) * r * 0.95;
+    ctx.beginPath();
+    ctx.arc(cx + Math.cos(a) * d, cy + Math.sin(a) * d, R * (0.008 + rnd() * 0.02), 0, Math.PI * 2);
+    ctx.fillStyle = rnd() < 0.6 ? 'rgba(30, 15, 5, 0.22)' : 'rgba(255, 250, 235, 0.35)';
+    ctx.fill();
+  }
+  // Craquelures très fines.
+  if (!mortar) {
+    ctx.lineWidth = Math.max(0.5, R * 0.012);
+    ctx.strokeStyle = gold ? 'rgba(90, 60, 10, 0.25)' : 'rgba(25, 12, 5, 0.2)';
+    ctx.beginPath();
+    for (let i = 0; i < 5; i++) {
+      let x = cx + (rnd() - 0.5) * r * 1.6;
+      let y = cy + (rnd() - 0.5) * r * 1.6;
+      ctx.moveTo(x, y);
+      let a = rnd() * Math.PI * 2;
+      for (let k = 0; k < 4; k++) {
+        a += (rnd() - 0.5) * 1.4;
+        x += Math.cos(a) * r * 0.22;
+        y += Math.sin(a) * r * 0.22;
+        ctx.lineTo(x, y);
+      }
+    }
+    ctx.stroke();
+  }
+  // L'émail se retire sur le bord : liseré plus clair où la terre affleure.
+  form();
+  ctx.lineWidth = R * 0.09;
+  ctx.strokeStyle = mortar ? 'rgba(120, 105, 80, 0.4)' : 'rgba(205, 125, 80, 0.3)';
+  ctx.stroke();
+  // Reflet de la lumière sur l'émail.
+  const hl = ctx.createRadialGradient(cx - r * 0.38, cy - r * 0.42, 0, cx - r * 0.38, cy - r * 0.42, r * 0.7);
+  hl.addColorStop(0, mortar ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.42)');
+  hl.addColorStop(1, 'rgba(255, 255, 255, 0)');
+  ctx.fillStyle = hl;
+  ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
+  if (!mortar) {
+    // Reflet net de la fenêtre sur l'émail brillant.
+    ctx.beginPath();
+    ctx.ellipse(cx - r * 0.42, cy - r * 0.5, r * 0.2, r * 0.07, -0.5, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+    ctx.fill();
+  }
+  ctx.restore();
+  // Petit éclat à un coin (une forme sur deux).
+  if (!mortar && shape % 2 === 1) {
+    const a = (Math.PI / 3) * (shape + 1);
+    const x = cx + Math.cos(a) * r * 0.9;
+    const y = cy + Math.sin(a) * r * 0.9;
+    ctx.beginPath();
+    ctx.ellipse(x, y, R * 0.09, R * 0.06, a, 0, Math.PI * 2);
+    ctx.fillStyle = '#c47a52';
+    ctx.fill();
+  }
+}
+
 /** Cache de sprites pré-rendus (une image par couleur et variante), reconstruit au redimensionnement. */
 export class SpriteCache {
   private cache = new Map<string, HTMLCanvasElement>();
@@ -219,7 +347,7 @@ export class SpriteCache {
       const cx = this.half;
       const cy = this.half;
       const th = this.theme;
-      const flat = th.style === 'flat';
+      const flat = th.style !== 'glaze';
       const shape = (r: number) => (flat ? roundHexPath(ctx, cx, cy, r, R * 0.2) : hexPath(ctx, cx, cy, r));
       const light = th.bg.startsWith('#f');
       if (kind === 'cracked') drawCracks(ctx, cx, cy, R, () => shape(R * 0.94 * (flat ? 0.97 : 1)), light);
@@ -229,17 +357,19 @@ export class SpriteCache {
     return c;
   }
 
-  get(color: number, variant: Variant): HTMLCanvasElement {
-    const key = `${color}:${variant}`;
+  /** `seed` (identifiant de la tuile) : pour les vraies tomettes, une des 4 formes faites main. */
+  get(color: number, variant: Variant, seed = 0): HTMLCanvasElement {
+    const shape = this.theme.style === 'tomette' ? Math.abs(seed) % 4 : 0;
+    const key = `${color}:${variant}:${shape}`;
     let c = this.cache.get(key);
     if (!c) {
-      c = this.render(color, variant);
+      c = this.render(color, variant, shape);
       this.cache.set(key, c);
     }
     return c;
   }
 
-  private render(color: number, variant: Variant): HTMLCanvasElement {
+  private render(color: number, variant: Variant, shape = 0): HTMLCanvasElement {
     const size = Math.ceil(this.half * 2 * this.dpr);
     const canvas = document.createElement('canvas');
     canvas.width = size;
@@ -257,9 +387,11 @@ export class SpriteCache {
     const night = variant === 'night' && !mortar && !gold;
     const base = night ? th.mortar.speck : mortar ? th.mortar.base : gold || joker ? th.gold.base : th.tiles[color % th.tiles.length];
     const flat = th.style === 'flat';
-    const path = (rr: number) => (flat ? roundHexPath(ctx, cx, cy, rr, R * 0.2) : hexPath(ctx, cx, cy, rr));
+    const path = (rr: number) => (th.style !== 'glaze' ? roundHexPath(ctx, cx, cy, rr, R * 0.2) : hexPath(ctx, cx, cy, rr));
 
-    if (flat) {
+    if (th.style === 'tomette') {
+      drawTomette(ctx, cx, cy, R, base, shape, gold, mortar);
+    } else if (flat) {
       // Aplat arrondi, ombre douce et léger reflet en haut.
       path(r * 0.97);
       ctx.save();
@@ -306,7 +438,16 @@ export class SpriteCache {
     if (mortar) drawMortar(ctx, cx, cy, R, th.mortar.speck, th.mortar.edge, () => path(r * 0.97));
     else if (gold) drawRosette(ctx, cx, cy, R * 0.62, th.gold.petals, th.gold.heart);
     else if (joker) drawJoker(ctx, cx, cy, R, th.tiles);
-    else drawGlyph(ctx, this.glyphs, color, cx, cy, R * 0.42, th.glyph);
+    else {
+      if (th.style === 'tomette' && !night) {
+        // Liseré peint à la main, comme sur les carreaux de faïence.
+        roundHexPath(ctx, cx, cy, R * 0.66, R * 0.14);
+        ctx.lineWidth = Math.max(1, R * 0.035);
+        ctx.strokeStyle = 'rgba(251, 243, 226, 0.38)';
+        ctx.stroke();
+      }
+      drawGlyph(ctx, this.glyphs, color, cx, cy, R * 0.42, th.glyph);
+    }
 
     if (variant === 'dim' || variant === 'flash') {
       path(r + 1);

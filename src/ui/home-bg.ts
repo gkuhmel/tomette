@@ -120,7 +120,7 @@ export class HomeBackground {
       ctx.translate(it.x, it.y);
       ctx.rotate(it.rot);
       ctx.fillStyle = theme.tiles[it.color];
-      if (theme.style === 'flat') roundHexPath(ctx, 0, 0, it.r, it.r * 0.2);
+      if (theme.style !== 'glaze') roundHexPath(ctx, 0, 0, it.r, it.r * 0.2);
       else hexPath(ctx, 0, 0, it.r);
       ctx.fill();
       ctx.restore();

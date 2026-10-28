@@ -20,6 +20,12 @@ export const UNLOCKS: Unlock[] = [
   { level: 7, kind: 'glyphs', index: 3 },
   { level: 8, kind: 'theme', index: 7 },
   { level: 9, kind: 'glyphs', index: 4 },
+  { level: 11, kind: 'theme', index: 8 },
+  { level: 13, kind: 'theme', index: 9 },
+  { level: 15, kind: 'theme', index: 10 },
+  { level: 17, kind: 'theme', index: 11 },
+  // Le thème ultime : vraies tomettes et décor de Provence.
+  { level: 20, kind: 'theme', index: 12 },
 ];
 
 /** Niveau requis pour un thème ou un jeu de pictogrammes (1 = disponible dès le départ). */
