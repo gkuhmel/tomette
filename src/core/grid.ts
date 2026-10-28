@@ -29,6 +29,8 @@ export interface Tile {
   kind: TileKind;
   /** Dalle de mortier à laquelle appartient la tuile (0 = aucune). */
   slab: number;
+  /** Cigale (née d'une farandole de 6) : quand elle disparaît, toute sa rangée disparaît avec elle. */
+  cicada: boolean;
 }
 
 export class Grid {
@@ -58,7 +60,7 @@ export class Grid {
   }
 
   makeTile(color: number): Tile {
-    return { id: this.nextId++, color, state: 'idle', timer: 0, fall: 0, chain: false, swapDc: 0, swapDr: 0, special: false, kind: 'normal', slab: 0 };
+    return { id: this.nextId++, color, state: 'idle', timer: 0, fall: 0, chain: false, swapDc: 0, swapDr: 0, special: false, kind: 'normal', slab: 0, cicada: false };
   }
 
   /** Crée et pose une tuile idle. */

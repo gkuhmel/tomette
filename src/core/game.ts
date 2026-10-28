@@ -10,7 +10,7 @@ import { activatePreview, fillInitial, generatePreview, levelAt, secondsPerRow }
 import { Rng } from './rng';
 import { Mode, modeById, ModeId } from './modes';
 import { nextOrder, Order } from './orders';
-import { findShapes, Shape } from './shapes';
+import { Farandole, findFarandoles, findShapes, Shape } from './shapes';
 
 /** Pas de la logique (60 Hz). */
 export const STEP_MS = 1000 / 60;
@@ -25,14 +25,18 @@ export interface ClearEvent {
   rosaces: number;
   /** Clear déclenché par une tomette d'or. */
   gold: boolean;
-  /** Motif d'une commande. */
-  shape?: 'order';
+  /** Forme particulière : motif d'une commande, ou farandole. */
+  shape?: 'order' | 'farandole';
+  /** Farandole : nombre de tuiles de la file. */
+  farandole?: number;
+  /** Cigales qui ont chanté (rangées entières effacées). */
+  cicadas?: number;
 }
 
 export type GameEvent = ClearEvent;
 
 /** Effet de duel à annoncer à l'écran (malus reçu, bouclier, contre-attaque). */
-export type Notice = 'night' | 'freeze' | 'crack' | 'quake' | 'shield' | 'blocked' | 'counter' | 'order' | 'orderGold' | 'shieldUsed' | 'mistral' | 'fireworks' | 'rainbow' | 'shot';
+export type Notice = 'night' | 'freeze' | 'crack' | 'quake' | 'shield' | 'blocked' | 'counter' | 'order' | 'orderGold' | 'shieldUsed' | 'mistral' | 'fireworks' | 'rainbow' | 'shot' | 'cicada' | 'cicadaSing';
 
 /** Petits signaux pour le son (échange, atterrissage, réparation). */
 export type Signal = 'swap' | 'land' | 'repair' | 'slide' | 'mortar' | 'crumble';
@@ -106,6 +110,8 @@ export class Game {
   ordersDone = 0;
   /** Tuiles qui viennent de bouger (échange, chute, glissement) pendant ce pas : les formes doivent en contenir une. */
   private fresh = new Set<number>();
+  /** Tuiles déplacées par le jeu du joueur (fin d'échange, atterrissage) : une farandole doit en contenir une. */
+  private moved = new Set<number>();
   /** Duel : « nuit tombée » restante (s) ; les tuiles perdent leurs couleurs à l'affichage. */
   nightLeft = 0;
   /** Prochaine dalle de mortier dans (s). */
@@ -370,6 +376,7 @@ export class Game {
         if (t.timer <= 0) {
           Object.assign(t, { state: 'idle', timer: 0, swapDc: 0, swapDr: 0 });
           this.fresh.add(t.id);
+          this.moved.add(t.id);
         }
       } else if (t.state === 'clearing') {
         t.timer -= dtMs;
@@ -382,7 +389,10 @@ export class Game {
     // 2. Gravité.
     const landed = stepGravity(g, cfg, dtMs);
     if (landed.length > 0) this.signals.push('land');
-    for (const t of landed) this.fresh.add(t.id);
+    for (const t of landed) {
+      this.fresh.add(t.id);
+      this.moved.add(t.id);
+    }
     if (cfg.slide) this.stepSlides();
     if (this.level > this.stats.maxLevel) this.stats.maxLevel = this.level;
 
@@ -432,6 +442,11 @@ export class Game {
         if (s) this.clearShape(s);
       }
       this.fresh.clear();
+    }
+    // Farandoles : 5 tuiles ou plus en file, formées par le joueur.
+    if (this.moved.size) {
+      if (cfg.farandole) for (const f of findFarandoles(g, this.moved)) this.clearFarandole(f);
+      this.moved.clear();
     }
 
     // 4. Une tuile posée qui ne participe pas à un clear perd son drapeau chain.
@@ -503,6 +518,35 @@ export class Game {
     this.startClear(s.cells, [], false, 'order');
   }
 
+  /**
+   * Farandole : la file disparaît (points et pause) et la voisine la plus haute devient
+   * un joker (5 tuiles) ou une cigale (6 et plus).
+   */
+  private clearFarandole(f: Farandole): void {
+    const g = this.grid;
+    if (f.cells.some(({ c, r }) => g.get(c, r)?.state !== 'idle')) return;
+    const inFile = new Set(f.cells.map(({ c, r }) => r * g.cols + c));
+    let best: Tile | null = null;
+    let bestR = Infinity;
+    for (const { c, r } of f.cells) {
+      for (const dir of ALL_DIRS) {
+        const n = neighbor(c, r, dir);
+        const t = g.get(n.c, n.r);
+        if (!t || inFile.has(n.r * g.cols + n.c) || t.state !== 'idle' || t.kind !== 'normal' || t.special || t.cicada) continue;
+        if (n.r < bestR) {
+          best = t;
+          bestR = n.r;
+        }
+      }
+    }
+    this.startClear(f.cells, [], false, 'farandole', f.color);
+    if (!best) return;
+    if (f.cells.length >= 6) {
+      best.cicada = true;
+      this.notices.push('cicada');
+    } else best.kind = 'joker';
+  }
+
   /** Commande réalisée : bonus, pause, une tomette d'or toutes les 3 commandes, puis une nouvelle commande. */
   private completeOrder(): void {
     const o = this.order;
@@ -524,7 +568,7 @@ export class Game {
     this.order = nextOrder(this.rng, this.colors, o.kind);
   }
 
-  private startClear(matched: Cell[], rosaces: Rosace[] = [], gold = false, shape?: 'order'): void {
+  private startClear(matched: Cell[], rosaces: Rosace[] = [], gold = false, shape?: 'order' | 'farandole', shapeColor = -1): void {
     const cfg = this.cfg;
     const g = this.grid;
     const key = ({ c, r }: Cell) => r * g.cols + c;
@@ -557,9 +601,26 @@ export class Game {
         this.notices.push('fireworks');
       }
     }
+    // Cigale : quand elle disparaît, toute sa rangée disparaît avec elle (et les cigales de cette rangée chantent à leur tour).
+    let cicadas = 0;
+    for (let i = 0; i < tiles.length; i++) {
+      if (!tiles[i].cicada) continue;
+      cicadas++;
+      const row = cells[i].r;
+      for (let c = 0; c < g.cols; c++) {
+        const t = g.get(c, row);
+        const k = row * g.cols + c;
+        if (!t || seen.has(k) || t.special || t.kind === 'mortar' || (t.state !== 'idle' && t.state !== 'hovering')) continue;
+        seen.add(k);
+        cells.push({ c, r: row });
+        tiles.push(t);
+      }
+    }
+    if (cicadas) this.notices.push('cicadaSing');
     for (const t of tiles) {
       t.state = 'clearing';
       t.timer = cfg.clearDurationMs;
+      t.cicada = false;
     }
     for (const k of rosaces) g.get(k.center.c, k.center.r)!.special = true;
     // Rosace arc-en-ciel (carte d'Expédition) : des tuiles autour de l'anneau deviennent des jokers.
@@ -599,10 +660,13 @@ export class Game {
     this.rosaceCount += rosaces.length;
 
     const size = cells.length;
+    const farandole = shape === 'farandole' ? matched.length : 0;
     const points =
-      pointsFor(cfg, this.chain, size) + rosaces.length * cfg.rosaceBonus * this.chain;
+      pointsFor(cfg, this.chain, size) +
+      rosaces.length * cfg.rosaceBonus * this.chain +
+      (farandole ? Math.round(cfg.farandoleBonus * (1 + (farandole - 5) * 0.5) * this.chain) : 0);
     this.score += points;
-    const pause = Math.max(stopTimeFor(cfg, this.chain, size), rosaces.length ? cfg.rosacePauseS : 0);
+    const pause = Math.max(stopTimeFor(cfg, this.chain, size), rosaces.length ? cfg.rosacePauseS : 0, farandole ? cfg.farandolePauseS : 0);
     this.stopTime = Math.max(this.stopTime, pause);
     const st = this.stats;
     st.maxChain = Math.max(st.maxChain, this.chain);
@@ -614,12 +678,24 @@ export class Game {
     this.alert = false;
     this.graceLeft = 0;
     const where = rosaces.length ? rosaces.map((k) => k.center) : gold ? [cells[0]] : cells;
-    this.events.push({ kind: 'clear', cells: where, chain: this.chain, size, points, rosaces: rosaces.length, gold, ...(shape ? { shape } : {}) });
+    this.events.push({
+      kind: 'clear',
+      cells: where,
+      chain: this.chain,
+      size,
+      points,
+      rosaces: rosaces.length,
+      gold,
+      ...(shape ? { shape } : {}),
+      ...(farandole ? { farandole } : {}),
+      ...(cicadas ? { cicadas } : {}),
+    });
     // Commandes réalisées par ce clear.
     const o = this.order;
     if (o) {
       const done =
         shape === 'order' ||
+        (o.kind === 'farandole' && shape === 'farandole' && shapeColor === o.color) ||
         (o.kind === 'rosace' && rosaces.length > 0) ||
         (o.kind === 'combo5' && size >= 5) ||
         (o.kind === 'chain3' && this.chain >= 3);

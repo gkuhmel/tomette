@@ -36,13 +36,19 @@ Déploiement manuel possible : `npm run deploy` (après `npx wrangler login`).
 - **Rosace** : au moins 5 des 6 voisines d'une tuile de la même autre couleur.
   L'anneau disparaît et le centre devient une **tomette d'or** ; l'échanger avec
   une voisine fait disparaître toute la couleur de cette voisine.
-- **Tutoriel** : 8 étapes jouées sur le plateau (échange, en biais, combo,
-  chaîne, monter, tuile fêlée, rosace, tomette d'or), avec une main
+- **Farandole** : 5 tuiles d'une même couleur qui se suivent en file (chacune touche
+  la suivante, sans embranchement ni boucle), formées par le jeu du joueur (une tuile
+  échangée ou tombée). Elles disparaissent (bonus, pause) et la voisine la plus haute
+  devient un joker ; à partir de 6, elle devient une **cigale** : quand la cigale
+  disparaît, toute sa rangée part avec elle. Rare si on ne la cherche pas (simulation :
+  environ une toutes les 4 minutes en Express Expert).
+- **Tutoriel** : 9 étapes jouées sur le plateau (échange, en biais, combo,
+  chaîne, monter, tuile fêlée, rosace, tomette d'or, farandole), avec une main
   animée qui montre le geste. Lancé à la première partie, rejouable par le
   bouton « Tutoriel » de l'accueil ; les règles détaillées sont dans Réglages.
 - **Commandes de motifs** (Classique, Contre-la-montre, Mosaïque, Express) : un
-  motif à réaliser est affiché à droite du score (triangle ou arc
-  d'une couleur, rosace, combo de 5, chaîne ×3). Réussi : bonus, pause de la
+  motif à réaliser est affiché à droite du score (triangle, arc ou
+  farandole d'une couleur, rosace, combo de 5, chaîne ×3). Réussi : bonus, pause de la
   pile, et une tomette d'or toutes les 3 commandes.
 - **Tuiles spéciales** : fêlée (ne s'aligne pas, réparée par un alignement
   voisin), scellée (non déplaçable, libérée par un alignement voisin), joker
@@ -76,7 +82,8 @@ Déploiement manuel possible : `npm run deploy` (après `npx wrangler login`).
   est fort, plus ses attaques sont puissantes). Combos et chaînes envoient des
   dalles de mortier ; combo de 6 = Fêlures (4 tuiles), chaîne ×4 = Séisme,
   tomette d'or = Gel (5 tuiles scellées), rosace = Nuit tombée (6 s sans
-  couleurs) et un bouclier pour soi. Contre-attaque : une attaque lancée
+  couleurs) et un bouclier pour soi, farandole = dalle sur toute la largeur
+  (+ Fêlures à partir de 6). Contre-attaque : une attaque lancée
   pendant que des dalles arrivent les annule d'abord. Pile adverse en
   miniature dans le HUD.
 - **Missions et niveau joueur** : 3 missions du jour (nouvelles à minuit) et

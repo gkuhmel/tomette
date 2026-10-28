@@ -27,8 +27,12 @@ export function attacksFor(e: ClearEvent, cols: number): Attack[] {
   if (e.rosaces > 0) return [{ kind: 'night', seconds: 6 }];
   if (e.gold) return [{ kind: 'freeze', n: 5 }];
   const out: Attack[] = [];
-  if (e.size >= 4) out.push({ kind: 'slab', w: Math.min(cols, e.size - 1), h: 1 });
-  if (e.size >= 6) out.push({ kind: 'crack', n: 4 });
+  // Farandole : une dalle sur toute la largeur ; de 6 tuiles et plus, des fêlures en prime.
+  if (e.farandole) {
+    out.push({ kind: 'slab', w: cols, h: 1 });
+    if (e.farandole >= 6) out.push({ kind: 'crack', n: 4 });
+  } else if (e.size >= 4) out.push({ kind: 'slab', w: Math.min(cols, e.size - 1), h: 1 });
+  if (e.size >= 6 && !e.farandole) out.push({ kind: 'crack', n: 4 });
   if (e.chain >= 2) out.push({ kind: 'slab', w: cols, h: 1 });
   if (e.chain === 4 || e.chain === 6) out.push({ kind: 'quake' });
   return out;

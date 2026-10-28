@@ -30,6 +30,10 @@ export const defaultConfig = {
   rosaceMin: 5,
   rosaceBonus: 500,
   rosacePauseS: 3,
+  /** Farandole : 5 tuiles d'une couleur en file (1 = activée) ; 5 donnent un joker, 6 et plus une cigale. */
+  farandole: 1,
+  farandoleBonus: 300,
+  farandolePauseS: 2,
   /** Commandes de motifs (modes Classique, Contre-la-montre, Mosaïque, Express) : bonus et pause de la pile. */
   orderBonus: 400,
   orderPauseS: 2,

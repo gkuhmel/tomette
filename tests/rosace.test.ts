@@ -108,7 +108,8 @@ function play(game: ReturnType<typeof emptyGame>, moves: [number, number, number
 
 describe('rosace réalisable en jeu', () => {
   it('rosace complète (6) en 3 échanges, sans alignement parasite', () => {
-    const game = emptyGame({ rosaceMin: 6 });
+    // Sans farandole : l'anneau de 5 sur 6 en est une, et partirait avant d'être complété.
+    const game = emptyGame({ rosaceMin: 6, farandole: 0 });
     const g = game.grid;
     for (let c = 0; c < 7; c++) {
       if (c < 2 || c > 4) fill(game, c, 11);

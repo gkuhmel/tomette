@@ -153,6 +153,66 @@ function drawCracks(ctx: CanvasRenderingContext2D, x: number, y: number, R: numb
   ctx.restore();
 }
 
+/** Cigale : un anneau doré autour de la tuile et une cigale posée en bas à droite. */
+function drawCicada(ctx: CanvasRenderingContext2D, cx: number, cy: number, R: number): void {
+  roundHexPath(ctx, cx, cy, R * 0.9, R * 0.18);
+  ctx.lineWidth = Math.max(1.5, R * 0.09);
+  ctx.strokeStyle = 'rgba(255, 214, 90, 0.95)';
+  ctx.stroke();
+  const x = cx + R * 0.34;
+  const y = cy + R * 0.1;
+  const s = R * 0.56;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(-0.45);
+  // Ailes transparentes en toit, plus longues que le corps, avec leurs nervures.
+  for (const side of [-1, 1]) {
+    ctx.save();
+    ctx.translate(side * s * 0.16, -s * 0.2);
+    ctx.rotate(side * 0.22);
+    ctx.beginPath();
+    ctx.ellipse(side * s * 0.14, s * 0.62, s * 0.26, s * 0.9, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(232, 248, 255, 0.88)';
+    ctx.fill();
+    ctx.lineWidth = Math.max(0.8, s * 0.06);
+    ctx.strokeStyle = 'rgba(40, 55, 50, 0.75)';
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(side * s * 0.05, -s * 0.15);
+    ctx.lineTo(side * s * 0.2, s * 1.3);
+    ctx.moveTo(side * s * 0.05, s * 0.3);
+    ctx.lineTo(side * s * 0.34, s * 0.95);
+    ctx.lineWidth = Math.max(0.6, s * 0.04);
+    ctx.stroke();
+    ctx.restore();
+  }
+  // Corps rayé.
+  ctx.beginPath();
+  ctx.ellipse(0, s * 0.2, s * 0.24, s * 0.55, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#4b4a2a';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(220, 200, 130, 0.7)';
+  ctx.lineWidth = Math.max(0.6, s * 0.05);
+  for (const k of [0.15, 0.35, 0.55]) {
+    ctx.beginPath();
+    ctx.moveTo(-s * 0.2, s * k);
+    ctx.lineTo(s * 0.2, s * k);
+    ctx.stroke();
+  }
+  // Tête large et yeux écartés.
+  ctx.beginPath();
+  ctx.ellipse(0, -s * 0.38, s * 0.36, s * 0.2, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#3a3820';
+  ctx.fill();
+  ctx.fillStyle = '#e9d9a0';
+  for (const side of [-1, 1]) {
+    ctx.beginPath();
+    ctx.arc(side * s * 0.3, -s * 0.42, s * 0.09, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
 /** Scellée : cerclage sombre riveté, posé à l'intérieur du bord. */
 function drawSeal(ctx: CanvasRenderingContext2D, x: number, y: number, R: number, ring: (r: number) => void, band: string, rivet: string): void {
   ring(R * 0.8);
@@ -333,7 +393,7 @@ export class SpriteCache {
   }
 
   /** Calque posé sur une tuile fêlée ou scellée. */
-  overlay(kind: 'cracked' | 'sealed'): HTMLCanvasElement {
+  overlay(kind: 'cracked' | 'sealed' | 'cicada'): HTMLCanvasElement {
     const key = `overlay:${kind}`;
     let c = this.cache.get(key);
     if (!c) {
@@ -350,7 +410,8 @@ export class SpriteCache {
       const flat = th.style !== 'glaze';
       const shape = (r: number) => (flat ? roundHexPath(ctx, cx, cy, r, R * 0.2) : hexPath(ctx, cx, cy, r));
       const light = th.bg.startsWith('#f');
-      if (kind === 'cracked') drawCracks(ctx, cx, cy, R, () => shape(R * 0.94 * (flat ? 0.97 : 1)), light);
+      if (kind === 'cicada') drawCicada(ctx, cx, cy, R);
+      else if (kind === 'cracked') drawCracks(ctx, cx, cy, R, () => shape(R * 0.94 * (flat ? 0.97 : 1)), light);
       else drawSeal(ctx, cx, cy, R, (r) => (flat ? roundHexPath(ctx, cx, cy, r, R * 0.16) : hexPath(ctx, cx, cy, r)), light ? 'rgba(29, 42, 68, 0.78)' : 'rgba(255, 244, 228, 0.85)', light ? '#ffffff' : th.bg);
       this.cache.set(key, c);
     }

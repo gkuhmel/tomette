@@ -32,6 +32,10 @@ export function orderSvg(o: Order): string {
     case 'triangle':
       cells = [[0, 0, col], [...at(0), col], [...at(1), col]];
       break;
+    case 'farandole':
+      // File en zigzag : 5 tuiles qui se suivent.
+      cells = [0, 1, 2, 3, 4].map((k): [number, number, string] => [k * 1.5, k % 2 ? -S3 / 2 : 0, col]);
+      break;
     case 'arc':
       cells = [[0, 0, 'var(--card)'], ...[0, 1, 2, 3].map((i): [number, number, string] => [...at(i), col])];
       break;

@@ -73,3 +73,62 @@ export function findShapes(grid: Grid, kind: ShapeKind, fresh: ReadonlySet<numbe
   });
   return out;
 }
+
+/** Farandole : 5 tuiles ou plus d'une même couleur qui se suivent en file. */
+export interface Farandole {
+  color: number;
+  /** Cases dans l'ordre de la file, d'un bout à l'autre. */
+  cells: Cell[];
+}
+
+/**
+ * Farandoles présentes dans la grille : un groupe de tuiles d'une même couleur, reliées
+ * l'une à l'autre en file, sans embranchement ni boucle (chaque tuile touche au plus
+ * deux tuiles du groupe), d'au moins `min` tuiles. Comme pour les autres formes, le
+ * groupe doit contenir une tuile qui vient de bouger (`moved`).
+ */
+export function findFarandoles(grid: Grid, moved: ReadonlySet<number>, min = 5): Farandole[] {
+  const out: Farandole[] = [];
+  const seen = new Set<number>();
+  const colorAt = (c: number, r: number) => (grid.inBounds(c, r) ? shapeColor(grid.get(c, r)) : -1);
+  for (let r = 0; r < grid.rows; r++) {
+    for (let c = 0; c < grid.cols; c++) {
+      const color = colorAt(c, r);
+      if (color < 0 || seen.has(key(grid, { c, r }))) continue;
+      // Groupe relié de cette couleur.
+      const group: Cell[] = [];
+      const stack: Cell[] = [{ c, r }];
+      seen.add(key(grid, { c, r }));
+      while (stack.length) {
+        const cur = stack.pop()!;
+        group.push(cur);
+        for (const d of RING) {
+          const n = neighbor(cur.c, cur.r, d);
+          if (colorAt(n.c, n.r) !== color || seen.has(key(grid, n))) continue;
+          seen.add(key(grid, n));
+          stack.push(n);
+        }
+      }
+      if (group.length < min) continue;
+      if (!group.some((x) => moved.has(grid.get(x.c, x.r)!.id))) continue;
+      // En file : arbre (n - 1 liaisons) où chaque tuile a au plus 2 voisines du groupe.
+      const inGroup = new Set(group.map((x) => key(grid, x)));
+      const degree = (x: Cell) => RING.filter((d) => inGroup.has(key(grid, neighbor(x.c, x.r, d)))).length;
+      const degrees = group.map(degree);
+      const links = degrees.reduce((a, b) => a + b, 0) / 2;
+      if (links !== group.length - 1 || degrees.some((d) => d > 2)) continue;
+      // Ordre de la file, depuis un bout.
+      const start = group[degrees.indexOf(1)];
+      const cells: Cell[] = [start];
+      const used = new Set([key(grid, start)]);
+      for (let cur = start; cells.length < group.length; ) {
+        const next = RING.map((d) => neighbor(cur.c, cur.r, d)).find((n) => inGroup.has(key(grid, n)) && !used.has(key(grid, n)))!;
+        used.add(key(grid, next));
+        cells.push(next);
+        cur = next;
+      }
+      out.push({ color, cells });
+    }
+  }
+  return out;
+}

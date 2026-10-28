@@ -373,6 +373,16 @@ const orderScene: Scene = {
   ],
 };
 
+const farandoleScene: Scene = {
+  R: 18,
+  cols: 5,
+  rows: 2,
+  tiles: [
+    ...[[0, 1], [1, 0], [2, 1], [3, 0], [4, 1]].map(([c, r]) => ({ c, r, color: RED_, ring: true })),
+    ...filler([[0, 0, YELLOW], [2, 0, TEAL], [4, 0, GREEN], [1, 1, BLUE], [3, 1, PURPLE]]),
+  ],
+};
+
 const mortarBefore: Scene = {
   R: 18,
   cols: 4,
@@ -435,6 +445,7 @@ export function howToScreen(onPlay: () => void, onBack: () => void, onTutorial: 
       section('howto.s6.title', fig(rosaceBefore, '→', rosaceAfter), ...tx('howto.s6.p1', 'howto.s6.p2', 'howto.s6.p3')),
       section('', fig(goldUse), t('howto.s6.p4')),
       section('', fig(orderScene), t('howto.s6.p6')),
+      section('', fig(farandoleScene), t('howto.s6.p7')),
       section('howto.s7.title', fig(specialsScene), ...tx('howto.s7.p1', 'howto.s7.p2', 'howto.s7.p3')),
       section('', fig(jokerScene), t('howto.s7.p4')),
       section('', fig(mortarBefore, '→', mortarAfter), t('howto.s7.p5')),

@@ -159,8 +159,10 @@ export class Renderer {
       this.effects.onClear(x, y, e.chain, e.size, e.rosaces, e.gold, L.R, this.theme, now);
       if (e.chain < 2 && e.size < 4 && !e.rosaces && !e.gold) continue;
       this.popups.push({
-        text: e.rosaces ? t('pop.rosace') : e.gold ? t('pop.gold') : e.chain >= 2 ? `×${e.chain}` : `${e.size}`,
-        sub: e.rosaces
+        text: e.farandole ? t('pop.farandole') : e.rosaces ? t('pop.rosace') : e.gold ? t('pop.gold') : e.chain >= 2 ? `×${e.chain}` : `${e.size}`,
+        sub: e.farandole
+          ? t('pop.farandoleN', { n: e.farandole })
+          : e.rosaces
           ? e.chain >= 2 ? t('pop.chainN', { n: e.chain }) : `+${e.points}`
           : e.gold ? t('pop.goldTiles', { n: e.size - 1 })
           : e.chain >= 2 && e.size >= 4 ? t('pop.comboN', { n: e.size }) : e.chain >= 2 ? t('pop.chain') : t('pop.combo'),
@@ -313,6 +315,12 @@ export class Renderer {
         if (t.kind === 'cracked' || t.kind === 'sealed') {
           const sz = t.id === heldId ? size * 1.1 : size;
           ctx.drawImage(this.sprites.overlay(t.kind), x - sz / 2, y - sz / 2, sz, sz);
+        }
+        if (t.cicada) {
+          // Cigale : petite cigale sur la tuile, qui « chante » (léger tremblement).
+          const sz = t.id === heldId ? size * 1.1 : size;
+          const buzz = Math.sin(now * 0.05 + t.id) * R * 0.03;
+          ctx.drawImage(this.sprites.overlay('cicada'), x - sz / 2 + buzz, y - sz / 2, sz, sz);
         }
         if (activating > 0 && this.activatedIds.has(t.id)) {
           // La rangée qui devient jouable s'éclaire progressivement.

@@ -5,7 +5,7 @@ import type { Cell } from './hex';
 /** Une étape du tutoriel : grille préparée, geste conseillé et condition de réussite. */
 export interface TutorialStep {
   /** Textes : clés tuto.<id>.title / tuto.<id>.text. */
-  id: 'swap' | 'diagonal' | 'combo' | 'chain' | 'rise' | 'cracked' | 'rosace' | 'gold';
+  id: 'swap' | 'diagonal' | 'combo' | 'chain' | 'rise' | 'cracked' | 'rosace' | 'gold' | 'farandole';
   build: (cfg: Config) => Game;
   /** Tuile à déplacer et case de destination conseillées. */
   hint?: { from: Cell; to: Cell };
@@ -154,5 +154,17 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     },
     hint: { from: { c: 3, r: 9 }, to: { c: 4, r: 9 } },
     done: (g) => g.stats.goldUsed >= 1,
+  },
+  {
+    id: 'farandole',
+    build: (cfg) => {
+      // Quatre tuiles en zigzag sur le bas ; la 5e arrive par un échange : farandole, une voisine devient joker.
+      const g = base(cfg, [9, 10]);
+      for (const [c, r] of [[0, 10], [1, 9], [2, 10], [3, 9]]) put(g, c, r, A);
+      put(g, 5, 9, A);
+      return g;
+    },
+    hint: { from: { c: 5, r: 9 }, to: { c: 4, r: 10 } },
+    done: (_g, ev) => ev.some((e) => !!e.farandole),
   },
 ];
