@@ -58,6 +58,17 @@ describe('farandole : en jeu', () => {
     settle(game);
   });
 
+  it('un joker dans la file compte pour la couleur de la farandole', () => {
+    const game = base();
+    ZIGZAG.slice(0, 3).forEach(([c, r]) => put(game, c, r, A));
+    put(game, 3, 9, A).kind = 'joker';
+    put(game, 5, 9, A);
+    expect(game.trySwap(5, 9, 4, 10)).toBe(true);
+    for (let i = 0; i < 30; i++) game.tick();
+    expect(game.events.find((e) => e.farandole)?.farandole).toBe(5);
+    settle(game);
+  });
+
   it('6 tuiles : une cigale ; quand elle disparaît, sa rangée part avec elle', () => {
     const game = base();
     ZIGZAG.forEach(([c, r]) => put(game, c, r, A));
