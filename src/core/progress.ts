@@ -109,7 +109,17 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'duelExtreme', check: () => false },
   { id: 'duelStreak', check: () => false },
   { id: 'expExpert', check: () => false },
+  // Duel en ligne (ami ou joueur au hasard) : débloqués par l'interface selon le nombre de victoires.
+  { id: 'online1', check: () => false },
+  { id: 'online10', check: () => false },
+  { id: 'online50', check: () => false },
+  { id: 'online100', check: () => false },
 ];
+
+/** Succès des victoires en ligne déjà acquis pour `wins` victoires. */
+export function onlineWinAchievements(wins: number): string[] {
+  return [1, 10, 50, 100].filter((n) => wins >= n).map((n) => `online${n}`);
+}
 
 /** Succès nouvellement obtenus. */
 export function newlyUnlocked(t: Totals, g: Snapshot | null, unlocked: ReadonlySet<string>): Achievement[] {

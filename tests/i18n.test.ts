@@ -34,3 +34,12 @@ describe('textes des succès et des thèmes', () => {
     expect(new Set(ACHIEVEMENTS.map((a) => a.id)).size).toBe(ACHIEVEMENTS.length);
   });
 });
+
+describe('succès des victoires en ligne', () => {
+  it('paliers 1, 10, 50, 100', async () => {
+    const { onlineWinAchievements } = await import('../src/core/progress');
+    expect(onlineWinAchievements(0)).toEqual([]);
+    expect(onlineWinAchievements(12)).toEqual(['online1', 'online10']);
+    expect(onlineWinAchievements(100)).toEqual(['online1', 'online10', 'online50', 'online100']);
+  });
+});

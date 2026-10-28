@@ -21,7 +21,7 @@ import { Renderer } from './render/renderer';
 import { applyThemeCss, themeFor } from './render/theme';
 import { attachLongPress, DebugPanel, loadSavedConfig, setConfigValue } from './ui/debug';
 import { hexBadge, HexButtonParts, icon } from './ui/hex-ui';
-import { ACHIEVEMENTS } from './core/progress';
+import { ACHIEVEMENTS, onlineWinAchievements } from './core/progress';
 import { el, formatTime } from './ui/dom';
 import { isCaptureMode, isDevMode, isPhone } from './ui/guard';
 import { Key, lang, t } from './i18n';
@@ -50,7 +50,7 @@ import { BoardView, cleanName, isRoomCode, LinkedDuel, NetStats, packView, Serve
 import { OnlineClient } from './net/client';
 import { LobbyClient } from './net/lobby';
 import { RobotFriend } from './net/robot';
-import { duelMenuScreen, playerLabel, recordOnline, roomScreen, searchScreen } from './ui/online';
+import { duelMenuScreen, loadOnline, playerLabel, recordOnline, roomScreen, searchScreen } from './ui/online';
 import { loadDuel, recordDuel } from './ui/duel';
 import { duelResult } from './ui/duel-result';
 import { orderChip } from './ui/order-chip';
@@ -327,6 +327,8 @@ function boot(): void {
   const renderer = new Renderer(canvas);
   const sound = new Sound();
   const progress = new Progress();
+  // Victoires en ligne d'avant ces succès : comptées dès le lancement.
+  progress.grant(onlineWinAchievements(loadOnline().wins));
   const missions = new Missions();
   const syncSound = () => {
     sound.sfxOn = config.sound !== 0;
@@ -492,6 +494,7 @@ function boot(): void {
       if (lost) net?.send({ t: 'over', stats: myStats() });
       const result = lost && remoteOver ? 'draw' : lost ? 'lose' : 'win';
       const rec = recordOnline(result);
+      progress.grant(onlineWinAchievements(rec.wins));
       block = duelResult({
         result,
         level: opponentLabel(),

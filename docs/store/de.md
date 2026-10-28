@@ -54,7 +54,7 @@ IDEEN ZUM ENTDECKEN
 
 AUSSERDEM
 • Tägliche Missionen und ein Spielerlevel
-• 44 Erfolge, Statistiken, Themen und Symbolsätze zum Freischalten
+• 48 Erfolge, Statistiken, Themen und Symbolsätze zum Freischalten
 • Offline spielbar (außer dem Online-Duell)
 • Ohne Werbung, ohne Konto: Deine Spiele bleiben auf deinem Handy
 

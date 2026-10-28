@@ -54,7 +54,7 @@ IDEE DA SCOPRIRE
 
 E INOLTRE
 • Missioni del giorno e livello del giocatore
-• 44 obiettivi, statistiche, temi e set di icone da sbloccare
+• 48 obiettivi, statistiche, temi e set di icone da sbloccare
 • Si gioca offline (tranne il duello online)
 • Senza pubblicità, senza account: le tue partite restano sul tuo telefono
 
