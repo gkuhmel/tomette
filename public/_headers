@@ -1,0 +1,12 @@
+# En-têtes de sécurité, appliqués par Cloudflare à tous les fichiers du site.
+# Le jeu ne charge rien d'ailleurs, sauf la mesure d'audience (Umami) et les rapports
+# d'erreurs (Sentry) quand ils sont activés : si VITE_UMAMI_SRC pointe ailleurs que
+# cloud.umami.is, ajouter son adresse à script-src et connect-src.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://cloud.umami.is; connect-src 'self' wss://tomettes.calanquesunited.com https://cloud.umami.is https://api-gateway.umami.dev https://*.ingest.sentry.io https://*.ingest.de.sentry.io https://*.ingest.us.sentry.io; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: no-referrer
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
+  Cross-Origin-Opener-Policy: same-origin
+  Strict-Transport-Security: max-age=31536000
