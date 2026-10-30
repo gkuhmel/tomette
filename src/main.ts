@@ -422,10 +422,12 @@ function boot(): void {
     pause.screen.hide();
     tuto.hidden = true;
     window.clearTimeout(hintTimer);
-    if (mode === 'campaign' || mode === 'expedition') {
-      // Rappel du but au début de chaque manche (la bulle disparaît seule).
+    // Explication de la ligne d'arrivée à la 1re manche seulement (la bulle disparaît seule) ;
+    // en expédition, celle du Carreau à la manche qui suit son choix.
+    const newShot = mode === 'expedition' && !!run && run.cards[run.cards.length - 1] === 'carreau';
+    if ((mode === 'campaign' || mode === 'expedition') && (stageNo === 1 || newShot)) {
       tutoTitle.textContent = t('camp.stageTitle', { n: stageNo, goal: game.goalRows });
-      tutoText.textContent = t('camp.hint') + (game.shots > 0 ? ` ${t('exp.shotHint')}` : '');
+      tutoText.textContent = [stageNo === 1 ? t('camp.hint') : '', game.shots > 0 ? t('exp.shotHint') : ''].filter(Boolean).join(' ');
       tutoActions.replaceChildren();
       tuto.hidden = false;
       hintTimer = window.setTimeout(() => {
