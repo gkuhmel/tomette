@@ -52,6 +52,38 @@ describe('formes', () => {
     expect(findShapes(g, 'arc', null).some((s) => s.color === A)).toBe(true);
   });
 
+  it('triangle avec une tuile scellée ou un joker, comme un alignement', () => {
+    const sealed = emptyGame();
+    star(sealed, 3, 6, A, [0, 1]);
+    sealed.grid.get(3, 6)!.kind = 'sealed';
+    expect(findShapes(sealed.grid, 'triangle', null).map((s) => s.color)).toEqual([A]);
+    const joker = emptyGame();
+    star(joker, 3, 6, A, [0, 1]);
+    joker.grid.get(3, 6)!.kind = 'joker';
+    expect(findShapes(joker.grid, 'triangle', null).map((s) => s.color)).toEqual([A]);
+    // Une tuile fêlée ne compte pas (elle ne s'aligne pas non plus).
+    const cracked = emptyGame();
+    star(cracked, 3, 6, A, [0, 1]);
+    cracked.grid.get(3, 6)!.kind = 'cracked';
+    expect(findShapes(cracked.grid, 'triangle', null)).toHaveLength(0);
+  });
+
+  it('commande « triangle » réalisée avec une tuile scellée', () => {
+    const game = emptyGame();
+    (game as { order: unknown }).order = { kind: 'triangle', color: A };
+    const bottom = game.grid.rows - 1;
+    game.grid.place(3, bottom, A);
+    game.grid.place(2, bottom, A);
+    game.grid.get(2, bottom)!.kind = 'sealed';
+    // Case au-dessus, voisine des deux : elle ferme le triangle.
+    const near = (a: { c: number; r: number }, b: { c: number; r: number }) => RING.some((d) => { const n = neighbor(a.c, a.r, d); return n.c === b.c && n.r === b.r; });
+    const third = RING.map((d) => neighbor(3, bottom, d)).find((x) => x.r < bottom && near(x, { c: 2, r: bottom }))!;
+    game.grid.place(third.c, third.r, A);
+    (game as unknown as { fresh: Set<number> }).fresh.add(game.grid.get(third.c, third.r)!.id);
+    game.tick();
+    expect(game.ordersDone).toBe(1);
+  });
+
   it('une forme doit contenir une tuile qui vient de bouger', () => {
     const game = emptyGame();
     star(game, 3, 6, A, [0, 1]);

@@ -18,10 +18,27 @@ export interface Shape {
 /** Voisins dans l'ordre du tour (sens horaire, en partant du haut). */
 export const RING: readonly Dir[] = ['up', 'upRight', 'downRight', 'down', 'downLeft', 'upLeft'];
 
-/** Couleur « de forme » d'une tuile (-1 : ne compte pas). */
+/** Joker posé : compte pour n'importe quelle couleur, comme dans un alignement. */
+const JOKER = -2;
+
+/**
+ * Couleur « de forme » d'une tuile (-1 : ne compte pas, JOKER : n'importe laquelle).
+ * Mêmes tuiles que pour un alignement : une tuile scellée compte, une fêlée non.
+ */
 function shapeColor(t: Tile | null): number {
-  if (!t || t.state !== 'idle' || t.special || t.kind !== 'normal') return -1;
-  return t.color;
+  if (!t || t.state !== 'idle' || t.special || t.kind === 'cracked' || t.kind === 'mortar') return -1;
+  return t.kind === 'joker' ? JOKER : t.color;
+}
+
+/** Couleur commune de cases (jokers compris), -1 s'il n'y en a pas (couleurs mêlées, case vide, que des jokers). */
+function commonColor(colors: number[]): number {
+  let color = -1;
+  for (const k of colors) {
+    if (k === JOKER) continue;
+    if (k < 0 || (color >= 0 && k !== color)) return -1;
+    color = k;
+  }
+  return colors.includes(-1) ? -1 : color;
 }
 
 const key = (grid: Grid, c: Cell) => c.r * grid.cols + c.c;
@@ -47,13 +64,14 @@ export function findShapes(grid: Grid, kind: ShapeKind, fresh: ReadonlySet<numbe
     for (let r = 0; r < grid.rows; r++) {
       for (let c = 0; c < grid.cols; c++) {
         const center = grid.get(c, r);
-        if (center && center.state !== 'idle') continue;
+        // Un joker au centre ferait un alignement avec l'arc.
+        if (center && (center.state !== 'idle' || center.kind === 'joker')) continue;
         const ring = RING.map((d) => neighbor(c, r, d));
         for (let i = 0; i < 6; i++) {
           const cells = [0, 1, 2, 3].map((k) => ring[(i + k) % 6]);
-          const color = colorAt(cells[0]);
+          const color = commonColor(cells.map(colorAt));
           if (color < 0 || (center && color === center.color)) continue;
-          if (cells.every((x) => colorAt(x) === color)) push(cells, color);
+          push(cells, color);
         }
       }
     }
@@ -62,13 +80,12 @@ export function findShapes(grid: Grid, kind: ShapeKind, fresh: ReadonlySet<numbe
   grid.forEach((_t, c, r) => {
     const here = { c, r };
     const ring = RING.map((d) => neighbor(c, r, d));
-    const color = colorAt(here);
-    if (color < 0) return;
+    if (colorAt(here) === -1) return;
     for (let i = 0; i < 6; i++) {
       const a = ring[i];
       const b = ring[(i + 1) % 6];
-      if (colorAt(a) !== color || colorAt(b) !== color) continue;
-      push([here, a, b], color);
+      const color = commonColor([colorAt(here), colorAt(a), colorAt(b)]);
+      if (color >= 0) push([here, a, b], color);
     }
   });
   return out;
@@ -90,18 +107,13 @@ export interface Farandole {
 export function findFarandoles(grid: Grid, moved: ReadonlySet<number>, min = 5): Farandole[] {
   const out: Farandole[] = [];
   const colorAt = (c: number, r: number) => (grid.inBounds(c, r) ? shapeColor(grid.get(c, r)) : -1);
-  // Un joker posé compte pour n'importe quelle couleur, comme dans un alignement.
-  const isJoker = (c: number, r: number) => {
-    const t = grid.inBounds(c, r) ? grid.get(c, r) : null;
-    return !!t && t.kind === 'joker' && t.state === 'idle' && !t.special;
-  };
   const colors = new Set<number>();
   grid.forEach((_t, c, r) => {
     const k = colorAt(c, r);
     if (k >= 0) colors.add(k);
   });
   for (const color of colors) {
-    const fits = (c: number, r: number) => colorAt(c, r) === color || isJoker(c, r);
+    const fits = (c: number, r: number) => colorAt(c, r) === color || colorAt(c, r) === JOKER;
     const seen = new Set<number>();
     for (let r = 0; r < grid.rows; r++) {
       for (let c = 0; c < grid.cols; c++) {
