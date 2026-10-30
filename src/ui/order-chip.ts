@@ -1,5 +1,8 @@
+import { config } from '../config';
 import type { Order } from '../core/orders';
 import { t, Key } from '../i18n';
+import { drawGlyph } from '../render/glyphs';
+import { themeFor } from '../render/theme';
 import { el } from './dom';
 
 /** Décalages (en rayons) des voisins d'un hexagone à plat : haut, haut-droite, bas-droite, bas, bas-gauche, haut-gauche. */
@@ -22,8 +25,24 @@ function hex(x: number, y: number, r: number, fill: string, stroke = ''): string
   return `<path d="${d}Z" fill="${fill}"${stroke ? ` stroke="${stroke}" stroke-width="0.25"` : ''}/>`;
 }
 
-/** Dessin du motif commandé (petits hexagones dans la couleur demandée). */
+/** Pictogramme de la couleur `color` (jeu et thème courants), en image. */
+function glyphImage(color: number): string {
+  const size = 64;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return '';
+  // Un peu plus grand que sur le plateau, pour rester lisible sur une si petite tuile.
+  drawGlyph(ctx, config.glyphs, color, size / 2, size / 2, (size / 2) * 0.62, themeFor(config.theme).glyph);
+  return canvas.toDataURL();
+}
+
+/**
+ * Dessin du motif commandé : petits hexagones dans la couleur demandée, avec son
+ * pictogramme (la couleur seule se confond facilement avec sa voisine).
+ */
 export function orderSvg(o: Order): string {
+  const glyph = o.color >= 0 ? glyphImage(o.color) : '';
   const col = o.color >= 0 ? `var(--t${o.color})` : 'var(--t4)';
   const r = 0.92;
   let cells: [number, number, string][] = [];
@@ -56,7 +75,12 @@ export function orderSvg(o: Order): string {
   const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
   const half = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) / 2 + r * scale + 0.15;
   return `<svg viewBox="${(cx - half).toFixed(2)} ${(cy - half).toFixed(2)} ${(half * 2).toFixed(2)} ${(half * 2).toFixed(2)}" aria-hidden="true">${cells
-    .map(([x, y, f]) => hex(x, y, r * scale, f, f === 'var(--card)' ? 'var(--muted)' : ''))
+    .map(([x, y, f]) => {
+      const tile = hex(x, y, r * scale, f, f === 'var(--card)' ? 'var(--muted)' : '');
+      if (!glyph || f !== col) return tile;
+      const g = r * scale;
+      return `${tile}<image href="${glyph}" x="${(x - g).toFixed(2)}" y="${(y - g).toFixed(2)}" width="${(g * 2).toFixed(2)}" height="${(g * 2).toFixed(2)}"/>`;
+    })
     .join('')}</svg>`;
 }
 
@@ -69,7 +93,8 @@ export function orderChip(): { root: HTMLElement; set(o: Order | null): void } {
   return {
     root,
     set(o) {
-      const k = o ? `${o.kind}:${o.color}` : '';
+      // Le pictogramme dépend du jeu de pictogrammes et du thème choisis.
+      const k = o ? `${o.kind}:${o.color}:${config.glyphs}:${config.theme}` : '';
       if (k === key) return;
       key = k;
       root.hidden = !o;
