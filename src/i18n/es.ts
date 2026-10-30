@@ -333,6 +333,8 @@ export const es: Dict = {
   'set.effectsHelp': 'Fragmentos, pétalos, aviso de nivel. Desactívalo para reducir las animaciones.',
   'set.shake': 'Vibración de pantalla',
   'set.shakeHelp': 'En las grandes cadenas y los rosetones.',
+  'set.vibration': 'Vibración',
+  'set.vibrationHelp': 'Al intercambiar, en las cadenas, los rosetones y los ataques.',
   'set.hideNames': 'Ocultar los apodos',
   'set.hideNamesHelp': 'Duelo en línea: no muestra el apodo de los rivales.',
   'set.theme': 'Tema',

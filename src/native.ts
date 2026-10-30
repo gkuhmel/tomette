@@ -1,4 +1,5 @@
 import { Capacitor } from '@capacitor/core';
+import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 import { Preferences } from '@capacitor/preferences';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { StatusBar, Style } from '@capacitor/status-bar';
@@ -87,4 +88,22 @@ export function statusBarFor(background: string): void {
 /** Écran de démarrage retiré dès que le jeu est affiché. */
 export function hideSplash(): void {
   if (isNative) SplashScreen.hide({ fadeOutDuration: 200 }).catch(() => {});
+}
+
+/** Vibrations (iPhone : moteur haptique) : impossibles dans Safari, possibles dans l'appli. */
+export type Buzz = 'light' | 'medium' | 'heavy' | 'warning' | 'success' | 'error';
+
+const IMPACT: Partial<Record<Buzz, ImpactStyle>> = { light: ImpactStyle.Light, medium: ImpactStyle.Medium, heavy: ImpactStyle.Heavy };
+const NOTIFY: Partial<Record<Buzz, NotificationType>> = { warning: NotificationType.Warning, success: NotificationType.Success, error: NotificationType.Error };
+let lastBuzz = 0;
+
+/** Une vibration ; plusieurs dans la même image n'en font qu'une (la première). */
+export function buzz(kind: Buzz): void {
+  if (!isNative) return;
+  const now = performance.now();
+  if (now - lastBuzz < 60) return;
+  lastBuzz = now;
+  const impact = IMPACT[kind];
+  const done = impact !== undefined ? Haptics.impact({ style: impact }) : Haptics.notification({ type: NOTIFY[kind]! });
+  done.catch(() => {});
 }

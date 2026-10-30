@@ -334,6 +334,8 @@ export const zh: Dict = {
   'set.effectsHelp': '碎片、花瓣、升级横幅。关闭可减少动画。',
   'set.shake': '屏幕震动',
   'set.shakeHelp': '在大连锁和花窗时触发。',
+  'set.vibration': '振动',
+  'set.vibrationHelp': '交换、连锁、花窗和受到攻击时。',
   'set.hideNames': '隐藏玩家昵称',
   'set.hideNamesHelp': '在线对战：不显示对手的昵称。',
   'set.theme': '主题',

@@ -333,6 +333,8 @@ export const it: Dict = {
   'set.effectsHelp': 'Schegge, petali, banner di livello. Disattiva per ridurre le animazioni.',
   'set.shake': 'Vibrazione dello schermo',
   'set.shakeHelp': 'Sulle grandi catene e sui rosoni.',
+  'set.vibration': 'Vibrazione',
+  'set.vibrationHelp': 'Negli scambi, nelle catene, nei rosoni e negli attacchi.',
   'set.hideNames': 'Nascondi i nickname',
   'set.hideNamesHelp': 'Duello online: non mostra il nickname degli avversari.',
   'set.theme': 'Tema',

@@ -333,6 +333,8 @@ export const de: Dict = {
   'set.effectsHelp': 'Splitter, Blütenblätter, Level-Banner. Ausschalten für weniger Bewegung.',
   'set.shake': 'Bildschirmwackeln',
   'set.shakeHelp': 'Bei großen Ketten und Rosetten.',
+  'set.vibration': 'Vibration',
+  'set.vibrationHelp': 'Beim Tauschen, bei Ketten, Rosetten und Angriffen.',
   'set.hideNames': 'Spielernamen ausblenden',
   'set.hideNamesHelp': 'Online-Duell: Namen der Gegner nicht anzeigen.',
   'set.theme': 'Design',

@@ -332,6 +332,8 @@ export const fr = {
   'set.effectsHelp': 'Éclats, pétales, bandeau de niveau. À couper pour réduire les animations.',
   'set.shake': 'Tremblement d\'écran',
   'set.shakeHelp': 'Sur les grosses chaînes et les rosaces.',
+  'set.vibration': 'Vibrations',
+  'set.vibrationHelp': 'À l\'échange, sur les chaînes, les rosaces et les attaques.',
   'set.hideNames': 'Masquer les pseudos',
   'set.hideNamesHelp': 'Duel en ligne : n\'affiche pas le pseudo des adversaires.',
   'set.theme': 'Thème',

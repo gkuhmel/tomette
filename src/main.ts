@@ -57,7 +57,7 @@ import { orderChip } from './ui/order-chip';
 import { resultBlock } from './ui/result';
 import { gameOverScreen, homeScreen, pauseScreen, rotateScreen } from './ui/screens';
 import { load, loadBest, loadDifficulty, save, saveBest, saveDifficulty } from './ui/storage';
-import { hideSplash, isNative, restoreSaves, statusBarFor } from './native';
+import { Buzz, buzz, hideSplash, isNative, restoreSaves, statusBarFor } from './native';
 
 type State = 'home' | 'playing' | 'paused' | 'over' | 'tutorial';
 
@@ -475,8 +475,13 @@ function boot(): void {
         return;
       }
     }
-    if (game.timeUp || game.won || duel?.winner === 0 || (mode === 'online' && !game.over)) sound.level();
-    else sound.gameOver();
+    if (game.timeUp || game.won || duel?.winner === 0 || (mode === 'online' && !game.over)) {
+      sound.level();
+      haptic('success');
+    } else {
+      sound.gameOver();
+      haptic('error');
+    }
     input.release();
     game.manualRise = false;
     const value = game.recordValue;
@@ -1180,11 +1185,17 @@ function boot(): void {
   // --- Son -----------------------------------------------------------------
   let lastLevel = 1;
   let lastAlertBeep = 0;
+  /** Vibration de l'application native, si le joueur les a gardées. */
+  const haptic = (kind: Buzz) => {
+    if (config.vibration) buzz(kind);
+  };
   function playSounds(now: number): void {
     syncSound();
     for (const s of game.signals) {
-      if (s === 'swap') sound.swap();
-      else if (s === 'land') sound.land();
+      if (s === 'swap') {
+        sound.swap();
+        haptic('light');
+      } else if (s === 'land') sound.land();
       else if (s === 'slide') sound.slide();
       else if (s === 'mortar') sound.mortar();
       else if (s === 'crumble') sound.crumble();
@@ -1192,16 +1203,23 @@ function boot(): void {
     }
     game.signals.length = 0;
     for (const n of game.notices) {
-      if (n === 'order' || n === 'orderGold' || n === 'fireworks' || n === 'rainbow') sound.rosace();
-      else if (n === 'mistral') sound.slide();
+      if (n === 'order' || n === 'orderGold' || n === 'fireworks' || n === 'rainbow') {
+        sound.rosace();
+        haptic('success');
+      } else if (n === 'mistral') sound.slide();
       else if (n === 'shot') sound.repair();
       else if (n === 'shield' || n === 'blocked' || n === 'counter' || n === 'shieldUsed') sound.repair();
-      else sound.mortar();
+      else {
+        // Attaque reçue (dalle, nuit, gel, fêlures, séisme) ou cigale.
+        sound.mortar();
+        haptic('warning');
+      }
     }
     for (const e of game.events) {
       if (e.rosaces) sound.rosace();
       else if (e.gold) sound.gold();
       else sound.clear(e.chain, e.size);
+      haptic(e.rosaces || e.gold || e.farandole ? 'heavy' : e.chain >= 2 || e.size >= 4 ? 'medium' : 'light');
     }
     if (state !== 'playing') return;
     if (game.level > lastLevel) sound.level();

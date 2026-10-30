@@ -6,6 +6,7 @@ import { isUnlocked, requiredLevel } from '../core/unlocks';
 import { setConfigValue } from './debug';
 import { Key, lang, LANGS, langName, setLang, t } from '../i18n';
 import { el } from './dom';
+import { isNative } from '../native';
 import { resetProgress } from './storage';
 import { Screen } from './screens';
 
@@ -22,6 +23,8 @@ export function settingsScreen(
     ['music', 'set.music', 'set.musicHelp'],
     ['animations', 'set.effects', 'set.effectsHelp'],
     ['screenShake', 'set.shake', 'set.shakeHelp'],
+    // Vibrations : seulement dans l'application (Safari ne sait pas faire vibrer un iPhone).
+    ...(isNative ? [['vibration', 'set.vibration', 'set.vibrationHelp'] as [ConfigKey, Key, Key]] : []),
     ['hideNames', 'set.hideNames', 'set.hideNamesHelp'],
   ];
   const syncers: (() => void)[] = [];

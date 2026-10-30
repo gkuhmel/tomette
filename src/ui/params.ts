@@ -119,6 +119,7 @@ export const PARAM_SECTIONS: ParamSection[] = [
       { key: 'glyphs', label: 'Pictogrammes', help: 'Dessins sur les tuiles. Pour le joueur, les jeux autres que Classique se débloquent avec le niveau.', min: 0, max: 4, step: 1, options: ['Classique', 'Provence', 'Mer', 'Jardin', 'Étoiles'] },
       { key: 'animations', label: 'Effets visuels', help: 'Éclats aux disparitions, écrasement à l\'atterrissage, pétales de rosace, bandeau de niveau, score qui défile.', min: 0, max: 1, step: 1, toggle: true },
       { key: 'hideNames', label: 'Masquer les pseudos', help: 'Duel en ligne : les pseudos des adversaires ne s\'affichent pas (« Joueur » ou « Ton ami » à la place). Réglage du joueur.', min: 0, max: 1, step: 1, toggle: true },
+      { key: 'vibration', label: 'Vibrations', help: 'Application native seulement : petite vibration à l\'échange, plus forte sur les chaînes, combos, rosaces et attaques reçues. Réglage du joueur.', min: 0, max: 1, step: 1, toggle: true },
       { key: 'screenShake', label: 'Tremblement d\'écran', help: 'Petit tremblement sur les chaînes ×3 et plus, les rosaces et les gros combos.', min: 0, max: 1, step: 1, toggle: true },
     ],
   },

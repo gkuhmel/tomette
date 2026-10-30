@@ -77,6 +77,8 @@ export const defaultConfig = {
   screenShake: 1,
   /** Duel en ligne : pseudos des adversaires masqués (« Joueur », « Ton ami ») (1 = masqués). */
   hideNames: 0,
+  /** Vibrations (application native seulement) : 1 = activées. */
+  vibration: 1,
 };
 
 export type Config = typeof defaultConfig;
@@ -84,7 +86,7 @@ export type ConfigKey = keyof Config;
 
 /** Paramètres structurels : appliqués au prochain redémarrage seulement. */
 /** Réglages que le joueur change lui-même (écran Réglages) : les seuls repris au lancement hors développement. */
-export const playerKeys: ConfigKey[] = ['sound', 'music', 'animations', 'screenShake', 'hideNames', 'theme', 'glyphs'];
+export const playerKeys: ConfigKey[] = ['sound', 'music', 'animations', 'screenShake', 'hideNames', 'vibration', 'theme', 'glyphs'];
 
 export const structuralKeys: ConfigKey[] = ['columns', 'rows', 'colors', 'initialRows'];
 
