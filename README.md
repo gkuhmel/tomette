@@ -26,6 +26,13 @@ Import a repository → `gkuhmel/tomette`, puis :
 
 Déploiement manuel possible : `npm run deploy` (après `npx wrangler login`).
 
+## Application iOS (Capacitor)
+
+Le même jeu, emballé dans une application iPhone (dossier `ios/`, code propre à l'appli
+dans `src/native.ts` : duel via le site, sauvegardes doublées, vibrations, barre d'état,
+écran de démarrage). Sur un Mac : `npm install` puis `npm run ios` (ouvre Xcode).
+Détails, signature et envoi sur TestFlight : `docs/NATIF-CAPACITOR.md`.
+
 ## Jouer
 
 - **Échanger** : glisser une tuile vers une voisine en biais (jamais vers le

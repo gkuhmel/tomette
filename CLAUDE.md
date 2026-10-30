@@ -8,7 +8,8 @@ jouable à la souris et au clavier.
 ## Documents de référence
 
 - `README.md` : règles, modes, réglages, déploiement, variables d'environnement.
-- `docs/NATIF-CAPACITOR.md` : plan du passage en application native (en attente du feu vert).
+- `docs/NATIF-CAPACITOR.md` : application iOS (Capacitor, dossier `ios/`, code propre à l'appli dans
+  `src/native.ts`) et compilation sur Mac.
 - `tools/video/README.md` : vidéos de promotion filmées en mode capture (`?capture=1`).
 - `docs/store/` : fiches App Store et Google Play (textes en 6 langues, réglages) ; visuels produits par `tools/store/`.
 
@@ -47,3 +48,4 @@ jouable à la souris et au clavier.
 - `npm test` : Vitest
 - `npm run deploy` : build puis `wrangler deploy` (après `npx wrangler login`)
 - `npm run serve` : build puis `wrangler dev` (jeu + serveur du duel en ligne, en local)
+- `npm run ios` (sur Mac) : build, copie dans le projet iOS et ouverture de Xcode ; `npm run ios:sync` sans ouvrir Xcode
