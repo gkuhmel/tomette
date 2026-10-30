@@ -46,11 +46,16 @@ on l'ouvre plus tard.
 ## Âge
 
 - **App Store** : répondre « Aucun » à toutes les questions de contenu → **4+**.
-  Pas de discussion entre joueurs, pas de contenu créé par les joueurs : le duel en
+  Attention : le duel en ligne affiche le **pseudo** choisi par l'adversaire (contenu créé
+  par les joueurs, même minimal). Garde-fous à citer dans les notes pour la validation :
+  pseudos filtrés (grossièretés et insultes, 6 langues, côté jeu et serveur), option
+  « Masquer les pseudos » dans les Réglages, pas de discussion, adresse de contact dans
+  À propos. Pas de discussion entre joueurs : le duel en
   ligne n'échange que l'état des parties.
 - **Google Play** (questionnaire IARC) : jeu, pas de violence, pas de langage,
   pas d'achat de jetons de hasard ; « Les utilisateurs peuvent-ils interagir ? » :
-  non (pas de messagerie). Résultat attendu : **PEGI 3 / Tout public**.
+  **oui** (duel en ligne avec un pseudo visible, sans messagerie). Résultat attendu :
+  **PEGI 3 / Tout public**, avec la mention « Interactions entre utilisateurs ».
 - **Public cible Google Play** : choisir **13 ans et plus**. Inclure les moins de
   13 ans ferait entrer l'app dans le programme « Familles » (règles plus strictes
   sur la mesure d'audience et les rapports d'erreurs).

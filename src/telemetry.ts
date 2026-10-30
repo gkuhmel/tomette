@@ -32,6 +32,11 @@ export function initTelemetry(): void {
           dsn: SENTRY_DSN,
           release: `tomettes@${__APP_VERSION__}`,
           tracesSampleRate: 0,
+          // Adresse de la page sans « ?… » ni « #… » (un lien d'invitation y porte un code de salle).
+          beforeSend(event) {
+            if (event.request?.url) event.request.url = event.request.url.split(/[?#]/)[0];
+            return event;
+          },
         });
       })
       .catch(() => {
