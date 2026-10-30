@@ -94,7 +94,7 @@ Description à écrire une fois le contenu du déblocage validé.
 ## Refaire les visuels
 
 ```bash
-npm run build && npx vite preview --port 4173 --strictPort   # dans un autre terminal
+DEV_TOOLS=1 npm run build && npx vite preview --port 4173 --strictPort   # dans un autre terminal
 cd tools/store
 node raw.mjs        # captures du jeu (7 scènes × 6 langues × iPhone, Android, iPad)
 node compose.mjs    # visuels avec accroches (captions.json) + images Google Play

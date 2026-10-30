@@ -81,6 +81,9 @@ export type Config = typeof defaultConfig;
 export type ConfigKey = keyof Config;
 
 /** Paramètres structurels : appliqués au prochain redémarrage seulement. */
+/** Réglages que le joueur change lui-même (écran Réglages) : les seuls repris au lancement hors développement. */
+export const playerKeys: ConfigKey[] = ['sound', 'music', 'animations', 'screenShake', 'theme', 'glyphs'];
+
 export const structuralKeys: ConfigKey[] = ['columns', 'rows', 'colors', 'initialRows'];
 
 export const config: Config = { ...defaultConfig };

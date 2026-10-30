@@ -2,6 +2,8 @@
 
 /** Version du jeu (package.json), injectée au build. */
 declare const __APP_VERSION__: string;
+/** Outils de développement compilés (voir vite.config.ts). */
+declare const __DEV_TOOLS__: boolean;
 
 interface ImportMetaEnv {
   /** Adresse de contact affichée dans « À propos » (optionnel). */

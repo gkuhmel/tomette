@@ -18,7 +18,7 @@ vidéos courtes : textes animés, ralentis, zooms, bruitages et rythme, carte de
 ## Utilisation
 
 ```bash
-npm run build && npx vite preview --port 4173 --strictPort   # dans un autre terminal
+DEV_TOOLS=1 npm run build && npx vite preview --port 4173 --strictPort   # dans un autre terminal
 cd tools/video
 node v1.mjs        # → out/tomettes-1-sauve.mp4
 ```

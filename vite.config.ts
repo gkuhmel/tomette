@@ -56,12 +56,18 @@ self.addEventListener('fetch', (e) => {
   };
 }
 
-export default defineConfig({
+/**
+ * Outils de développement (panneau de debug, mode capture, ami robot) : présents avec
+ * `npm run dev`, ou dans un build local lancé avec DEV_TOOLS=1 (vidéos, captures des stores).
+ * Absents de la version publiée : le code est retiré au build, aucun paramètre ne les ouvre.
+ */
+export default defineConfig(({ command }) => ({
   base: './',
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
+    __DEV_TOOLS__: JSON.stringify(command === 'serve' || process.env.DEV_TOOLS === '1'),
   },
   plugins: [offline()],
   build: { target: 'safari15' },
   test: { include: ['tests/**/*.test.ts'] },
-});
+}));

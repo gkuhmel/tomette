@@ -136,7 +136,10 @@ italien, chinois (`src/i18n/`).
 - **Développement** : panneau de debug avec tous les paramètres expliqués,
   appliqués en direct et mémorisés. Ouverture : appui long (1 s) en haut à
   gauche, ou bouton ⚙ avec `?dev=1` dans l'adresse. « Exporter » copie la
-  configuration en JSON.
+  configuration en JSON. Les outils de développement (debug, mode capture, ami
+  robot) n'existent qu'avec `npm run dev`, ou dans un build local
+  `DEV_TOOLS=1 npm run build` : **ils sont retirés de la version publiée**, et
+  celle-ci ne reprend que les réglages de l'écran Réglages.
 
 ## Variables d'environnement (Cloudflare → ton projet → Settings → Build → Variables and secrets)
 

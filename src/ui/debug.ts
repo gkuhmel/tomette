@@ -1,4 +1,4 @@
-import { config, ConfigKey, defaultConfig, structuralKeys } from '../config';
+import { config, ConfigKey, defaultConfig, playerKeys, structuralKeys } from '../config';
 import type { Game } from '../core/game';
 import { el } from './dom';
 import { PARAM_SECTIONS, ParamMeta } from './params';
@@ -6,13 +6,17 @@ import { load, remove, save } from './storage';
 
 const CONFIG_KEY = 'tomettes.config';
 
-/** Applique au démarrage les réglages mémorisés. */
+/**
+ * Applique au démarrage les réglages mémorisés. Hors développement, seuls ceux de l'écran
+ * Réglages sont repris : un réglage de jeu modifié autrefois (ou à la main) ne compte pas.
+ */
 export function loadSavedConfig(): void {
   const raw = load(CONFIG_KEY);
   if (!raw) return;
   try {
     const saved = JSON.parse(raw) as Record<string, unknown>;
-    for (const key of Object.keys(defaultConfig) as ConfigKey[]) {
+    const keys = __DEV_TOOLS__ ? (Object.keys(defaultConfig) as ConfigKey[]) : playerKeys;
+    for (const key of keys) {
       const v = saved[key];
       if (typeof v === 'number' && Number.isFinite(v)) config[key] = v;
     }

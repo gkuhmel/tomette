@@ -60,7 +60,7 @@ import { load, loadBest, loadDifficulty, save, saveBest, saveDifficulty } from '
 
 type State = 'home' | 'playing' | 'paused' | 'over' | 'tutorial';
 
-const dev = isDevMode();
+const dev = __DEV_TOOLS__ && isDevMode();
 const phone = isPhone();
 
 function boot(): void {
@@ -341,23 +341,26 @@ function boot(): void {
   }
   const input = new BoardInput(canvas, () => (state === 'playing' || state === 'tutorial' ? game : null), () => layout);
 
-  const debug = new DebugPanel({
-    getGame: () => game,
-    getFps: () => fps,
-    restart: (seed) => startGame(seed),
-    onOpenChange: (open) => {
-      debugOpen = open;
-      input.release();
-      game.manualRise = false;
-    },
-  });
-  attachLongPress(corner, 1000, () => debug.open());
-  // Bouton de debug visible seulement avec ?dev=1 (sinon : appui long en haut à gauche).
-  if (dev && !isCaptureMode()) {
-    const gear = el('button', { id: 'debug-gear', type: 'button', 'aria-label': 'Debug' });
-    gear.innerHTML = icon('gear');
-    gear.addEventListener('click', () => (debug.isOpen ? debug.close() : debug.open()));
-    footer.append(gear);
+  // Panneau de debug : seulement dans les builds de développement (retiré de la version publiée).
+  if (__DEV_TOOLS__) {
+    const debug = new DebugPanel({
+      getGame: () => game,
+      getFps: () => fps,
+      restart: (seed) => startGame(seed),
+      onOpenChange: (open) => {
+        debugOpen = open;
+        input.release();
+        game.manualRise = false;
+      },
+    });
+    attachLongPress(corner, 1000, () => debug.open());
+    // Bouton de debug visible avec ?dev=1 (sinon : appui long en haut à gauche).
+    if (dev && !isCaptureMode()) {
+      const gear = el('button', { id: 'debug-gear', type: 'button', 'aria-label': 'Debug' });
+      gear.innerHTML = icon('gear');
+      gear.addEventListener('click', () => (debug.isOpen ? debug.close() : debug.open()));
+      footer.append(gear);
+    }
   }
 
   function relayout(): void {

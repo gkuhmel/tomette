@@ -18,7 +18,8 @@ jouable à la souris et au clavier.
 - `src/core/` est **pur et déterministe** (pas de DOM) et testé par Vitest.
 - Tous les paramètres de jeu sont dans `src/config.ts`, réglables en direct dans le
   panneau de debug (appui long en haut à gauche, ou `?dev=1`), avec une explication
-  par paramètre dans `src/ui/params.ts`.
+  par paramètre dans `src/ui/params.ts`. Outils de développement (debug, capture, robot)
+  seulement avec `npm run dev` ou un build `DEV_TOOLS=1` : jamais dans la version publiée.
 - Langues : français (référence, `src/i18n/fr.ts`), anglais, espagnol, allemand,
   italien, chinois. Tout nouveau texte visible reçoit ses traductions le jour même ;
   `tests/i18n.test.ts` vérifie que chaque langue a toutes les clés.
