@@ -158,7 +158,7 @@ export class Renderer {
       y = y / e.cells.length + L.y0 - game.riseOffset * L.h;
       this.effects.onClear(x, y, e.chain, e.size, e.rosaces, e.gold, L.R, this.theme, now);
       if (e.chain < 2 && e.size < 4 && !e.rosaces && !e.gold) continue;
-      this.popups.push({
+      this.addPopup({
         text: e.farandole ? t('pop.farandole') : e.rosaces ? t('pop.rosace') : e.gold ? t('pop.gold') : e.chain >= 2 ? `×${e.chain}` : `${e.size}`,
         sub: e.farandole
           ? t('pop.farandoleN', { n: e.farandole })
@@ -174,9 +174,35 @@ export class Renderer {
     game.events.length = 0;
     // Annonces de duel : au milieu du plateau.
     for (const n of game.notices) {
-      this.popups.push({ text: t(`pop.${n}` as Key), sub: '', x: L.x0 + L.boardW / 2, y: L.y0 + L.boardH * 0.4, born: now });
+      this.addPopup({ text: t(`pop.${n}` as Key), sub: '', x: L.x0 + L.boardW / 2, y: L.y0 + L.boardH * 0.4, born: now });
     }
     game.notices.length = 0;
+  }
+
+  /**
+   * Ajoute un texte flottant sans le poser sur un autre encore visible : plusieurs
+   * annonces d'un coup s'empilent (au-dessus, sinon en dessous) au lieu de se mélanger.
+   */
+  private addPopup(p: Popup): void {
+    const L = this.layout!;
+    const big = L.R * 1.1;
+    // Hauteur d'un texte et de sa ligne secondaire.
+    const step = big * 1.75;
+    const width = (q: Popup) => Math.max(q.text.length * big * 0.62, q.sub.length * L.R * 0.26);
+    const live = this.popups.filter((q) => p.born - q.born < POPUP_MS * 0.85);
+    const yNow = (q: Popup) => q.y - ((p.born - q.born) / POPUP_MS) * L.R * 1.2;
+    const free = (y: number) =>
+      live.every((q) => Math.abs(yNow(q) - y) >= step * 0.99 || Math.abs(q.x - p.x) >= (width(q) + width(p)) / 2);
+    const top = L.y0 + big;
+    const bottom = L.y0 + L.boardH - step;
+    for (let i = 0; i < 8; i++) {
+      for (const y of [p.y - i * step, p.y + i * step]) {
+        if (y < top || y > bottom || !free(y)) continue;
+        this.popups.push({ ...p, y });
+        return;
+      }
+    }
+    this.popups.push(p);
   }
 
   draw(game: Game, heldId: number | null, now: number): void {
