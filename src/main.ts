@@ -46,11 +46,11 @@ import { Duel, duelConfig } from './core/duel';
 const MALUS_ICON = { night: '🌙', freeze: '❄', crack: '⚡', quake: '〰' } as const;
 import { drawMini } from './render/mini';
 import { safeName } from './core/names';
-import { BoardView, cleanName, isRoomCode, LinkedDuel, NetStats, packView, ServerMsg } from './core/net';
+import { BoardView, cleanName, LinkedDuel, NetStats, packView, ServerMsg } from './core/net';
 import { OnlineClient } from './net/client';
 import { LobbyClient } from './net/lobby';
 import { RobotFriend } from './net/robot';
-import { duelMenuScreen, loadOnline, playerLabel, recordOnline, roomScreen, searchScreen } from './ui/online';
+import { duelMenuScreen, inviteCode, loadOnline, playerLabel, recordOnline, roomScreen, searchScreen } from './ui/online';
 import { loadDuel, recordDuel } from './ui/duel';
 import { duelResult } from './ui/duel-result';
 import { orderChip } from './ui/order-chip';
@@ -139,11 +139,11 @@ function boot(): void {
     randomMatch = matched !== '';
     opponentName = matched.trim();
     if (!matched) roomView.open(code, creator);
-    net = new OnlineClient(code, onNet, () => {
+    net = new OnlineClient(code, onNet, (closeCode) => {
       if (state === 'playing' || state === 'paused') {
         remoteOver = remoteOver ?? remote?.stats ?? emptyStats();
       } else if (searchView.visible) searchFailed(t('online.dropped'));
-      else roomView.status(t('online.dropped'));
+      else roomView.status(t(closeCode === 4010 ? 'online.expired' : 'online.dropped'));
     });
     net.connect();
   }
@@ -1367,12 +1367,11 @@ function boot(): void {
     if (!once) requestAnimationFrame((t) => frame(t));
   }
 
-  // Lien d'invitation (?room=ABCD) : on rejoint directement la salle de l'ami.
-  const invite = new URLSearchParams(location.search).get('room')?.toUpperCase() ?? '';
-  if (isRoomCode(invite)) {
-    history.replaceState(null, '', location.pathname);
-    openRoom(invite, false);
-  }
+  // Lien d'invitation (#room=ABCDEFGH) : on rejoint directement la salle de l'ami, et le
+  // code disparaît aussitôt de l'adresse (et de l'historique).
+  const invite = inviteCode(location.hash);
+  if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+  if (invite) openRoom(invite, false);
 
   updateOrientation();
   if (typeof ResizeObserver !== 'undefined') new ResizeObserver(relayout).observe(stage);

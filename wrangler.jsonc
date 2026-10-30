@@ -19,6 +19,10 @@
       { "name": "LOBBY", "class_name": "Lobby" }
     ]
   },
+  // Au plus 30 connexions (salle ou file) par minute et par adresse IP.
+  "ratelimits": [
+    { "name": "CONNECT_LIMIT", "namespace_id": "1001", "simple": { "limit": 30, "period": 60 } }
+  ],
   "migrations": [
     { "tag": "v1", "new_sqlite_classes": ["Room"] },
     { "tag": "v2", "new_sqlite_classes": ["Lobby"] }

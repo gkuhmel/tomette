@@ -31,10 +31,24 @@ interface Fetcher {
   fetch(request: Request): Promise<Response>;
 }
 
+interface DurableObjectStorage {
+  get<T = unknown>(key: string): Promise<T | undefined>;
+  put(key: string, value: unknown): Promise<void>;
+  deleteAll(): Promise<void>;
+  setAlarm(at: number): Promise<void>;
+  deleteAlarm(): Promise<void>;
+}
+
 interface DurableObjectState {
   acceptWebSocket(ws: WebSocket, tags?: string[]): void;
   getWebSockets(tag?: string): WebSocket[];
   getTags(ws: WebSocket): string[];
+  storage: DurableObjectStorage;
+}
+
+/** Limiteur de débit de Cloudflare (binding `ratelimits`). */
+interface RateLimit {
+  limit(options: { key: string }): Promise<{ success: boolean }>;
 }
 
 declare module 'cloudflare:workers' {

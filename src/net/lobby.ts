@@ -1,7 +1,8 @@
-import type { LobbyMsg } from '../core/net';
+import { isRoomCode, LobbyMsg } from '../core/net';
 
 /**
- * File du « joueur au hasard » (WebSocket vers /api/lobby) : on attend qu'un autre joueur
+ * File du « joueur au hasard » (WebSocket vers /api/lobby) : on donne son pseudo dans le
+ * premier message (pas dans l'adresse), puis on attend qu'un autre joueur
  * arrive ; la salle d'attente nous donne alors un code de salle et le pseudo de l'adversaire.
  */
 export class LobbyClient {
@@ -16,8 +17,9 @@ export class LobbyClient {
 
   connect(): void {
     const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const ws = new WebSocket(`${proto}//${location.host}/api/lobby?name=${encodeURIComponent(this.name)}`);
+    const ws = new WebSocket(`${proto}//${location.host}/api/lobby`);
     this.ws = ws;
+    ws.addEventListener('open', () => ws.send(JSON.stringify({ t: 'hello', name: this.name })));
     ws.addEventListener('message', (e) => {
       let m: LobbyMsg;
       try {
@@ -25,9 +27,10 @@ export class LobbyClient {
       } catch {
         return;
       }
-      if (m.t === 'match' && !this.done) {
+      if (m.t === 'match' && isRoomCode(String(m.code)) && !this.done) {
+        const opponent = typeof m.opponent === 'string' ? m.opponent : '';
         this.done = true;
-        this.onMatch(m.code, m.opponent, m.host);
+        this.onMatch(m.code, opponent, m.host === true);
       }
     });
     ws.addEventListener('close', () => {

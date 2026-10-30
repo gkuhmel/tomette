@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ClearEvent } from '../src/core/game';
-import { checkClientMsg, checkServerMsg, isRoomCode, LinkedDuel, packView, randomRoomCode } from '../src/core/net';
+import { checkClientMsg, checkServerMsg, formatRoomCode, isRoomCode, LinkedDuel, packView, parseRoomCode, randomRoomCode } from '../src/core/net';
+import { inviteCode } from '../src/ui/online';
 import { emptyGame, settle } from './helpers';
 
 const ev = (o: Partial<ClearEvent>): ClearEvent => ({ kind: 'clear', cells: [], chain: 1, size: 3, points: 0, rosaces: 0, gold: false, ...o });
@@ -8,8 +9,18 @@ const ev = (o: Partial<ClearEvent>): ClearEvent => ({ kind: 'clear', cells: [], 
 describe('duel en ligne', () => {
   it('codes de salle', () => {
     for (let i = 0; i < 50; i++) expect(isRoomCode(randomRoomCode())).toBe(true);
-    expect(isRoomCode('ABCO')).toBe(false);
-    expect(isRoomCode('ABC')).toBe(false);
+    expect(randomRoomCode()).toHaveLength(8);
+    expect(isRoomCode('ABCDEFGO')).toBe(false);
+    expect(isRoomCode('ABCD')).toBe(false);
+    expect(formatRoomCode('ABCDEFGH')).toBe('ABCD-EFGH');
+    expect(parseRoomCode(' abcd-efgh ')).toBe('ABCDEFGH');
+  });
+
+  it('lien d\'invitation : code après « # »', () => {
+    expect(inviteCode('#room=ABCD-EFGH')).toBe('ABCDEFGH');
+    expect(inviteCode('#room=ABCDEFGH')).toBe('ABCDEFGH');
+    expect(inviteCode('#room=ABCD')).toBe('');
+    expect(inviteCode('')).toBe('');
   });
 
   it('aperçu compact de la grille', () => {

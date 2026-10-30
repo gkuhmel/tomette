@@ -57,7 +57,10 @@ Déploiement manuel possible : `npm run deploy` (après `npx wrangler login`).
   pile ; la manche est gagnée quand plus aucune tuile n'est au-dessus. 1 à 3
   étoiles selon le temps ; chaque manche réussie ouvre la suivante.
 - **Défier un ami** (dans Duel) : duel en ligne. Un joueur crée une partie et
-  partage le code de 4 lettres (ou le lien `?room=ABCD`) ; l'autre le saisit.
+  partage le code de 8 lettres (« ABCD-EFGH », ou le lien `#room=ABCDEFGH`) ; l'autre le
+  saisit. Le code est tiré au hasard cryptographique, voyage après le `#` du lien (jamais
+  envoyé au serveur) et dans l'en-tête de la connexion (sous-protocole WebSocket), jamais
+  dans une adresse ; le jeu l'efface de la barre d'adresse dès l'ouverture.
   Chacun fait tourner sa propre partie ; un petit Worker Cloudflare (une salle
   = un Durable Object, `worker/index.ts`) relaie attaques et aperçu de la pile.
   Rien n'est stocké côté serveur.
@@ -75,13 +78,19 @@ Déploiement manuel possible : `npm run deploy` (après `npx wrangler login`).
   créer, « 🤖 Faire venir un robot ». Le robot est un vrai second joueur : il passe par
   le serveur, joue sa partie (IA du duel), envoie attaques et grille, accepte les revanches
   (`src/net/robot.ts`).
-- **Garde-fous du serveur** (`worker/index.ts`) : au-delà de 30 messages par seconde, le
-  surplus est ignoré, et la connexion coupée au-delà de 100 (un joueur en envoie environ 5) ;
-  une connexion à une salle dure au plus 30 minutes ; au plus 30 recherches de joueur au
-  hasard par minute et par adresse IP (seule une empreinte de l'adresse est gardée, en
-  mémoire, une minute). En complément, une règle de limitation de débit Cloudflare
-  (gratuite) sur `/api/` est conseillée : tableau de bord Cloudflare → Security → WAF →
-  Rate limiting rules (chemin commençant par `/api/`, 20 requêtes par 10 s et par IP).
+- **Garde-fous du serveur** (`worker/index.ts`) : seules les pages du site et l'app native
+  (Capacitor) peuvent se connecter (en-tête Origin) ; au plus 30 connexions par minute et
+  par adresse IP (binding `CONNECT_LIMIT` de `wrangler.jsonc`) ; chaque message est vérifié
+  et borné (`checkClientMsg`, aussi appliqué par le jeu à la réception) et seule la copie
+  vérifiée est relayée ; au-delà de 30 messages par seconde, le surplus est ignoré, et la
+  connexion coupée au-delà de 100 (un joueur en envoie environ 5) ; une salle sert une seule
+  fois (fermée aux autres dès que les deux joueurs sont là), une invitation expire au bout
+  de 10 minutes et une connexion dure au plus 30 minutes ; au plus 30 recherches de joueur
+  au hasard par minute et par adresse IP (seule une empreinte de l'adresse est gardée, en
+  mémoire, une minute) ; le pseudo est envoyé dans un message, pas dans l'adresse. En
+  complément, une règle de limitation de débit Cloudflare (gratuite) sur `/api/` est
+  conseillée : tableau de bord Cloudflare → Security → WAF → Rate limiting rules (chemin
+  commençant par `/api/`, 20 requêtes par 10 s et par IP).
 - **Expédition** (tuile de l'accueil, qui ouvre un écran de présentation) : roguelite de
   20 manches (difficulté de l'accueil) à ligne d'arrivée, une seule vie. L'expédition en
   cours est sauvegardée (`tomettes.run`) : on la reprend (une manche interrompue repart

@@ -66,18 +66,43 @@ export function cleanName(s: string): string {
     .slice(0, 20);
 }
 
-/** Codes de salle : 4 lettres sans ambiguïté (pas de I, O, L…). */
+/**
+ * Codes de salle : 8 lettres sans ambiguïté (pas de I, O, L…), tirées au hasard
+ * cryptographique : environ 78 milliards de codes, impossibles à deviner.
+ */
 export const ROOM_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ';
+export const ROOM_CODE_LENGTH = 8;
 
 export function isRoomCode(s: string): boolean {
-  return s.length === 4 && [...s].every((ch) => ROOM_ALPHABET.includes(ch));
+  return s.length === ROOM_CODE_LENGTH && [...s].every((ch) => ROOM_ALPHABET.includes(ch));
 }
 
-export function randomRoomCode(rand: () => number = Math.random): string {
+/** Hasard cryptographique dans [0, 1[. */
+function secureRandom(): number {
+  return crypto.getRandomValues(new Uint32Array(1))[0] / 2 ** 32;
+}
+
+export function randomRoomCode(rand: () => number = secureRandom): string {
   let s = '';
-  for (let i = 0; i < 4; i++) s += ROOM_ALPHABET[Math.floor(rand() * ROOM_ALPHABET.length)];
+  for (let i = 0; i < ROOM_CODE_LENGTH; i++) s += ROOM_ALPHABET[Math.floor(rand() * ROOM_ALPHABET.length)];
   return s;
 }
+
+/** « ABCDEFGH » → « ABCD-EFGH » (plus facile à lire et à recopier). */
+export function formatRoomCode(code: string): string {
+  return `${code.slice(0, 4)}-${code.slice(4)}`;
+}
+
+/** Saisie du joueur → code : majuscules, sans tiret ni espace. */
+export function parseRoomCode(input: string): string {
+  return input.toUpperCase().replace(/[^A-Z]/g, '').slice(0, ROOM_CODE_LENGTH);
+}
+
+/**
+ * Le code de salle voyage dans l'en-tête de la connexion WebSocket (sous-protocole),
+ * pas dans l'adresse : il n'apparaît ni dans les journaux ni dans l'historique.
+ */
+export const ROOM_PROTOCOL = 'tomettes.room.';
 
 /*
  * Messages venus de l'autre joueur : le serveur les relaie, mais un jeu modifié peut envoyer

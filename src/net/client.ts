@@ -1,6 +1,6 @@
-import { checkServerMsg, ClientMsg, ServerMsg } from '../core/net';
+import { checkServerMsg, ClientMsg, ROOM_PROTOCOL, ServerMsg } from '../core/net';
 
-/** Connexion à une salle de duel en ligne (WebSocket vers /api/room/CODE). */
+/** Connexion à une salle de duel en ligne (WebSocket vers /api/room ; le code voyage dans l'en-tête, pas dans l'adresse). */
 export class OnlineClient {
   private ws: WebSocket | null = null;
   /** Fermée volontairement : ne pas signaler une coupure. */
@@ -9,12 +9,13 @@ export class OnlineClient {
   constructor(
     readonly code: string,
     private onMessage: (m: ServerMsg) => void,
-    private onDrop: () => void,
+    /** Coupure non voulue ; `code` : code de fermeture (4010 : invitation expirée). */
+    private onDrop: (code: number) => void,
   ) {}
 
   connect(): void {
     const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const ws = new WebSocket(`${proto}//${location.host}/api/room/${this.code}`);
+    const ws = new WebSocket(`${proto}//${location.host}/api/room`, [ROOM_PROTOCOL + this.code]);
     this.ws = ws;
     ws.addEventListener('message', (e) => {
       let m: ServerMsg | null = null;
@@ -25,8 +26,8 @@ export class OnlineClient {
       }
       if (m) this.onMessage(m);
     });
-    ws.addEventListener('close', () => {
-      if (!this.closing) this.onDrop();
+    ws.addEventListener('close', (e) => {
+      if (!this.closing) this.onDrop(e.code);
     });
   }
 

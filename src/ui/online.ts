@@ -1,5 +1,5 @@
 import { isOffensive } from '../core/names';
-import { cleanName, isRoomCode, randomRoomCode } from '../core/net';
+import { cleanName, formatRoomCode, isRoomCode, parseRoomCode, randomRoomCode } from '../core/net';
 import { t } from '../i18n';
 import { el } from './dom';
 import { icon } from './hex-ui';
@@ -61,9 +61,18 @@ export function recordOnline(result: 'win' | 'lose' | 'draw'): { wins: number; l
   return r;
 }
 
-/** Lien à partager pour rejoindre une salle. */
+/**
+ * Lien à partager pour rejoindre une salle. Le code est après « # » : cette partie de
+ * l'adresse n'est jamais envoyée au serveur (ni journaux, ni en-tête Referer).
+ */
 export function roomLink(code: string): string {
-  return `${location.origin}${location.pathname}?room=${code}`;
+  return `${location.origin}${location.pathname}#room=${code}`;
+}
+
+/** Code de salle d'un lien d'invitation (« #room=ABCDEFGH »), ou ''. */
+export function inviteCode(hash: string): string {
+  const code = parseRoomCode(new URLSearchParams(hash.replace(/^#/, '')).get('room') ?? '');
+  return isRoomCode(code) ? code : '';
 }
 
 /** Écran Duel : contre l'ordinateur, ou défier un ami (créer / rejoindre une salle). */
@@ -104,11 +113,11 @@ export function duelMenuScreen(handlers: {
   const nameRow = el('label', { class: 'name-row' }, [el('span', {}, [t('online.nameLabel')]), nameInput, tag]);
   const create = el('button', { type: 'button', class: 'btn primary' }, [t('online.create')]);
   create.addEventListener('click', () => handlers.create(randomRoomCode()));
-  const input = el('input', { class: 'room-input', maxlength: '4', autocomplete: 'off', autocapitalize: 'characters', spellcheck: 'false', placeholder: 'ABCD', 'aria-label': t('online.code') });
+  const input = el('input', { class: 'room-input', maxlength: '9', autocomplete: 'off', autocapitalize: 'characters', spellcheck: 'false', placeholder: 'ABCD-EFGH', 'aria-label': t('online.code') });
   const join = el('button', { type: 'button', class: 'btn' }, [t('online.join')]);
   const error = el('p', { class: 'room-error' });
   const tryJoin = () => {
-    const code = input.value.trim().toUpperCase();
+    const code = parseRoomCode(input.value);
     if (!isRoomCode(code)) {
       error.textContent = t('online.badCode');
       return;
@@ -117,7 +126,11 @@ export function duelMenuScreen(handlers: {
     handlers.join(code);
   };
   join.addEventListener('click', tryJoin);
-  input.addEventListener('input', () => (input.value = input.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4)));
+  // Saisie en deux groupes de 4 lettres (« ABCD-EFGH »), avec ou sans tiret.
+  input.addEventListener('input', () => {
+    const c = parseRoomCode(input.value);
+    input.value = c.length > 4 ? formatRoomCode(c) : c;
+  });
   input.addEventListener('keydown', (e) => {
     e.stopPropagation();
     if (e.key === 'Enter') tryJoin();
@@ -129,8 +142,8 @@ export function duelMenuScreen(handlers: {
   robot.addEventListener('click', () => {
     const code = randomRoomCode();
     handlers.robotHost?.(code);
-    input.value = code;
-    error.textContent = t('online.robotWaiting', { code });
+    input.value = formatRoomCode(code);
+    error.textContent = t('online.robotWaiting', { code: formatRoomCode(code) });
   });
   const screen = new Screen('screen-duel', [
     el('div', { class: 'panel' }, [
@@ -173,7 +186,7 @@ export function roomScreen(onCancel: () => void, onRobot?: (code: string) => voi
   share.addEventListener('click', async () => {
     const url = roomLink(current);
     try {
-      if (navigator.share) await navigator.share({ title: 'Tomettes', text: t('online.shareText', { code: current }), url });
+      if (navigator.share) await navigator.share({ title: 'Tomettes', text: t('online.shareText', { code: formatRoomCode(current) }), url });
       else {
         await navigator.clipboard.writeText(url);
         status.textContent = t('online.copied');
@@ -188,7 +201,7 @@ export function roomScreen(onCancel: () => void, onRobot?: (code: string) => voi
   return Object.assign(screen, {
     open(c: string, creator: boolean) {
       current = c;
-      code.textContent = c;
+      code.textContent = formatRoomCode(c);
       share.hidden = !creator;
       robot.hidden = !creator || !onRobot;
       status.textContent = t('online.connecting');
