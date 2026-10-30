@@ -1,5 +1,5 @@
 import { DurableObject } from 'cloudflare:workers';
-import { cleanName, isRoomCode, randomRoomCode } from '../src/core/net';
+import { checkClientMsg, cleanName, isRoomCode, randomRoomCode } from '../src/core/net';
 import { safeName } from '../src/core/names';
 
 /**
@@ -128,12 +128,14 @@ export class Room extends DurableObject<Env> {
       ws.close(4009, 'too long');
       return;
     }
-    let msg: { t?: string };
+    let msg;
     try {
-      msg = JSON.parse(message);
+      msg = checkClientMsg(JSON.parse(message));
     } catch {
       return;
     }
+    // Message invalide (jeu modifié) : ignoré, rien n'est relayé.
+    if (!msg) return;
     const other = this.players().find((w) => w !== ws);
     if (msg.t === 'rematch') {
       const seat = ws.deserializeAttachment() as Seat;
@@ -145,11 +147,11 @@ export class Room extends DurableObject<Env> {
     }
     if (msg.t === 'hello') {
       // Le pseudo est filtré ici aussi : un jeu modifié ne peut pas imposer un pseudo grossier.
-      const name = safeName(cleanName(String((msg as { name?: unknown }).name ?? '')), '');
-      other?.send(JSON.stringify({ t: 'hello', name }));
+      other?.send(JSON.stringify({ t: 'hello', name: safeName(msg.name, '') }));
       return;
     }
-    if (msg.t === 'state' || msg.t === 'attack' || msg.t === 'over') other?.send(message);
+    // On relaie la copie vérifiée, pas le texte reçu.
+    other?.send(JSON.stringify(msg));
   }
 
   async webSocketClose(ws: WebSocket): Promise<void> {

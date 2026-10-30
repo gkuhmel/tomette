@@ -1,4 +1,4 @@
-import type { ClientMsg, ServerMsg } from '../core/net';
+import { checkServerMsg, ClientMsg, ServerMsg } from '../core/net';
 
 /** Connexion à une salle de duel en ligne (WebSocket vers /api/room/CODE). */
 export class OnlineClient {
@@ -17,11 +17,13 @@ export class OnlineClient {
     const ws = new WebSocket(`${proto}//${location.host}/api/room/${this.code}`);
     this.ws = ws;
     ws.addEventListener('message', (e) => {
+      let m: ServerMsg | null = null;
       try {
-        this.onMessage(JSON.parse(String(e.data)) as ServerMsg);
+        m = checkServerMsg(JSON.parse(String(e.data)));
       } catch {
         /* message illisible : ignoré */
       }
+      if (m) this.onMessage(m);
     });
     ws.addEventListener('close', () => {
       if (!this.closing) this.onDrop();
