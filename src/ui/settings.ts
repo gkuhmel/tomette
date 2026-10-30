@@ -22,6 +22,7 @@ export function settingsScreen(
     ['music', 'set.music', 'set.musicHelp'],
     ['animations', 'set.effects', 'set.effectsHelp'],
     ['screenShake', 'set.shake', 'set.shakeHelp'],
+    ['hideNames', 'set.hideNames', 'set.hideNamesHelp'],
   ];
   const syncers: (() => void)[] = [];
 

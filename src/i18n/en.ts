@@ -333,6 +333,8 @@ export const en: Dict = {
   'set.effectsHelp': 'Shards, petals, level banner. Turn off to reduce motion.',
   'set.shake': 'Screen shake',
   'set.shakeHelp': 'On big chains and rosettes.',
+  'set.hideNames': 'Hide player names',
+  'set.hideNamesHelp': 'Online duel: don\'t show opponents\' names.',
   'set.theme': 'Theme',
   'set.language': 'Language',
   'set.progress': 'Progress',

@@ -121,7 +121,8 @@ function boot(): void {
   let opponentName = '';
   /** Adversaire trouvé par la file du joueur au hasard (et non un ami). */
   let randomMatch = false;
-  const opponentLabel = () => opponentName || (randomMatch ? t('online.player') : t('online.opponent'));
+  // Pseudo de l'adversaire, sauf si le joueur a choisi de les masquer (Réglages).
+  const opponentLabel = () => (config.hideNames ? '' : opponentName) || (randomMatch ? t('online.player') : t('online.opponent'));
   const emptyStats = (): NetStats => ({ score: 0, sent: 0, chain: 1, rosaces: 0 });
   const myStats = (): NetStats => ({ score: game.score, sent: linked?.sent ?? 0, chain: game.stats.maxChain, rosaces: game.rosaceCount });
   function leaveOnline(): void {
@@ -250,7 +251,7 @@ function boot(): void {
       (code, opponent, host) => {
         window.clearInterval(searchTimer);
         lobby = null;
-        searchView.found(opponent || t('online.player'));
+        searchView.found((config.hideNames ? '' : opponent) || t('online.player'));
         // L'hôte crée la salle un instant avant que l'autre la rejoigne.
         window.setTimeout(() => openRoom(code, host, opponent || ' '), host ? 300 : 700);
       },
