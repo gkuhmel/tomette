@@ -1,5 +1,6 @@
 import { isOffensive } from '../core/names';
 import { cleanName, formatRoomCode, isRoomCode, parseRoomCode, randomRoomCode } from '../core/net';
+import { sitePage } from '../native';
 import { t } from '../i18n';
 import { el } from './dom';
 import { icon } from './hex-ui';
@@ -66,7 +67,7 @@ export function recordOnline(result: 'win' | 'lose' | 'draw'): { wins: number; l
  * l'adresse n'est jamais envoyée au serveur (ni journaux, ni en-tête Referer).
  */
 export function roomLink(code: string): string {
-  return `${location.origin}${location.pathname}#room=${code}`;
+  return `${sitePage()}#room=${code}`;
 }
 
 /** Code de salle d'un lien d'invitation (« #room=ABCDEFGH »), ou ''. */

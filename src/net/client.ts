@@ -1,4 +1,5 @@
 import { checkServerMsg, ClientMsg, ROOM_PROTOCOL, ServerMsg } from '../core/net';
+import { socketBase } from '../native';
 
 /** Connexion à une salle de duel en ligne (WebSocket vers /api/room ; le code voyage dans l'en-tête, pas dans l'adresse). */
 export class OnlineClient {
@@ -14,8 +15,7 @@ export class OnlineClient {
   ) {}
 
   connect(): void {
-    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const ws = new WebSocket(`${proto}//${location.host}/api/room`, [ROOM_PROTOCOL + this.code]);
+    const ws = new WebSocket(`${socketBase()}/api/room`, [ROOM_PROTOCOL + this.code]);
     this.ws = ws;
     ws.addEventListener('message', (e) => {
       let m: ServerMsg | null = null;

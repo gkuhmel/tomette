@@ -1,4 +1,6 @@
-/** Accès localStorage protégés (navigation privée, stockage bloqué…). */
+import { mirror } from '../native';
+
+/** Accès localStorage protégés (navigation privée, stockage bloqué…) ; doublés en natif (voir native.ts). */
 export function load(key: string): string | null {
   try {
     return localStorage.getItem(key);
@@ -13,6 +15,7 @@ export function save(key: string, value: string): void {
   } catch {
     /* ignoré */
   }
+  mirror(key, value);
 }
 
 export function remove(key: string): void {
@@ -21,6 +24,7 @@ export function remove(key: string): void {
   } catch {
     /* ignoré */
   }
+  mirror(key, null);
 }
 
 /** Clé du record d'un mode et d'une difficulté (Classique / Normal garde la clé historique). */
@@ -58,7 +62,7 @@ export function resetProgress(): void {
       const k = localStorage.key(i);
       if (k && k.startsWith('tomettes.') && !keep.has(k)) keys.push(k);
     }
-    keys.forEach((k) => localStorage.removeItem(k));
+    keys.forEach((k) => remove(k));
   } catch {
     /* ignoré */
   }

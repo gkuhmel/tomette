@@ -1,4 +1,5 @@
 import { isRoomCode, LobbyMsg } from '../core/net';
+import { socketBase } from '../native';
 
 /**
  * File du « joueur au hasard » (WebSocket vers /api/lobby) : on donne son pseudo dans le
@@ -16,8 +17,7 @@ export class LobbyClient {
   ) {}
 
   connect(): void {
-    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const ws = new WebSocket(`${proto}//${location.host}/api/lobby`);
+    const ws = new WebSocket(`${socketBase()}/api/lobby`);
     this.ws = ws;
     ws.addEventListener('open', () => ws.send(JSON.stringify({ t: 'hello', name: this.name })));
     ws.addEventListener('message', (e) => {

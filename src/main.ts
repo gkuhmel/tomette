@@ -57,6 +57,7 @@ import { orderChip } from './ui/order-chip';
 import { resultBlock } from './ui/result';
 import { gameOverScreen, homeScreen, pauseScreen, rotateScreen } from './ui/screens';
 import { load, loadBest, loadDifficulty, save, saveBest, saveDifficulty } from './ui/storage';
+import { hideSplash, isNative, restoreSaves, statusBarFor } from './native';
 
 type State = 'home' | 'playing' | 'paused' | 'over' | 'tutorial';
 
@@ -818,6 +819,7 @@ function boot(): void {
   const theme0 = themeFor(config.theme);
   renderer.setTheme(theme0);
   applyThemeCss(theme0);
+  statusBarFor(theme0.css['--sky1']);
   howto.setTheme(theme0);
   home.howto.addEventListener('click', () => startTutorial(null));
   over.replay.addEventListener('click', () => {
@@ -1334,6 +1336,7 @@ function boot(): void {
     const theme = themeFor(config.theme);
     if (renderer.setTheme(theme)) {
       applyThemeCss(theme);
+      statusBarFor(theme.css['--sky1']);
       howto.setTheme(theme);
     }
     if (renderer.setGlyphs(Math.round(config.glyphs))) howto.redraw();
@@ -1376,13 +1379,20 @@ function boot(): void {
 
   updateOrientation();
   if (typeof ResizeObserver !== 'undefined') new ResizeObserver(relayout).observe(stage);
-  requestAnimationFrame((t) => frame(t));
+  requestAnimationFrame((t) => {
+    frame(t);
+    // Application native : l'écran de démarrage laisse place au jeu déjà dessiné.
+    hideSplash();
+  });
 }
 
-boot();
+// Application native : sauvegardes restaurées d'abord (rechargement si le stockage avait été vidé).
+restoreSaves().then((restored) => (restored ? location.reload() : boot()));
+// Filet de sécurité : l'écran de démarrage ne reste jamais affiché.
+window.setTimeout(hideSplash, 4000);
 
-// Hors ligne : service worker (build de production uniquement).
-if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+// Hors ligne : service worker (build de production du site ; inutile dans l'application).
+if (import.meta.env.PROD && !isNative && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(() => {
       /* hors ligne indisponible : le jeu marche quand même */

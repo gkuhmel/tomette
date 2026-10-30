@@ -1,3 +1,4 @@
+import { mirror } from '../native';
 import { de } from './de';
 import { en } from './en';
 import { es } from './es';
@@ -36,6 +37,7 @@ export function setLang(l: Lang): void {
   } catch {
     /* ignoré */
   }
+  mirror(LANG_KEY, l);
   lang = l;
 }
 
