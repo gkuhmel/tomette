@@ -33,6 +33,16 @@ dans `src/native.ts` : duel via le site, sauvegardes doublées, vibrations, barr
 écran de démarrage). Sur un Mac : `npm install` puis `npm run ios` (ouvre Xcode).
 Détails, signature et envoi sur TestFlight : `docs/NATIF-CAPACITOR.md`.
 
+## Version gratuite et version complète
+
+Gratuit : Classique, campagne (manches 1 à 10), duels (ordinateur et en ligne), une
+expédition par jour, thèmes gagnés en montant de niveau. Achat unique « Tomettes complet »
+(0,99 €, dans l'application iOS) : campagne 11 à 30, expédition sans limite,
+Contre-la-montre, Mosaïque, Express et le thème Tomettes. Cadenas « Complet » sur ce qui
+est réservé ; un appui ouvre l'écran d'achat (sur le site : lien vers l'App Store).
+Règles : `src/core/premium.ts` ; achat : `src/purchase.ts` ; détails dans
+`docs/NATIF-CAPACITOR.md`.
+
 ## Jouer
 
 - **Échanger** : glisser une tuile vers une voisine en biais (jamais vers le

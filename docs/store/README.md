@@ -40,8 +40,8 @@ on l'ouvre plus tard.
 - **Copyright** : © 2026 Calanques United.
 - **URL de confidentialité** : `https://<adresse du site>/privacy.html` (page déjà en ligne).
 - **URL d'assistance** : une page de contact ou une adresse e-mail dédiée (à créer).
-- **Prix** : à fixer avec le modèle retenu (gratuit + déblocage complet). Ne jamais
-  écrire de prix dans les textes (refusé par Apple).
+- **Prix** : application gratuite, avec l'achat intégré « Tomettes complet » à 0,99 €.
+  Ne jamais écrire de prix dans les textes (refusé par Apple).
 
 ## Âge
 
@@ -89,12 +89,35 @@ Ce que fait le jeu :
 - Chiffrées en transit : oui. Suppression sur demande : non applicable (données anonymes).
 - Collecte obligatoire : non liée à un compte ; pas de compte dans l'app.
 
-## Achat intégré (quand le déblocage sera codé)
+## Achat intégré « Tomettes complet »
 
-Produit non consommable, identifiant suggéré `tomettes.full`. Nom affiché :
-« Tomettes complet » (en : « Tomettes Full », es : « Tomettes completo »,
-de : « Tomettes komplett », it : « Tomettes completo », zh : « Tomettes 完整版 »).
-Description à écrire une fois le contenu du déblocage validé.
+Produit **non consommable**, identifiant **`com.calanquesunited.tomettes.full`**
+(`src/core/premium.ts`), prix **0,99 €** (palier le plus bas). À créer dans App Store
+Connect → l'app → Monétisation → Achats intégrés → +, après avoir signé le **contrat des
+apps payantes** (Accords, avec banque et fiscalité).
+
+- Nom de référence : `Tomettes complet`.
+- Noms et descriptions (localisations de l'achat) :
+
+| Langue | Nom | Description |
+|---|---|---|
+| fr | Tomettes complet | Tout le jeu : campagne complète, expédition sans limite, tous les modes et le thème Tomettes. |
+| en | Tomettes Full | The whole game: full campaign, unlimited expeditions, every mode and the Tomettes theme. |
+| es | Tomettes completo | Todo el juego: campaña completa, expediciones sin límite, todos los modos y el tema Tomettes. |
+| de | Tomettes komplett | Das ganze Spiel: komplette Kampagne, unbegrenzte Expeditionen, alle Modi und das Tomettes-Design. |
+| it | Tomettes completo | Tutto il gioco: campagna completa, spedizioni senza limiti, tutte le modalità e il tema Tomettes. |
+| zh | Tomettes 完整版 | 全部游戏内容：完整战役、无限远征、所有模式和 Tomettes 主题。 |
+
+- Capture pour la validation : l'écran « Tomettes complet » du jeu (Duel → n'importe quel
+  mode verrouillé, ou Réglages → Version complète).
+- **Partage familial** : au choix (non activé dans le fichier de test).
+- Notes pour la validation : « Version gratuite jouable sans limite de temps (Classique,
+  campagne 1 à 10, duels, une expédition par jour). L'achat unique débloque le reste.
+  Restaurer : Réglages → Version complète → Restaurer mes achats. »
+
+Contenu gratuit et payant, et vérification de l'achat : voir `src/core/premium.ts` et
+`src/purchase.ts`. Sur le site, la version complète renvoie vers l'App Store
+(`APP_STORE_URL` dans `src/native.ts`, à remplir quand l'app est publiée).
 
 ## Refaire les visuels
 

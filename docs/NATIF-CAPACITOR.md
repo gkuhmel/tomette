@@ -62,9 +62,30 @@ version affiché (**Version**, ex. 1.0) ne change qu'aux vraies nouvelles versio
 - [ ] Fiche : textes et captures (`docs/store/`), confidentialité, âge (`docs/store/README.md`)
 - [ ] Tester sur l'iPhone : partie, duel en ligne (ami et hasard), vibrations, reprise
       après passage en arrière-plan, sauvegardes après redémarrage
-- [ ] Verrous et achat intégré (déblocage complet) : étape suivante, à valider
+- [ ] Achat intégré créé dans App Store Connect (voir `docs/store/README.md`)
 - [ ] Liens d'invitation qui ouvrent l'appli (liens universels) : plus tard, demande
       l'identifiant d'équipe Apple et un fichier `apple-app-site-association` sur le site
+
+## Achat intégré « Tomettes complet »
+
+Plugin `@capgo/native-purchases` (StoreKit 2) : l'achat est signé par Apple et vérifié par
+l'iPhone, sans serveur. Revérifié à chaque lancement (un remboursement le retire), gardé
+pour jouer hors ligne. Code : `src/purchase.ts` ; verrous : `src/core/premium.ts`.
+
+**Tester sans payer, dans Xcode** (pas besoin d'App Store Connect) :
+1. Glisser `ios/App/Tomettes.storekit` dans le navigateur de projet de Xcode (sans
+   l'ajouter à la cible).
+2. Product → Scheme → Edit Scheme… → Run → Options → **StoreKit Configuration** :
+   `Tomettes.storekit`.
+3. Lancer ▶︎ : l'achat ouvre une fausse fenêtre de l'App Store. Pour recommencer :
+   Debug → StoreKit → Manage Transactions, supprimer l'achat.
+
+**Bac à sable et TestFlight** : une fois le produit créé dans App Store Connect (contrat
+des apps payantes signé), retirer le fichier StoreKit du schéma ; acheter avec un compte
+de test (Utilisateurs et accès → Sandbox) ou depuis TestFlight : rien n'est débité.
+
+**Dans le navigateur, en développement** (`npm run dev`) : le panneau de debug a une
+bascule « Version complète : oui / non », et l'achat y est simulé.
 
 ## Android (plus tard)
 
