@@ -3,6 +3,8 @@ import { THEMES, themeFor } from '../render/theme';
 import { SpriteCache } from '../render/sprites';
 import { GLYPH_SET_COUNT } from '../render/glyphs';
 import { isUnlocked, requiredLevel } from '../core/unlocks';
+import { LockReason, themeLocked } from '../core/premium';
+import { isPremium, restoreFull } from '../purchase';
 import { setConfigValue } from './debug';
 import { Key, lang, LANGS, langName, setLang, t } from '../i18n';
 import { el } from './dom';
@@ -17,6 +19,8 @@ export function settingsScreen(
   onAbout: () => void,
   getLevel: () => number,
   onRules: () => void,
+  /** Ouvre l'écran « Tomettes complet ». */
+  onFull: (reason: LockReason) => void,
 ): Screen & { refresh(): void } {
   const toggles: [ConfigKey, Key, Key][] = [
     ['sound', 'set.sound', 'set.soundHelp'],
@@ -45,10 +49,13 @@ export function settingsScreen(
   /** Bouton verrouillé tant que le niveau du joueur est insuffisant. */
   const lockable = (b: HTMLButtonElement, lock: HTMLElement, kind: 'theme' | 'glyphs', i: number) => {
     syncers.push(() => {
-      const open = isUnlocked(kind, i, getLevel());
-      b.disabled = !open;
-      b.classList.toggle('locked', !open);
-      lock.textContent = open ? '' : `🔒 ${t('unlock.level', { n: requiredLevel(kind, i) })}`;
+      // Thème de la version complète : ouvert dès l'achat, quel que soit le niveau ; sinon
+      // le bouton reste actif et présente l'achat.
+      const full = kind === 'theme' && themeLocked(i, isPremium());
+      const open = kind === 'theme' && !full && themeLocked(i, false) ? true : isUnlocked(kind, i, getLevel());
+      b.disabled = !open && !full;
+      b.classList.toggle('locked', !open || full);
+      lock.textContent = full ? `🔒 ${t('full.lock')}` : open ? '' : `🔒 ${t('unlock.level', { n: requiredLevel(kind, i) })}`;
     });
   };
 
@@ -62,6 +69,7 @@ export function settingsScreen(
       lock,
     ]);
     b.addEventListener('click', () => {
+      if (themeLocked(i, isPremium())) return onFull('theme');
       setConfigValue('theme', i);
       onChange();
       refresh();
@@ -131,6 +139,26 @@ export function settingsScreen(
   const back = el('button', { type: 'button', class: 'btn primary' }, [t('common.back')]);
   back.addEventListener('click', onBack);
 
+  // Version complète (dans l'appli) : état, achat et « Restaurer mes achats » (exigé par Apple).
+  const fullState = el('p', { class: 'full-state' });
+  const fullOpen = el('button', { type: 'button', class: 'btn primary' }, [t('full.buy')]);
+  fullOpen.addEventListener('click', () => onFull('menu'));
+  const fullRestore = el('button', { type: 'button', class: 'btn' }, [t('full.restore')]);
+  fullRestore.addEventListener('click', async () => {
+    fullRestore.disabled = true;
+    const found = await restoreFull();
+    fullRestore.disabled = false;
+    fullState.textContent = t(found ? 'full.restored' : 'full.notFound');
+    refresh();
+  });
+  syncers.push(() => {
+    const owned = isPremium();
+    fullOpen.hidden = owned;
+    fullRestore.hidden = owned;
+    if (owned) fullState.textContent = t('full.owned');
+  });
+  const fullSection = isNative || __DEV_TOOLS__ ? [el('h3', {}, [t('full.section')]), fullState, el('div', { class: 'home-buttons' }, [fullOpen, fullRestore])] : [];
+
   const screen = new Screen('screen-settings', [
     el('div', { class: 'panel' }, [
       el('h2', {}, [t('common.settings')]),
@@ -141,6 +169,7 @@ export function settingsScreen(
       el('div', { class: 'theme-list' }, glyphButtons),
       el('h3', {}, [t('set.language')]),
       el('div', { class: 'lang-list' }, langButtons),
+      ...fullSection,
       el('h3', {}, [t('set.progress')]),
       el('div', { class: 'home-buttons' }, [rules, reset, about]),
       el('div', { class: 'home-buttons' }, [back]),

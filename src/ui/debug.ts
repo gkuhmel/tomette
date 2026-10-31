@@ -1,6 +1,7 @@
 import { config, ConfigKey, defaultConfig, playerKeys, structuralKeys } from '../config';
 import type { Game } from '../core/game';
 import { el } from './dom';
+import { isPremium, setDevPremium } from '../purchase';
 import { PARAM_SECTIONS, ParamMeta } from './params';
 import { load, remove, save } from './storage';
 
@@ -68,6 +69,13 @@ export class DebugPanel {
       return b;
     };
 
+    // Version complète simulée (tester les verrous et l'écran d'achat sans payer).
+    const fullLabel = () => `Version complète : ${isPremium() ? 'oui' : 'non'}`;
+    const full = button(fullLabel(), () => {
+      setDevPremium(!isPremium());
+      full.textContent = fullLabel();
+    });
+
     this.root = el('div', { id: 'debug-panel' }, [
       el('div', { class: 'debug-head' }, [el('strong', {}, ['Debug']), button('Fermer', () => this.close())]),
       this.stats,
@@ -87,6 +95,7 @@ export class DebugPanel {
             if (n >= 1) this.hooks.getGame()?.jumpToLevel(n);
           }),
         ]),
+        full,
       ]),
       fields,
       el('p', { class: 'debug-note' }, ['↻ : appliqué au prochain redémarrage.']),

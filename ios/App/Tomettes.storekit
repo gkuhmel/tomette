@@ -1,0 +1,52 @@
+{
+  "identifier": "E5D19422-D7BC-4D9D-8E05-32ADBC76B656",
+  "nonRenewingSubscriptions": [],
+  "products": [
+    {
+      "displayPrice": "0.99",
+      "familyShareable": false,
+      "internalID": "59A94D8A-DD30-4E62-A0F4-0F5035C17B2D",
+      "localizations": [
+        {
+          "description": "Tout le jeu : campagne complète, expédition sans limite, tous les modes et le thème Tomettes.",
+          "displayName": "Tomettes complet",
+          "locale": "fr"
+        },
+        {
+          "description": "The whole game: full campaign, unlimited expeditions, every mode and the Tomettes theme.",
+          "displayName": "Tomettes Full",
+          "locale": "en_US"
+        },
+        {
+          "description": "Todo el juego: campaña completa, expediciones sin límite, todos los modos y el tema Tomettes.",
+          "displayName": "Tomettes completo",
+          "locale": "es_ES"
+        },
+        {
+          "description": "Das ganze Spiel: komplette Kampagne, unbegrenzte Expeditionen, alle Modi und das Tomettes-Design.",
+          "displayName": "Tomettes komplett",
+          "locale": "de"
+        },
+        {
+          "description": "Tutto il gioco: campagna completa, spedizioni senza limiti, tutte le modalità e il tema Tomettes.",
+          "displayName": "Tomettes completo",
+          "locale": "it"
+        },
+        {
+          "description": "全部游戏内容：完整战役、无限远征、所有模式和 Tomettes 主题。",
+          "displayName": "Tomettes 完整版",
+          "locale": "zh_Hans"
+        }
+      ],
+      "productID": "com.calanquesunited.tomettes.full",
+      "referenceName": "Tomettes complet",
+      "type": "NonConsumable"
+    }
+  ],
+  "settings": {},
+  "subscriptionGroups": [],
+  "version": {
+    "major": 3,
+    "minor": 0
+  }
+}

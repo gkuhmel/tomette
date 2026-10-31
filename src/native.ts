@@ -16,6 +16,12 @@ export const isNative = Capacitor.isNativePlatform();
  */
 export const SITE_ORIGIN = 'https://tomettes.calanquesunited.com';
 
+/**
+ * Page de l'appli sur l'App Store (bouton de la version complète, sur le site).
+ * Vide tant que l'appli n'est pas publiée : le site affiche alors « Bientôt sur l'App Store ».
+ */
+export const APP_STORE_URL = '';
+
 /** Origine du site (serveur du duel, liens à partager). */
 export function siteOrigin(): string {
   return isNative ? SITE_ORIGIN : location.origin;

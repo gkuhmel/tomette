@@ -2614,3 +2614,64 @@ button.exp-card:active {
     margin: 4px 0 10px !important;
   }
 }
+
+/* --- Version complète (écran d'achat) ------------------------------------- */
+/* Au-dessus de l'écran qui l'a ouvert (campagne, expédition, réglages…). */
+#screen-full {
+  z-index: 12;
+}
+
+.full-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.full-reason {
+  text-align: center;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.full-list {
+  list-style: none;
+  margin: 4px 0;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: var(--card);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.full-list li::before {
+  content: '✓';
+  color: var(--t3);
+  font-weight: 900;
+  margin-right: 10px;
+}
+
+.full-buy {
+  text-align: center;
+  text-decoration: none;
+}
+
+.full-buy[aria-disabled='true'] {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.full-web,
+.full-status,
+.full-state,
+.exp-free {
+  text-align: center;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.full-status:empty,
+.full-state:empty {
+  display: none;
+}

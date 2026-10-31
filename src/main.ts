@@ -58,6 +58,9 @@ import { resultBlock } from './ui/result';
 import { gameOverScreen, homeScreen, pauseScreen, rotateScreen } from './ui/screens';
 import { load, loadBest, loadDifficulty, save, saveBest, saveDifficulty } from './ui/storage';
 import { Buzz, buzz, hideSplash, isNative, restoreSaves, statusBarFor } from './native';
+import { dayKey, expeditionAllowed, LockReason, modeLocked, stageLocked, themeLocked } from './core/premium';
+import { initPurchases, isPremium, onPremiumChange } from './purchase';
+import { paywallScreen } from './ui/paywall';
 
 type State = 'home' | 'playing' | 'paused' | 'over' | 'tutorial';
 
@@ -273,7 +276,12 @@ function boot(): void {
   );
   /** Expédition en cours (null hors expédition). */
   let run: SavedRun | null = null;
+  /** Jour de la dernière expédition gratuite (version gratuite : une par jour). */
+  const FREE_EXP_KEY = 'tomettes.expFreeDay';
   function startExpedition(): void {
+    const today = dayKey(new Date());
+    if (!expeditionAllowed(isPremium(), load(FREE_EXP_KEY) ?? '', today)) return requireFull('expedition', startExpedition);
+    if (!isPremium()) save(FREE_EXP_KEY, today);
     run = { stage: 1, cards: [], score: 0, shields: 0, time: 0, seed: randomSeed(), difficulty };
     saveRun(run);
     expIntro.hide();
@@ -305,7 +313,9 @@ function boot(): void {
   function openExpIntro(): void {
     const saved = loadRun();
     home.screen.hide();
-    expIntro.open(saved, t(`diff.${saved?.difficulty ?? difficulty}` as Key));
+    // Version gratuite : rappel de l'expédition du jour (ou qu'elle est déjà jouée).
+    const note = isPremium() ? '' : t(expeditionAllowed(false, load(FREE_EXP_KEY) ?? '', dayKey(new Date())) ? 'exp.freeDaily' : 'exp.freeUsed');
+    expIntro.open(saved, t(`diff.${saved?.difficulty ?? difficulty}` as Key), note);
   }
   const cardsView = cardsScreen((id) => {
     if (!run) return;
@@ -653,7 +663,9 @@ function boot(): void {
       ...(mr.levelAfter > mr.levelBefore ? [el('p', { class: 'over-level-up' }, [t('over.levelUp', { n: mr.levelAfter })])] : []),
       playerLevel(missions),
       ...(mr.daily.length || mr.long !== null ? [el('p', { class: 'over-ach-title' }, [t('over.missionsDone')])] : []),
-      ...unlocksBetween(mr.levelBefore, mr.levelAfter).map((u) =>
+      ...unlocksBetween(mr.levelBefore, mr.levelAfter)
+        .filter((u) => !(u.kind === 'theme' && themeLocked(u.index, isPremium())))
+        .map((u) =>
         el('p', { class: 'over-unlock' }, [t('over.unlocked', { name: t(`${u.kind === 'theme' ? 'theme' : 'glyphs'}.${u.index}` as Key) })]),
       ),
       ...mr.daily.map((m) => el('p', {}, [`✓ ${missionText(m.id, m.target)}`])),
@@ -715,6 +727,8 @@ function boot(): void {
 
   /** Lance un mode depuis l'accueil (la première fois : le tutoriel d'abord). */
   function launch(m: ModeId): void {
+    if (modeLocked(m, isPremium())) return requireFull('mode', () => launch(m));
+    if (m === 'campaign' && stageLocked(stageNo, isPremium())) return requireFull('stage', () => launch(m));
     if (load(TUTORIAL_KEY)) startGame(randomSeed(), m);
     else startTutorial(m);
   }
@@ -739,7 +753,7 @@ function boot(): void {
     const recs: [ModeId, HexButtonParts][] = [['endless', home.play], ['timeAttack', home.timeAttack], ['mosaic', home.mosaic], ['express', home.express]];
     for (const [id, b] of recs) {
       const rec = loadBest(id, difficulty);
-      b.rec.textContent = rec > 0 ? (modeById(id).record === 'rosaces' ? `${rec} ✿` : String(rec)) : '—';
+      b.rec.textContent = modeLocked(id, isPremium()) ? `🔒 ${t('full.lock')}` : rec > 0 ? (modeById(id).record === 'rosaces' ? `${rec} ✿` : String(rec)) : '—';
       b.button.title = modeTag(modeById(id), config);
     }
     home.progressCount.textContent = `${progress.unlocked.size}/${ACHIEVEMENTS.length}`;
@@ -782,7 +796,28 @@ function boot(): void {
       settings.hide();
       openHowto('settings');
     },
+    (reason) => requireFull(reason),
   );
+
+  // --- Version complète (achat intégré) -----------------------------------------
+  /** Action à reprendre si le joueur achète depuis l'écran « Tomettes complet ». */
+  let afterFull: (() => void) | null = null;
+  const paywall = paywallScreen((bought) => {
+    const next = afterFull;
+    afterFull = null;
+    if (bought && next) next();
+  });
+  /** Contenu de la version complète demandé : écran d'achat (ou lien vers l'appli, sur le site). */
+  function requireFull(reason: LockReason, then?: () => void): void {
+    afterFull = then ?? null;
+    paywall.open(reason);
+  }
+  // Achat confirmé, restauré ou remboursé : verrous mis à jour partout.
+  onPremiumChange(() => {
+    if (home.screen.visible) showHome();
+    settings.refresh();
+    campaignView.refresh();
+  });
   const about = aboutScreen(() => {
     about.hide();
     settings.show();
@@ -820,6 +855,8 @@ function boot(): void {
     howto.show();
   }
   showHome();
+  // Thème de la version complète sans l'achat (ancien joueur du site, achat remboursé) : thème par défaut.
+  if (themeLocked(Math.round(config.theme), isPremium())) setConfigValue('theme', 0);
   // Thème choisi appliqué dès le démarrage (pas de flash de l'ancien thème).
   const theme0 = themeFor(config.theme);
   renderer.setTheme(theme0);
@@ -839,6 +876,7 @@ function boot(): void {
   });
   over.next.addEventListener('click', () => {
     stageNo = Math.min(STAGE_COUNT, stageNo + 1);
+    if (stageLocked(stageNo, isPremium())) return requireFull('stage', () => startGame(randomSeed(), 'campaign'));
     startGame(randomSeed(), 'campaign');
   });
   over.menu.addEventListener('click', () => {
@@ -921,6 +959,11 @@ function boot(): void {
   const campaignView = campaignScreen(
     (n) => {
       stageNo = n;
+      if (stageLocked(n, isPremium()))
+        return requireFull('stage', () => {
+          campaignView.hide();
+          launch('campaign');
+        });
       campaignView.hide();
       launch('campaign');
     },
@@ -928,6 +971,7 @@ function boot(): void {
       campaignView.hide();
       showHome();
     },
+    (n) => stageLocked(n, isPremium()),
   );
   home.duel.button.addEventListener('click', () => {
     duelMenu.setCpuLabel(t(`diff.${difficulty}` as Key));
@@ -1394,6 +1438,9 @@ function boot(): void {
   const invite = inviteCode(location.hash);
   if (location.hash) history.replaceState(null, '', location.pathname + location.search);
   if (invite) openRoom(invite, false);
+
+  // Application native : achat vérifié auprès de l'App Store (et prix dans la devise du joueur).
+  void initPurchases();
 
   updateOrientation();
   if (typeof ResizeObserver !== 'undefined') new ResizeObserver(relayout).observe(stage);

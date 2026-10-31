@@ -32,7 +32,12 @@ export const totalStars = (list = loadStars()) => list.reduce((n, s) => n + (s |
 export const starText = (n: number) => '★'.repeat(n) + '☆'.repeat(3 - n);
 
 /** Écran Campagne : les 30 manches en nid d'abeille, avec leurs étoiles. */
-export function campaignScreen(onPick: (stage: number) => void, onBack: () => void): Screen & { refresh(): void } {
+export function campaignScreen(
+  onPick: (stage: number) => void,
+  onBack: () => void,
+  /** Manche réservée à la version complète (cadenas, mais le bouton présente l'achat). */
+  fullOnly: (stage: number) => boolean,
+): Screen & { refresh(): void } {
   const total = el('p', { class: 'campaign-total' });
   const grid = el('div', { class: 'stage-grid' });
   const back = el('button', { type: 'button', class: 'btn primary' }, [t('common.back')]);
@@ -53,12 +58,13 @@ export function campaignScreen(onPick: (stage: number) => void, onBack: () => vo
       ...Array.from({ length: STAGE_COUNT }, (_, i) => {
         const n = i + 1;
         const open = stageOpen(n, stars);
+        const full = fullOnly(n);
         const got = stars[i] ?? 0;
-        const b = el('button', { type: 'button', class: `stage-btn${open ? '' : ' locked'}${got ? ' done' : ''}` }, [
-          el('b', {}, [open ? String(n) : '🔒']),
-          el('small', {}, [open ? starText(got) : '']),
+        const b = el('button', { type: 'button', class: `stage-btn${open && !full ? '' : ' locked'}${got ? ' done' : ''}` }, [
+          el('b', {}, [open && !full ? String(n) : '🔒']),
+          el('small', {}, [full ? t('full.lock') : open ? starText(got) : '']),
         ]);
-        b.disabled = !open;
+        b.disabled = !open && !full;
         b.addEventListener('click', () => onPick(n));
         return b;
       }),

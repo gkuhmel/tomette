@@ -159,7 +159,7 @@ function rule(emoji: string, color: string, n: number): HTMLElement {
 }
 
 /** Présentation de l'expédition, avec reprise ou abandon de celle en cours. */
-export function expIntroScreen(h: ExpIntroHandlers): Screen & { open(saved: SavedRun | null, diffName: string): void } {
+export function expIntroScreen(h: ExpIntroHandlers): Screen & { open(saved: SavedRun | null, diffName: string, note?: string): void } {
   const w = 120;
   const hh = 104;
   const hero = el('div', { class: 'exp-hero' });
@@ -168,6 +168,8 @@ export function expIntroScreen(h: ExpIntroHandlers): Screen & { open(saved: Save
     `<path class="halo" d="${roundHexPathD(w / 2, hh / 2, 58, 10)}"/><path d="${roundHexPathD(w / 2, hh / 2, 50, 9)}"/></svg>` +
     `<span class="exp-hero-icon">${icon('compass')}</span>`;
   const meta = el('p', { class: 'exp-meta' });
+  // Version gratuite : une expédition par jour.
+  const freeNote = el('p', { class: 'exp-free' });
   const saved = el('div', { class: 'exp-saved' });
   const main = el('button', { type: 'button', class: 'btn primary' });
   const abandon = el('button', { type: 'button', class: 'btn danger' }, [t('exp.abandon')]);
@@ -194,12 +196,15 @@ export function expIntroScreen(h: ExpIntroHandlers): Screen & { open(saved: Save
       el('h3', {}, [t('exp.deck', { n: CARDS.length })]),
       deck,
       meta,
+      freeNote,
       el('div', { class: 'home-buttons' }, [main, el('div', { class: 'exp-row' }, [back, abandon])]),
     ]),
   ]);
   return Object.assign(screen, {
-    open(run: SavedRun | null, diffName: string) {
+    open(run: SavedRun | null, diffName: string, note = '') {
       hasRun = !!run;
+      freeNote.textContent = note;
+      freeNote.hidden = !note;
       const rec = loadExp();
       const next = run ? (run.choices ? run.stage + 1 : run.stage) : 1;
       meta.replaceChildren(
