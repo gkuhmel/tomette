@@ -36,7 +36,7 @@ Détails, signature et envoi sur TestFlight : `docs/NATIF-CAPACITOR.md`.
 ## Version gratuite et version complète
 
 Gratuit : Classique, campagne (manches 1 à 10), duels (ordinateur et en ligne), une
-expédition par jour, thèmes gagnés en montant de niveau. Achat unique « Tomettes complet »
+expédition et un atelier par jour, thèmes gagnés en montant de niveau. Achat unique « Tomettes complet »
 (0,99 €, dans l'application iOS) : campagne 11 à 30, expédition sans limite,
 Contre-la-montre, Mosaïque, Express et le thème Tomettes. Cadenas « Complet » sur ce qui
 est réservé ; un appui ouvre l'écran d'achat (sur le site : lien vers l'App Store).
@@ -108,6 +108,17 @@ Règles : `src/core/premium.ts` ; achat : `src/purchase.ts` ; détails dans
   complément, une règle de limitation de débit Cloudflare (gratuite) sur `/api/` est
   conseillée : tableau de bord Cloudflare → Security → WAF → Rate limiting rules (chemin
   commençant par `/api/`, 20 requêtes par 10 s et par IP).
+- **L'Atelier** (second onglet de l'écran Expédition, « Les cartes » | « L'Atelier ») :
+  20 manches, une seule vie, la pile accélère d'une manche à l'autre (même courbe que
+  l'expédition). Chaque manche affiche sous le score un **bon de commande** de 2 à 5 motifs
+  (triangle, arc ou farandole d'une couleur, combo de 5, chaîne ×3, rosace ; « 2 triangles »
+  dès la manche 12, « triangle puis arc » dès la 16), à livrer dans l'ordre voulu ; tout
+  livré = manche gagnée. Une manche livrée en moins de 25 s par motif rapporte un
+  **pourboire** 🪙 (2 au plus) : toucher une commande puis confirmer la saute. Score :
+  points des manches + 1 000 × numéro de manche livrée. Version gratuite : un atelier par
+  jour (en plus de l'expédition du jour). Succès : Maître artisan (20 manches), Carnet bien
+  rempli (100 commandes), Travail soigné (une manche dès la 5e sans toucher le haut).
+  Code : `src/core/atelier.ts`, `src/ui/atelier.ts`.
 - **Expédition** (tuile de l'accueil, qui ouvre un écran de présentation) : roguelite de
   20 manches (difficulté de l'accueil) à ligne d'arrivée, une seule vie. L'expédition en
   cours est sauvegardée (`tomettes.run`) : on la reprend (une manche interrompue repart
