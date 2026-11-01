@@ -9,7 +9,8 @@ import { findRosaces, Rosace } from './rosace';
 import { activatePreview, fillInitial, generatePreview, levelAt, secondsPerRow } from './rise';
 import { Rng } from './rng';
 import { Mode, modeById, ModeId } from './modes';
-import { nextOrder, Order } from './orders';
+import { nextOrder, Order, OrderKind } from './orders';
+import { BonItem, COLORED, itemFinished, itemStep } from './atelier';
 import { Farandole, findFarandoles, findShapes, Shape } from './shapes';
 
 /** Pas de la logique (60 Hz). */
@@ -36,7 +37,7 @@ export interface ClearEvent {
 export type GameEvent = ClearEvent;
 
 /** Effet de duel à annoncer à l'écran (malus reçu, bouclier, contre-attaque). */
-export type Notice = 'night' | 'freeze' | 'crack' | 'quake' | 'shield' | 'blocked' | 'counter' | 'order' | 'orderGold' | 'shieldUsed' | 'mistral' | 'fireworks' | 'rainbow' | 'shot' | 'cicada' | 'cicadaSing';
+export type Notice = 'night' | 'freeze' | 'crack' | 'quake' | 'shield' | 'blocked' | 'counter' | 'order' | 'orderGold' | 'orderStep' | 'orderSkip' | 'shieldUsed' | 'mistral' | 'fireworks' | 'rainbow' | 'shot' | 'cicada' | 'cicadaSing';
 
 /** Petits signaux pour le son (échange, atterrissage, réparation). */
 export type Signal = 'swap' | 'land' | 'repair' | 'slide' | 'mortar' | 'crumble';
@@ -108,6 +109,10 @@ export class Game {
   order: Order | null = null;
   /** Commandes réalisées pendant la partie. */
   ordersDone = 0;
+  /** Atelier : bon de commande de la manche (null hors atelier) ; tout livré = manche gagnée. */
+  bon: BonItem[] | null = null;
+  /** La pile a touché le haut au moins une fois (alerte) pendant la partie. */
+  everAlert = false;
   /** Tuiles qui viennent de bouger (échange, chute, glissement) pendant ce pas : les formes doivent en contenir une. */
   private fresh = new Set<number>();
   /** Tuiles déplacées par le jeu du joueur (fin d'échange, atterrissage) : une farandole doit en contenir une. */
@@ -125,7 +130,7 @@ export class Game {
   constructor(
     cfg: Config,
     seed: number,
-    options: { empty?: boolean; mode?: ModeId; startLevel?: number; goalRows?: number; orders?: boolean } = {},
+    options: { empty?: boolean; mode?: ModeId; startLevel?: number; goalRows?: number; orders?: boolean; bon?: BonItem[] } = {},
   ) {
     this.cfg = cfg;
     this.mode = modeById(options.mode ?? 'endless');
@@ -141,6 +146,7 @@ export class Game {
     this.preview = generatePreview(this.grid, this.rng, this.colors, this.kindChances());
     this.mortarIn = this.nextMortarDelay();
     if (options.orders) this.order = nextOrder(this.rng, this.colors, null);
+    if (options.bon) this.bon = options.bon.map((i) => ({ ...i, steps: [...i.steps] }));
   }
 
   /** Délai avant la prochaine dalle : l'intervalle moyen, à ±40 %. */
@@ -436,9 +442,8 @@ export class Game {
     if (matched.length > 0 || rosaces.length > 0) this.startClear(matched, rosaces);
     // Formes construites par le joueur : triangle ou arc, s'ils sont commandés.
     if (this.fresh.size) {
-      const o = this.order;
-      if (o && (o.kind === 'triangle' || o.kind === 'arc')) {
-        const s = findShapes(g, o.kind, this.fresh).find((x) => x.color === o.color);
+      for (const w of this.wantedShapes()) {
+        const s = findShapes(g, w.kind, this.fresh).find((x) => x.color === w.color);
         if (s) this.clearShape(s);
       }
       this.fresh.clear();
@@ -466,6 +471,11 @@ export class Game {
 
     // 8. Campagne : plus aucune tuile au-dessus de la ligne d'arrivée = manche réussie.
     if (!this.over && this.goalRows > 0 && this.tilesAboveLine() === 0) {
+      this.won = true;
+      this.over = true;
+    }
+    // Atelier : tout le bon est livré = manche réussie.
+    if (!this.over && this.bon && this.bon.every(itemFinished)) {
       this.won = true;
       this.over = true;
     }
@@ -515,7 +525,57 @@ export class Game {
   private clearShape(s: Shape): void {
     const g = this.grid;
     if (s.cells.some(({ c, r }) => g.get(c, r)?.state !== 'idle')) return;
-    this.startClear(s.cells, [], false, 'order');
+    this.startClear(s.cells, [], false, 'order', s.color, s.kind);
+  }
+
+  /** Triangles et arcs demandés en ce moment (commande en cours, lignes du bon de l'atelier). */
+  private wantedShapes(): { kind: 'triangle' | 'arc'; color: number }[] {
+    const out: { kind: 'triangle' | 'arc'; color: number }[] = [];
+    const want = (kind: OrderKind, color: number) => {
+      if ((kind === 'triangle' || kind === 'arc') && !out.some((w) => w.kind === kind && w.color === color)) out.push({ kind, color });
+    };
+    if (this.order) want(this.order.kind, this.order.color);
+    for (const i of this.bon ?? []) if (!itemFinished(i)) want(itemStep(i), i.color);
+    return out;
+  }
+
+  /**
+   * Atelier : ce clear fait avancer les lignes du bon qu'il remplit. Une forme construite
+   * (triangle, arc, farandole) ne compte que pour une ligne ; rosace, combo et chaîne
+   * comptent pour chaque ligne qui les demande.
+   */
+  private advanceBon(c: { shape?: 'order' | 'farandole'; kind?: OrderKind; color: number; rosaces: number; size: number }): void {
+    let shapeUsed = false;
+    for (const i of this.bon ?? []) {
+      if (itemFinished(i)) continue;
+      const step = itemStep(i);
+      let ok = false;
+      if (step === 'farandole') ok = c.shape === 'farandole' && c.color === i.color;
+      else if (COLORED.includes(step)) ok = c.shape === 'order' && c.kind === step && c.color === i.color;
+      else ok = (step === 'rosace' && c.rosaces > 0) || (step === 'combo5' && c.size >= 5) || (step === 'chain3' && this.chain >= 3);
+      if (!ok || (COLORED.includes(step) && shapeUsed)) continue;
+      if (COLORED.includes(step)) shapeUsed = true;
+      i.done++;
+      if (itemFinished(i)) this.deliverLine();
+      else this.notices.push('orderStep');
+    }
+  }
+
+  /** Une ligne du bon livrée : bonus et pause, comme une commande. */
+  private deliverLine(): void {
+    this.ordersDone++;
+    this.score += this.cfg.orderBonus;
+    this.stopTime = Math.max(this.stopTime, this.cfg.orderPauseS);
+    this.notices.push('order');
+  }
+
+  /** Atelier : saute une ligne du bon (pourboire). Renvoie false si elle est déjà livrée. */
+  skipLine(index: number): boolean {
+    const i = this.bon?.[index];
+    if (!i || itemFinished(i) || this.over) return false;
+    i.done = i.steps.length * i.count;
+    this.notices.push('orderSkip');
+    return true;
   }
 
   /**
@@ -568,7 +628,7 @@ export class Game {
     this.order = nextOrder(this.rng, this.colors, o.kind);
   }
 
-  private startClear(matched: Cell[], rosaces: Rosace[] = [], gold = false, shape?: 'order' | 'farandole', shapeColor = -1): void {
+  private startClear(matched: Cell[], rosaces: Rosace[] = [], gold = false, shape?: 'order' | 'farandole', shapeColor = -1, shapeKind?: OrderKind): void {
     const cfg = this.cfg;
     const g = this.grid;
     const key = ({ c, r }: Cell) => r * g.cols + c;
@@ -694,13 +754,14 @@ export class Game {
     const o = this.order;
     if (o) {
       const done =
-        shape === 'order' ||
+        (shape === 'order' && shapeKind === o.kind && shapeColor === o.color) ||
         (o.kind === 'farandole' && shape === 'farandole' && shapeColor === o.color) ||
         (o.kind === 'rosace' && rosaces.length > 0) ||
         (o.kind === 'combo5' && size >= 5) ||
         (o.kind === 'chain3' && this.chain >= 3);
       if (done) this.completeOrder();
     }
+    if (this.bon) this.advanceBon({ shape, kind: shapeKind, color: shapeColor, rosaces: rosaces.length, size });
   }
 
   /** La tomette d'or en `at` et toutes les tuiles posées de la couleur `color` disparaissent. */
@@ -740,6 +801,7 @@ export class Game {
 
     if (g.topRowOccupied(true)) {
       this.alert = true;
+      this.everAlert = true;
       this.graceLeft = this.cfg.graceS;
       return;
     }
