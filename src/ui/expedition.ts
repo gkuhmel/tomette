@@ -150,16 +150,16 @@ export interface ExpIntroHandlers {
   back(): void;
 }
 
-/** Une règle de l'expédition : pictogramme dans une tomette, titre, explication. */
-function rule(emoji: string, color: string, n: number): HTMLElement {
+/** Une règle (expédition, atelier) : pictogramme dans une tomette, titre, explication. */
+export function rule(emoji: string, color: string, n: number, prefix: 'exp' | 'atl' = 'exp'): HTMLElement {
   return el('div', { class: 'exp-rule' }, [
     el('span', { class: 'card-badge', style: `--c:${color}` }, [emoji]),
-    el('span', {}, [el('strong', {}, [t(`exp.r${n}.t` as Key)]), el('small', {}, [t(`exp.r${n}.p` as Key)])]),
+    el('span', {}, [el('strong', {}, [t(`${prefix}.r${n}.t` as Key)]), el('small', {}, [t(`${prefix}.r${n}.p` as Key)])]),
   ]);
 }
 
 /** Présentation de l'expédition, avec reprise ou abandon de celle en cours. */
-export function expIntroScreen(h: ExpIntroHandlers): Screen & { open(saved: SavedRun | null, diffName: string, note?: string): void } {
+export function expIntroScreen(h: ExpIntroHandlers, tabs?: HTMLElement): Screen & { open(saved: SavedRun | null, diffName: string, note?: string): void } {
   const w = 120;
   const hh = 104;
   const hero = el('div', { class: 'exp-hero' });
@@ -183,6 +183,7 @@ export function expIntroScreen(h: ExpIntroHandlers): Screen & { open(saved: Save
   const deck = el('div', { class: 'exp-deck' }, CARDS.map((c) => cardBadge(c.id, true)));
   const screen = new Screen('screen-exp', [
     el('div', { class: 'panel exp-intro' }, [
+      ...(tabs ? [tabs] : []),
       hero,
       el('h2', {}, [t('mode.expedition.name')]),
       el('p', { class: 'exp-tagline' }, [t('exp.tagline')]),

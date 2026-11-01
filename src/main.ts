@@ -61,6 +61,21 @@ import { Buzz, buzz, hideSplash, isNative, restoreSaves, statusBarFor } from './
 import { dayKey, expeditionAllowed, LockReason, modeLocked, stageLocked, themeLocked } from './core/premium';
 import { initPurchases, isPremium, onPremiumChange } from './purchase';
 import { paywallScreen } from './ui/paywall';
+import { ATELIER_STAGES, atelierPoints, atelierStage, earnsTip, makeBon, MAX_TIPS } from './core/atelier';
+import {
+  addDelivered,
+  atelierBreakScreen,
+  atelierIntroScreen,
+  bonStrip,
+  clearAtelierRun,
+  expTabs,
+  ExpTab,
+  loadAtelier,
+  loadAtelierRun,
+  saveAtelier,
+  saveAtelierRun,
+  SavedAtelier,
+} from './ui/atelier';
 
 type State = 'home' | 'playing' | 'paused' | 'over' | 'tutorial';
 
@@ -91,7 +106,13 @@ function boot(): void {
   const mini = el('canvas', { id: 'duel-mini' });
   const chip = orderChip();
   chip.root.hidden = true;
-  const hud = el('header', { id: 'hud' }, [badge.root, el('div', { class: 'hud-score' }, [hudScore, hudSub, incoming, runCards]), chip.root, mini, pauseBtn]);
+  // Atelier : bon de commande sous le score ; une ligne touchée avec un pourboire est sautée.
+  const bonView = bonStrip((index) => {
+    if (!atl || atl.tips <= 0 || state !== 'playing' || !game.skipLine(index)) return;
+    atl.tips--;
+    saveAtelierRun(atl);
+  });
+  const hud = el('header', { id: 'hud' }, [badge.root, el('div', { class: 'hud-score' }, [hudScore, hudSub, incoming, runCards, bonView.root]), chip.root, mini, pauseBtn]);
   const canvas = el('canvas', { id: 'board' });
   const stage = el('main', { id: 'stage' }, [canvas]);
   const raise = el('button', { id: 'raise', type: 'button' }, [t('common.raise')]);
@@ -297,6 +318,14 @@ function boot(): void {
     if (run.choices) cardsView.open(run.stage, run.score, run.choices, run.cards);
     else startGame(randomSeed(), 'expedition');
   }
+  // Expédition : deux modes en onglets (« Les cartes », « L'Atelier ») ; le dernier choisi est retenu.
+  const EXP_TAB_KEY = 'tomettes.expTab';
+  const switchExpTab = (tab: ExpTab) => {
+    save(EXP_TAB_KEY, tab);
+    expIntro.hide();
+    atelierIntro.hide();
+    openExpIntro();
+  };
   const expIntro = expIntroScreen({
     start: startExpedition,
     resume: resumeExpedition,
@@ -309,8 +338,63 @@ function boot(): void {
       expIntro.hide();
       showHome();
     },
-  });
+  }, expTabs('cards', switchExpTab));
+
+  /** Atelier en cours (null hors atelier). */
+  let atl: SavedAtelier | null = null;
+  /** Jour du dernier atelier gratuit (version gratuite : un par jour). */
+  const FREE_ATL_KEY = 'tomettes.atelierFreeDay';
+  function startAtelier(): void {
+    const today = dayKey(new Date());
+    if (!expeditionAllowed(isPremium(), load(FREE_ATL_KEY) ?? '', today)) return requireFull('expedition', startAtelier);
+    if (!isPremium()) save(FREE_ATL_KEY, today);
+    atl = { stage: 1, score: 0, tips: 0, time: 0, delivered: 0, seed: randomSeed(), difficulty };
+    saveAtelierRun(atl);
+    atelierIntro.hide();
+    launch('atelier');
+  }
+  function resumeAtelier(): void {
+    atl = loadAtelierRun();
+    if (!atl) return startAtelier();
+    atelierIntro.hide();
+    home.screen.hide();
+    startGame(randomSeed(), 'atelier');
+  }
+  const atelierIntro = atelierIntroScreen(
+    {
+      start: startAtelier,
+      resume: resumeAtelier,
+      abandon: () => {
+        clearAtelierRun();
+        atl = null;
+        openExpIntro();
+      },
+      back: () => {
+        atelierIntro.hide();
+        showHome();
+      },
+    },
+    expTabs('atelier', switchExpTab),
+  );
+  const atelierBreak = atelierBreakScreen(
+    () => {
+      atelierBreak.hide();
+      startGame(randomSeed(), 'atelier');
+    },
+    () => {
+      atelierBreak.hide();
+      state = 'home';
+      showHome();
+    },
+  );
   function openExpIntro(): void {
+    if (load(EXP_TAB_KEY) === 'atelier') {
+      const savedAtl = loadAtelierRun();
+      home.screen.hide();
+      const note = isPremium() ? '' : t(expeditionAllowed(false, load(FREE_ATL_KEY) ?? '', dayKey(new Date())) ? 'atl.freeDaily' : 'atl.freeUsed');
+      atelierIntro.open(savedAtl, t(`diff.${savedAtl?.difficulty ?? difficulty}` as Key), note);
+      return;
+    }
     const saved = loadRun();
     home.screen.hide();
     // Version gratuite : rappel de l'expédition du jour (ou qu'elle est déjà jouée).
@@ -393,7 +477,7 @@ function boot(): void {
     shownScore = 0;
     mode = m;
     best = loadBest(mode, difficulty);
-    badge.label.textContent = mode === 'campaign' || mode === 'expedition' ? t('hud.stage') : modeById(mode).record === 'rosaces' ? t('hud.rosaces') : t('hud.level');
+    badge.label.textContent = mode === 'campaign' || mode === 'expedition' || mode === 'atelier' ? t('hud.stage') : modeById(mode).record === 'rosaces' ? t('hud.rosaces') : t('hud.level');
     hudRecLabel.textContent = t('hud.record');
     hudCache.length = 0;
     const prev = game.grid;
@@ -411,6 +495,13 @@ function boot(): void {
       game = new Game(st.cfg, seed, { mode, startLevel: st.spec.level, goalRows: st.goal, orders: true });
       game.shields = run.shields;
       game.shots = modsFor(run.cards).shots;
+    } else if (mode === 'atelier' && atl) {
+      // L'atelier suit la difficulté choisie à son ouverture ; le bon découle de sa graine
+      // (le même après une reprise).
+      const st = atelierStage(atl.stage, withDifficulty(config, atl.difficulty));
+      stageNo = atl.stage;
+      const bon = makeBon(atl.stage, new Rng(atl.seed + atl.stage * 7919), Math.max(3, Math.min(6, Math.round(st.cfg.colors))));
+      game = new Game(st.cfg, seed, { mode, startLevel: st.level, bon });
     } else if (mode === 'online') {
       game = new Game(duelConfig(config), seed, { mode });
       linked = new LinkedDuel(game);
@@ -440,7 +531,16 @@ function boot(): void {
     // Explication de la ligne d'arrivée à la 1re manche seulement (la bulle disparaît seule) ;
     // en expédition, celle du Carreau à la manche qui suit son choix.
     const newShot = mode === 'expedition' && !!run && run.cards[run.cards.length - 1] === 'carreau';
-    if ((mode === 'campaign' || mode === 'expedition') && (stageNo === 1 || newShot)) {
+    if (mode === 'atelier' && stageNo === 1) {
+      // Atelier : le bon de commande et le pourboire, à la 1re manche.
+      tutoTitle.textContent = `${t('hud.stage')} 1`;
+      tutoText.textContent = t('atl.hint');
+      tutoActions.replaceChildren();
+      tuto.hidden = false;
+      hintTimer = window.setTimeout(() => {
+        if (state === 'playing' && mode === 'atelier') tuto.hidden = true;
+      }, 6000);
+    } else if ((mode === 'campaign' || mode === 'expedition') && (stageNo === 1 || newShot)) {
       tutoTitle.textContent = t('camp.stageTitle', { n: stageNo, goal: game.goalRows });
       tutoText.textContent = [stageNo === 1 ? t('camp.hint') : '', game.shots > 0 ? t('exp.shotHint') : ''].filter(Boolean).join(' ');
       tutoActions.replaceChildren();
@@ -485,6 +585,37 @@ function boot(): void {
         return;
       }
     }
+    if (mode === 'atelier' && atl) {
+      // Commandes livrées (une ligne sautée ne compte pas) et succès de la manche.
+      atl.delivered += game.ordersDone;
+      const delivered = addDelivered(game.ordersDone);
+      progress.grant([
+        ...(delivered >= 100 ? ['atl100'] : []),
+        ...(game.won && atl.stage >= 5 && !game.everAlert ? ['atlCalm'] : []),
+      ]);
+      atl.score += atelierPoints(atl.stage, game.score, game.won);
+      atl.time += game.elapsed;
+      if (game.won && atl.stage < ATELIER_STAGES) {
+        // Manche livrée : la partie compte (stats, missions), pourboire si elle a été rapide.
+        sound.level();
+        haptic('success');
+        input.release();
+        game.manualRise = false;
+        progress.finish(game);
+        missions.finish(game);
+        const tip = earnsTip(game.elapsed, game.bon ?? []) && atl.tips < MAX_TIPS;
+        if (tip) atl.tips++;
+        const stageDone = atl.stage;
+        atl.stage++;
+        saveAtelierRun(atl);
+        const total = atl.score;
+        const tips = atl.tips;
+        const show = () => atelierBreak.open(stageDone, total, tip, tips);
+        if (config.animations) overTimer = window.setTimeout(show, GAME_OVER_FADE_MS + 250);
+        else show();
+        return;
+      }
+    }
     if (game.timeUp || game.won || duel?.winner === 0 || (mode === 'online' && !game.over)) {
       sound.level();
       haptic('success');
@@ -496,7 +627,7 @@ function boot(): void {
     game.manualRise = false;
     const value = game.recordValue;
     const prevBest = best;
-    const record = value > best && mode !== 'duel' && mode !== 'campaign' && mode !== 'expedition';
+    const record = value > best && mode !== 'duel' && mode !== 'campaign' && mode !== 'expedition' && mode !== 'atelier';
     if (record) {
       best = value;
       saveBest(best, mode, difficulty);
@@ -554,6 +685,33 @@ function boot(): void {
       over.replay.textContent = t('duel.rematch');
       game.over = true;
       cpu.over = true;
+    } else if (mode === 'atelier' && atl) {
+      // Fin de l'atelier : tous les bons livrés, ou la pile a débordé.
+      const done = game.won && atl.stage >= ATELIER_STAGES;
+      clearAtelierRun();
+      const better = saveAtelier(atl.score, done ? ATELIER_STAGES : atl.stage);
+      if (done) progress.grant(['atl20']);
+      block = resultBlock({
+        tone: done ? 'gold' : 'grey',
+        art: done ? 'flag' : 'crack',
+        title: done ? t('atl.done') : t('atl.over'),
+        sub: `${t('atl.tabAtelier')} · ${formatTime(atl.time)}`,
+        cards: [
+          {
+            title: t('atl.tabAtelier'),
+            color: 'var(--t1)',
+            big: String(atl.score),
+            rows: [
+              [t('exp.reached'), `${done ? ATELIER_STAGES : atl.stage}/${ATELIER_STAGES}`],
+              [t('atl.delivered'), String(atl.delivered)],
+            ],
+          },
+        ],
+        footer: [better ? t('over.newRecord') : t('exp.record', { n: loadAtelier().best })],
+        confetti: done,
+      });
+      over.screen.root.classList.add(done ? 'gold' : 'grey');
+      over.replay.textContent = t('atl.new');
     } else if (mode === 'expedition' && run) {
       // Fin d'expédition : réussie (8 manches) ou perdue.
       const done = game.won && run.stage >= RUN_STAGES;
@@ -872,6 +1030,7 @@ function boot(): void {
       return;
     }
     if (mode === 'expedition') startExpedition();
+    else if (mode === 'atelier') startAtelier();
     else startGame();
   });
   over.next.addEventListener('click', () => {
@@ -927,7 +1086,9 @@ function boot(): void {
   }
   pause.resume.addEventListener('click', resumeGame);
   pause.restart.addEventListener('click', () => {
-    if (mode !== 'expedition') startGame();
+    if (mode === 'atelier') {
+      if (window.confirm(t('atl.abandonConfirm'))) startAtelier();
+    } else if (mode !== 'expedition') startGame();
     else if (window.confirm(t('exp.abandonConfirm'))) startExpedition();
   });
   pause.settings.addEventListener('click', () => openSettings('pause'));
@@ -1053,7 +1214,7 @@ function boot(): void {
     }
     if (dev && e.code === 'KeyW' && state === 'playing') {
       if (cpu) cpu.over = true;
-      else if (mode === 'campaign' || mode === 'expedition') game.won = game.over = true;
+      else if (mode === 'campaign' || mode === 'expedition' || mode === 'atelier') game.won = game.over = true;
       return;
     }
     if (e.code !== 'Space' || debugOpen) return;
@@ -1104,7 +1265,8 @@ function boot(): void {
     else if (shownScore < game.score) shownScore = Math.min(game.score, shownScore + Math.max(1, Math.ceil((game.score - shownScore) * 0.12)));
     setText(0, hudScore, String(shownScore));
     if (!duel) setText(1, hudBest, String(Math.max(best, game.recordValue)));
-    setText(2, badge.value, String(game.goalRows > 0 ? stageNo : game.mode.record === 'rosaces' ? game.rosaceCount : game.level));
+    bonView.update(mode === 'atelier' ? game.bon : null, atl?.tips ?? 0);
+    setText(2, badge.value, String(game.goalRows > 0 || mode === 'atelier' ? stageNo : game.mode.record === 'rosaces' ? game.rosaceCount : game.level));
     const left = game.timeLeft;
     setText(3, hudTime, formatTime(left === null ? game.elapsed : Math.ceil(left)));
     // Jauge de la pastille : temps restant (modes chronométrés) ou avancée dans le niveau.
@@ -1250,7 +1412,11 @@ function boot(): void {
       if (n === 'order' || n === 'orderGold' || n === 'fireworks' || n === 'rainbow') {
         sound.rosace();
         haptic('success');
-      } else if (n === 'mistral') sound.slide();
+      } else if (n === 'orderStep') {
+        sound.repair();
+        haptic('light');
+      } else if (n === 'orderSkip') sound.slide();
+      else if (n === 'mistral') sound.slide();
       else if (n === 'shot') sound.repair();
       else if (n === 'shield' || n === 'blocked' || n === 'counter' || n === 'shieldUsed') sound.repair();
       else {

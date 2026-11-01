@@ -2675,3 +2675,113 @@ button.exp-card:active {
 .full-state:empty {
   display: none;
 }
+
+/* --- Expédition : onglets « Les cartes » / « L'Atelier » ---------------------- */
+.exp-tabs {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.exp-tab {
+  flex: 1;
+  max-width: 170px;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--muted);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 900;
+  box-shadow: 0 3px 8px rgba(30, 50, 110, 0.08);
+  cursor: pointer;
+}
+
+.exp-tab.selected {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* L'Atelier : le dessin d'un triangle commandé à la place de la boussole. */
+.atl-hero {
+  display: grid;
+  place-items: center;
+}
+
+.atl-hero svg {
+  width: 96px;
+  height: 96px;
+  filter: drop-shadow(0 8px 14px rgba(30, 50, 110, 0.25));
+}
+
+.atl-tip {
+  text-align: center;
+  font-weight: 900;
+}
+
+/* --- Atelier : bon de commande sous le score -------------------------------- */
+.bon-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.bon-strip[hidden] {
+  display: none;
+}
+
+.bon-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 42px;
+  height: 38px;
+  padding: 2px 6px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--fg);
+  font: inherit;
+  box-shadow: 0 2px 6px rgba(30, 50, 110, 0.12);
+  cursor: pointer;
+}
+
+.bon-item .bon-art svg {
+  display: block;
+  width: 30px;
+  height: 30px;
+}
+
+.bon-item small {
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.bon-item.done {
+  opacity: 0.45;
+}
+
+.bon-item.done b {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--t3);
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.bon-item.armed {
+  background: var(--primary);
+  color: #fff;
+}
+
+.bon-tips {
+  font-size: 14px;
+  font-weight: 900;
+}

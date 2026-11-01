@@ -88,6 +88,10 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'expHalf', check: () => false },
   { id: 'exp1', check: () => false },
   { id: 'expNoShield', check: () => false },
+  // Atelier : débloqués par l'interface (fin d'atelier, manche livrée, commandes cumulées).
+  { id: 'atl20', check: () => false },
+  { id: 'atl100', check: () => false },
+  { id: 'atlCalm', check: () => false },
   // Succès difficiles : pour les joueurs qui ont déjà tout le reste.
   { id: 'chain7', check: (t) => t.bestChain >= 7 },
   { id: 'combo10', check: (t) => t.bestCombo >= 10 },
