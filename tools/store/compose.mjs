@@ -8,7 +8,7 @@ const HERE = fileURLToPath(new URL('.', import.meta.url));
 const ROOT = `${HERE}../..`;
 const CAPTIONS = JSON.parse(readFileSync(`${HERE}captions.json`, 'utf8'));
 const LANGS = (process.env.LANGS || Object.keys(CAPTIONS).join(',')).split(',');
-const SCENES = ['1-chaine5', '2-biais', '3-chaine7', '4-rosace', '5-duel', '6-modes', '7-expedition'];
+const SCENES = ['1-chaine5', '2-biais', '3-chaine7', '4-rosace', '5-duel', '6-modes', '7-atelier'];
 // Couleurs des tuiles (thème Faïence), une par scène.
 const TILES = ['#f2766b', '#3466d6', '#f2c94c', '#5cb85c', '#9b7ede', '#2fb5b0'];
 const SCENE_COLOR = ['#f2766b', '#2fb5b0', '#e0a92a', '#9b7ede', '#f2766b', '#3466d6', '#5cb85c'];

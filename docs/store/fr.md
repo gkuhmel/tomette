@@ -14,10 +14,10 @@ Tomettes
 Puzzle provençal à enchaîner
 ```
 
-## App Store · Texte promotionnel (109/170)
+## App Store · Texte promotionnel (110/170)
 
 ```text
-Pars en Expédition : 20 manches, une seule vie et une carte à choisir après chaque manche. Jusqu'où iras-tu ?
+Ouvre l'Atelier : 20 manches, une seule vie et un bon de commande à livrer à chaque manche. Jusqu'où iras-tu ?
 ```
 
 ## App Store · Mots-clés (91/100)
@@ -26,7 +26,7 @@ Pars en Expédition : 20 manches, une seule vie et une carte à choisir après c
 match 3,hexagone,carreaux,provence,casse-tête,combo,chaîne,rosace,duel,couleurs,terre cuite
 ```
 
-## App Store · Description (identique sur Google Play) (1564/4000)
+## App Store · Description (identique sur Google Play) (1543/4000)
 
 ```text
 Tomettes, c'est le puzzle d'action inspiré des carreaux hexagonaux des maisons provençales.
@@ -49,12 +49,12 @@ DES IDÉES À DÉCOUVRIR
 • Mosaïque : un maximum de rosaces en 3 minutes
 • Express : départ au niveau 8, ça va vite
 • Campagne : 30 manches à ligne d'arrivée, jusqu'à 3 étoiles chacune
-• Expédition : 20 manches, une seule vie et une carte à choisir après chaque manche, avec son bonus et sa contrepartie
+• L'Atelier : 20 manches, une seule vie, et à chaque manche un bon de commande de motifs à livrer
 • Duel : affronte l'ordinateur, ou défie un ami en ligne avec un simple code
 
 ET AUSSI
 • Missions du jour et niveau de joueur
-• 48 succès, des statistiques, des thèmes et des jeux de pictogrammes à débloquer
+• 49 succès, des statistiques, des thèmes et des jeux de pictogrammes à débloquer
 • Jouable hors ligne (sauf le duel en ligne)
 • Sans publicité, sans compte : tes parties restent sur ton téléphone
 

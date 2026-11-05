@@ -46,15 +46,14 @@ for (const dev of ONLY) for (const lang of LANGS) {
   await start(p, [4, 'mosaic', 'normal', 1262, 29, 900, 0.3]); await frames(p, 9); await clean(p); await shot('4-rosace');
   // 5) Duel contre l'ordinateur (dalles qui tombent).
   await start(p, [4, 'duel', 'hard', 5200, 29, 800, 0.3, 'hard']); await frames(p, 6, 2); await clean(p); await shot('5-duel');
-  // 7) Expédition : choix d'une carte après la 1re manche.
-  await p.evaluate(() => { tomettes.autoplay(null); localStorage.removeItem('tomettes.run');
+  // 7) L'Atelier : une partie en cours, le bon de commande sous le score.
+  await p.evaluate(() => { tomettes.autoplay(null); localStorage.removeItem('tomettes.atelierRun');
     for (const s of document.querySelectorAll('.screen')) s.hidden = true; document.getElementById('screen-home').hidden = false;
     document.querySelectorAll('#screen-home .hex-btn')[4].click(); });
   await p.clock.runFor(300);
-  await p.evaluate(() => document.querySelector('#screen-exp .btn.primary').click());
+  await p.evaluate(() => document.querySelector('#screen-atelier .btn.primary').click());
   await frames(p, 30, 2);
-  await p.keyboard.press('KeyW'); await frames(p, 4, 2);
-  await p.clock.runFor(3000); await frames(p, 2, 0); await clean(p); await shot('7-expedition');
+  await p.clock.runFor(7000); await frames(p, 2, 0); await clean(p); await shot('7-atelier');
   await b.close();
   console.log('ok', dev, lang);
 }

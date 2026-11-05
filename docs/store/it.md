@@ -14,10 +14,10 @@ Tomettes
 Puzzle di piastrelle esagonali
 ```
 
-## App Store · Texte promotionnel (108/170)
+## App Store · Texte promotionnel (111/170)
 
 ```text
-Parti in Spedizione: 20 manche, una sola vita e una carta da scegliere dopo ogni manche. Fin dove arriverai?
+Apri la Bottega: 20 manche, una sola vita e una bolla d'ordine da consegnare a ogni manche. Fin dove arriverai?
 ```
 
 ## App Store · Mots-clés (94/100)
@@ -26,7 +26,7 @@ Parti in Spedizione: 20 manche, una sola vita e una carta da scegliere dopo ogni
 match 3,esagono,piastrelle,provenza,rompicapo,combo,catena,rosone,duello,colori,logica,offline
 ```
 
-## App Store · Description (identique sur Google Play) (1513/4000)
+## App Store · Description (identique sur Google Play) (1494/4000)
 
 ```text
 Tomettes è un puzzle d'azione ispirato alle piastrelle esagonali in cotto delle case provenzali.
@@ -49,12 +49,12 @@ IDEE DA SCOPRIRE
 • Mosaico: il massimo di rosoni in 3 minuti
 • Express: si parte dal livello 8, tutto va veloce
 • Campagna: 30 manche con traguardo, fino a 3 stelle ciascuna
-• Spedizione: 20 manche, una sola vita e una carta da scegliere dopo ogni manche, con il suo vantaggio e il suo prezzo
+• La Bottega: 20 manche, una sola vita e, a ogni manche, una bolla d'ordine di motivi da consegnare
 • Duello: sfida il computer, o un amico online con un semplice codice
 
 E INOLTRE
 • Missioni del giorno e livello del giocatore
-• 48 obiettivi, statistiche, temi e set di icone da sbloccare
+• 49 obiettivi, statistiche, temi e set di icone da sbloccare
 • Si gioca offline (tranne il duello online)
 • Senza pubblicità, senza account: le tue partite restano sul tuo telefono
 

@@ -14,10 +14,10 @@ Tomettes
 Puzle de baldosas hexagonales
 ```
 
-## App Store · Texte promotionnel (107/170)
+## App Store · Texte promotionnel (102/170)
 
 ```text
-Parte de Expedición: 20 fases, una sola vida y una carta para elegir tras cada fase. ¿Hasta dónde llegarás?
+Abre el Taller: 20 fases, una sola vida y un albarán que entregar en cada fase. ¿Hasta dónde llegarás?
 ```
 
 ## App Store · Mots-clés (89/100)
@@ -26,7 +26,7 @@ Parte de Expedición: 20 fases, una sola vida y una carta para elegir tras cada 
 match 3,hexágono,baldosas,provenza,rompecabezas,combo,cadena,rosetón,duelo,colores,lógica
 ```
 
-## App Store · Description (identique sur Google Play) (1507/4000)
+## App Store · Description (identique sur Google Play) (1484/4000)
 
 ```text
 Tomettes es un puzle de acción inspirado en las baldosas hexagonales de barro cocido de las casas de Provenza.
@@ -49,12 +49,12 @@ IDEAS POR DESCUBRIR
 • Mosaico: el máximo de rosetones en 3 minutos
 • Exprés: empiezas en el nivel 8, todo va rápido
 • Campaña: 30 fases con línea de meta, hasta 3 estrellas cada una
-• Expedición: 20 fases, una sola vida y una carta para elegir tras cada fase, con su ventaja y su contrapartida
+• El Taller: 20 fases, una sola vida y, en cada fase, un albarán de motivos que entregar
 • Duelo: enfréntate al ordenador o reta a un amigo en línea con un simple código
 
 Y ADEMÁS
 • Misiones diarias y nivel de jugador
-• 48 logros, estadísticas, temas y juegos de iconos por desbloquear
+• 49 logros, estadísticas, temas y juegos de iconos por desbloquear
 • Se juega sin conexión (salvo el duelo en línea)
 • Sin anuncios y sin cuenta: tus partidas se quedan en tu teléfono
 

@@ -20,7 +20,7 @@ espagnol, allemand, italien, chinois simplifié).
 
 Les captures 6,9″ suffisent pour tous les iPhone (Apple les réduit pour les autres
 tailles). Ordre : 1 chaîne, 2 en biais, 3 chaînes, 4 rosace, 5 duel, 6 modes,
-7 expédition. La 1re est la plus importante : c'est elle qu'on voit dans les
+7 atelier. La 1re est la plus importante : c'est elle qu'on voit dans les
 résultats de recherche.
 
 Conseil : publier la version iOS **pour iPhone seulement** au départ (réglage
@@ -101,18 +101,18 @@ apps payantes** (Accords, avec banque et fiscalité).
 
 | Langue | Nom | Description |
 |---|---|---|
-| fr | Tomettes complet | Tout le jeu : campagne complète, expédition sans limite, tous les modes et le thème Tomettes. |
-| en | Tomettes Full | The whole game: full campaign, unlimited expeditions, every mode and the Tomettes theme. |
-| es | Tomettes completo | Todo el juego: campaña completa, expediciones sin límite, todos los modos y el tema Tomettes. |
-| de | Tomettes komplett | Das ganze Spiel: komplette Kampagne, unbegrenzte Expeditionen, alle Modi und das Tomettes-Design. |
-| it | Tomettes completo | Tutto il gioco: campagna completa, spedizioni senza limiti, tutte le modalità e il tema Tomettes. |
-| zh | Tomettes 完整版 | 全部游戏内容：完整战役、无限远征、所有模式和 Tomettes 主题。 |
+| fr | Tomettes complet | Tout le jeu : campagne complète, atelier sans limite, tous les modes et le thème Tomettes. |
+| en | Tomettes Full | The whole game: full campaign, unlimited Workshop, every mode and the Tomettes theme. |
+| es | Tomettes completo | Todo el juego: campaña completa, Taller sin límite, todos los modos y el tema Tomettes. |
+| de | Tomettes komplett | Das ganze Spiel: komplette Kampagne, unbegrenzte Werkstatt, alle Modi und das Tomettes-Design. |
+| it | Tomettes completo | Tutto il gioco: campagna completa, Bottega senza limiti, tutte le modalità e il tema Tomettes. |
+| zh | Tomettes 完整版 | 全部游戏内容：完整战役、无限工坊、所有模式和 Tomettes 主题。 |
 
 - Capture pour la validation : l'écran « Tomettes complet » du jeu (Duel → n'importe quel
   mode verrouillé, ou Réglages → Version complète).
 - **Partage familial** : au choix (non activé dans le fichier de test).
 - Notes pour la validation : « Version gratuite jouable sans limite de temps (Classique,
-  campagne 1 à 10, duels, une expédition par jour). L'achat unique débloque le reste.
+  campagne 1 à 10, duels, un atelier par jour). L'achat unique débloque le reste.
   Restaurer : Réglages → Version complète → Restaurer mes achats. »
 
 Contenu gratuit et payant, et vérification de l'achat : voir `src/core/premium.ts` et

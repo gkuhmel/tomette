@@ -14,10 +14,10 @@ Tomettes
 Hexagon tile match puzzle
 ```
 
-## App Store · Texte promotionnel (109/170)
+## App Store · Texte promotionnel (106/170)
 
 ```text
-Set off on an Expedition: 20 stages, a single life and a card to pick after every stage. How far will you go?
+Open the Workshop: 20 stages, a single life and an order slip to deliver every stage. How far will you go?
 ```
 
 ## App Store · Mots-clés (98/100)
@@ -26,7 +26,7 @@ Set off on an Expedition: 20 stages, a single life and a card to pick after ever
 match 3,hex,tiles,provence,brain,combo,chain,rosette,duel,colors,colours,strategy,relaxing,offline
 ```
 
-## App Store · Description (identique sur Google Play) (1383/4000)
+## App Store · Description (identique sur Google Play) (1374/4000)
 
 ```text
 Tomettes is an action puzzle inspired by the hexagonal terracotta tiles of Provençal homes.
@@ -49,12 +49,12 @@ IDEAS TO DISCOVER
 • Mosaic: as many rosettes as you can in 3 minutes
 • Express: start at level 8, things move fast
 • Campaign: 30 stages with a finish line, up to 3 stars each
-• Expedition: 20 stages, a single life and a card to pick after each stage, with its perk and its catch
+• The Workshop: 20 stages, a single life, and an order slip of patterns to deliver every stage
 • Duel: take on the computer, or challenge a friend online with a simple code
 
 AND ALSO
 • Daily missions and a player level
-• 48 achievements, statistics, themes and icon sets to unlock
+• 49 achievements, statistics, themes and icon sets to unlock
 • Plays offline (except the online duel)
 • No ads, no account: your games stay on your phone
 

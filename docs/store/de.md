@@ -14,10 +14,10 @@ Tomettes
 Sechseck-Fliesen-Puzzle
 ```
 
-## App Store · Texte promotionnel (117/170)
+## App Store · Texte promotionnel (109/170)
 
 ```text
-Brich zur Expedition auf: 20 Runden, ein einziges Leben und nach jeder Runde eine Karte zur Wahl. Wie weit kommst du?
+Öffne die Werkstatt: 20 Runden, ein einziges Leben und in jeder Runde ein Auftragszettel. Wie weit kommst du?
 ```
 
 ## App Store · Mots-clés (98/100)
@@ -26,7 +26,7 @@ Brich zur Expedition auf: 20 Runden, ein einziges Leben und nach jeder Runde ein
 match 3,sechseck,fliesen,provence,denkspiel,kombo,kette,rosette,duell,farben,logik,knobeln,offline
 ```
 
-## App Store · Description (identique sur Google Play) (1525/4000)
+## App Store · Description (identique sur Google Play) (1524/4000)
 
 ```text
 Tomettes ist ein Action-Puzzle, inspiriert von den sechseckigen Terrakottafliesen provenzalischer Häuser.
@@ -49,12 +49,12 @@ IDEEN ZUM ENTDECKEN
 • Mosaik: so viele Rosetten wie möglich in 3 Minuten
 • Express: Start auf Level 8, hier geht es schnell
 • Kampagne: 30 Runden mit Ziellinie, bis zu 3 Sterne pro Runde
-• Expedition: 20 Runden, ein einziges Leben und nach jeder Runde eine Karte mit Vorteil und Haken
+• Die Werkstatt: 20 Runden, ein einziges Leben und in jeder Runde ein Auftragszettel mit Mustern
 • Duell: Tritt gegen den Computer an oder fordere online einen Freund mit einem einfachen Code heraus
 
 AUSSERDEM
 • Tägliche Missionen und ein Spielerlevel
-• 48 Erfolge, Statistiken, Themen und Symbolsätze zum Freischalten
+• 49 Erfolge, Statistiken, Themen und Symbolsätze zum Freischalten
 • Offline spielbar (außer dem Online-Duell)
 • Ohne Werbung, ohne Konto: Deine Spiele bleiben auf deinem Handy
 
