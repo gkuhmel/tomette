@@ -84,11 +84,9 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'chrono3k', check: (_t, g) => inMode(g, 'timeAttack') && g!.score >= 3000 },
   { id: 'games25', check: (t) => t.games >= 25 },
   { id: 'games100', check: (t) => t.games >= 100 },
-  // Expédition : débloqués par l'interface en fin d'expédition (ils dépendent de toute la run).
+  // Atelier : débloqués par l'interface (manche 10 atteinte, fin d'atelier, manche livrée,
+  // commandes cumulées). Les identifiants « exp… » viennent de l'ancienne Expédition.
   { id: 'expHalf', check: () => false },
-  { id: 'exp1', check: () => false },
-  { id: 'expNoShield', check: () => false },
-  // Atelier : débloqués par l'interface (fin d'atelier, manche livrée, commandes cumulées).
   { id: 'atl20', check: () => false },
   { id: 'atl100', check: () => false },
   { id: 'atlCalm', check: () => false },
@@ -107,7 +105,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'tiles10k', check: (t) => t.tiles >= 10000 },
   { id: 'games250', check: (t) => t.games >= 250 },
   { id: 'hours10', check: (t) => t.timeS >= 36000 },
-  // Débloqués par l'interface : campagne, duel, expédition.
+  // Débloqués par l'interface : campagne, duel, atelier.
   { id: 'camp30', check: () => false },
   { id: 'camp90', check: () => false },
   { id: 'duelExtreme', check: () => false },

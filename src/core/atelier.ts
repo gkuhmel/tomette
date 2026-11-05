@@ -1,13 +1,13 @@
 import type { Config } from '../config';
-import { emptyMods, runStage } from './expedition';
+import { stageSpec } from './campaign';
 import type { OrderKind } from './orders';
 import { Rng } from './rng';
 
 /**
- * L'Atelier (second mode de l'Expédition) : 20 manches d'affilée, une seule vie. Chaque
+ * L'Atelier : 20 manches d'affilée, une seule vie. Chaque
  * manche affiche un bon de commande (2 à 5 motifs, visibles en même temps, à livrer dans
  * l'ordre voulu) ; la manche est gagnée quand tout est livré. La pile accélère d'une manche
- * à l'autre comme dans l'expédition. Une manche livrée vite rapporte un pourboire, qui
+ * à l'autre (difficulté des manches de campagne, de la 2e à la 30e). Une manche livrée vite rapporte un pourboire, qui
  * permet de sauter une commande plus tard (2 au plus).
  */
 export const ATELIER_STAGES = 20;
@@ -72,10 +72,25 @@ export function makeBon(stage: number, rng: Rng, colors: number): BonItem[] {
   return out;
 }
 
-/** Manche `n` (1 à 20) : même difficulté de pile que l'expédition, sans ligne d'arrivée. */
+/**
+ * Manche `n` (1 à 20) : reprend la difficulté des manches de campagne, de la 2e à la 30e
+ * (couleurs, vitesse de départ, tuiles spéciales, dalles), sans ligne d'arrivée.
+ */
 export function atelierStage(n: number, cfg: Config): { level: number; cfg: Config } {
-  const st = runStage(n, cfg, emptyMods());
-  return { level: st.spec.level, cfg: st.cfg };
+  const spec = stageSpec(Math.round(2 + ((n - 1) * 28) / (ATELIER_STAGES - 1)), cfg);
+  const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+  return {
+    level: spec.level,
+    cfg: {
+      ...cfg,
+      colors: clamp(spec.colors, 3, 6),
+      initialRows: clamp(spec.initialRows, 1, cfg.rows - 3),
+      crackedChance: Math.min(0.3, spec.crackedChance),
+      sealedChance: Math.min(0.3, spec.sealedChance),
+      mortarEveryS: spec.mortarEveryS,
+      mortarFromLevel: 1,
+    },
+  };
 }
 
 /** Manche livrée assez vite pour un pourboire ? */

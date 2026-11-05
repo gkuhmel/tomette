@@ -18,6 +18,7 @@ const ICONS = {
   swords: '<path d="M4 4l9 9M4 4h4M4 4v4M20 4l-9 9M20 4h-4M20 4v4"/><path d="M7 14l3 3M17 14l-3 3M5 19l3-3M19 19l-3-3"/>',
   target: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle class="f" cx="12" cy="12" r="1.4"/>',
   compass: '<circle cx="12" cy="12" r="9"/><path class="f" d="M15.5 8.5l-2 5-5 2 2-5z"/>',
+  clipboard: '<rect x="5" y="4.5" width="14" height="16.5" rx="2"/><path d="M9 4.5V3.5h6v1"/><path d="M8.5 10.5l1.5 1.5 2.5-3M8.5 16l1.5 1.5 2.5-3M14.5 11h2M14.5 16.5h2"/>',
   flag: '<path d="M6 21V4"/><path class="f" d="M6 4h12l-2.5 4L18 12H6z"/>',
 } as const;
 
@@ -127,8 +128,6 @@ export function fitRosace(menu: HTMLElement): void {
   let count = 0;
   for (const child of Array.from(screen.children)) {
     if (child === menu || !(child instanceof HTMLElement) || child.offsetParent === null) continue;
-    // Contenu placé sous la rosace, qu'on atteint en faisant défiler (cartes de l'expédition en pause).
-    if (child.dataset.nofit !== undefined) continue;
     if (getComputedStyle(child).position === 'absolute') continue;
     const m = getComputedStyle(child);
     others += child.offsetHeight + parseFloat(m.marginTop) + parseFloat(m.marginBottom);

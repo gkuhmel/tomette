@@ -37,7 +37,7 @@ export interface HomeScreen {
   express: HexButtonParts;
   campaign: HexButtonParts;
   duel: HexButtonParts;
-  expedition: HexButtonParts;
+  atelier: HexButtonParts;
   /** Sous la rosace : missions (avec le compte du jour). */
   missions: HTMLElement;
   missionsCount: HTMLElement;
@@ -65,7 +65,7 @@ export function homeScreen(): HomeScreen {
   const duel = hexButton('var(--t0)', 'swords', modeName('duel'));
   const timeAttack = hexButton('var(--t5)', 'clock', modeName('timeAttack'));
   const mosaic = hexButton('var(--t4)', 'flower', modeName('mosaic'));
-  const expedition = hexButton('var(--t3)', 'compass', t('mode.expedition.name'));
+  const atelier = hexButton('var(--t3)', 'clipboard', t('mode.atelier.name'));
   const campaign = hexButton('var(--t1)', 'flag', modeName('campaign'));
   const express = hexButton('var(--t2)', 'bolt', modeName('express'));
   // « Tutoriel » : rejoue le tutoriel pas à pas (les règles détaillées sont dans les Réglages).
@@ -77,7 +77,7 @@ export function homeScreen(): HomeScreen {
   const missions = toolButton('target', t('missions.title'), missionsCount);
   const playerLevel = el('span', { class: 'pb-level' });
   const player = el('button', { type: 'button', class: 'player-bar' }, [playerLevel]);
-  const rosace = rosaceMenu(play, [duel, timeAttack, mosaic, expedition, campaign, express]);
+  const rosace = rosaceMenu(play, [duel, timeAttack, mosaic, atelier, campaign, express]);
   const screen = new Screen('screen-home', [
     el('div', { class: 'home-top' }, [el('h1', { class: 'title' }, ['Tomettes']), el('small', { class: 'tagline' }, [t('home.tagline')])]),
     rosace,
@@ -86,7 +86,7 @@ export function homeScreen(): HomeScreen {
     player,
   ]);
   autoFitRosace(rosace);
-  return { screen, difficulty, play, timeAttack, mosaic, express, campaign, duel, expedition, missions, missionsCount, howto, progress, progressCount, settings, player, playerLevel };
+  return { screen, difficulty, play, timeAttack, mosaic, express, campaign, duel, atelier, missions, missionsCount, howto, progress, progressCount, settings, player, playerLevel };
 }
 
 export function gameOverScreen(): {
@@ -127,8 +127,6 @@ export function gameOverScreen(): {
 export interface PauseScreen {
   screen: Screen;
   stats: HTMLElement;
-  /** Cartes d'Expédition en jeu (vide hors expédition). */
-  cards: HTMLElement;
   resume: HTMLElement;
   restart: HTMLElement;
   settings: HTMLElement;
@@ -149,18 +147,14 @@ export function pauseScreen(): PauseScreen {
   const menu = hexButton('var(--t0)', 'home', t('common.menu'));
   const stats = el('small', { class: 'tagline' });
   const pauseRosace = rosaceMenu(resume, [restart, settings, sound, music, howto, menu]);
-  // Sous la rosace, hors calcul de sa taille : on y accède en faisant défiler.
-  const cards = el('div', { class: 'pause-cards', 'data-nofit': '' });
   const screen = new Screen('screen-pause', [
     el('div', { class: 'home-top' }, [el('h1', { class: 'title' }, [t('common.pause')]), stats]),
     pauseRosace,
-    cards,
   ]);
   autoFitRosace(pauseRosace);
   return {
     screen,
     stats,
-    cards,
     resume: resume.button,
     restart: restart.button,
     settings: settings.button,

@@ -2,14 +2,13 @@ import { ATELIER_STAGES, BonItem, itemFinished, itemStep, itemTotal, MAX_TIPS } 
 import { DIFFICULTIES, Difficulty } from '../core/difficulty';
 import { Key, t } from '../i18n';
 import { el } from './dom';
-import { rule } from './expedition';
 import { orderSvg } from './order-chip';
 import { Screen } from './screens';
 import { load, remove, save } from './storage';
 
 /*
- * L'Atelier (second mode de l'expédition) : record, partie en cours, onglets de l'écran
- * Expédition, bandeau du bon de commande pendant la partie, écran entre deux manches.
+ * L'Atelier : record, partie en cours, écran de présentation, bandeau du bon de commande
+ * pendant la partie, écran entre deux manches.
  */
 
 const KEY = 'tomettes.atelier';
@@ -79,16 +78,12 @@ export function clearAtelierRun(): void {
   remove(RUN_KEY);
 }
 
-export type ExpTab = 'cards' | 'atelier';
-
-/** Onglets en haut de l'écran Expédition : « Les cartes » | « L'Atelier ». */
-export function expTabs(active: ExpTab, onSwitch: (tab: ExpTab) => void): HTMLElement {
-  const tab = (id: ExpTab, label: Key) => {
-    const b = el('button', { type: 'button', class: `exp-tab${id === active ? ' selected' : ''}`, role: 'tab', 'aria-selected': String(id === active) }, [t(label)]);
-    b.addEventListener('click', () => id !== active && onSwitch(id));
-    return b;
-  };
-  return el('div', { class: 'exp-tabs', role: 'tablist' }, [tab('cards', 'atl.tabCards'), tab('atelier', 'atl.tabAtelier')]);
+/** Une règle de l'atelier : pictogramme dans une tomette, titre, explication. */
+function rule(emoji: string, color: string, n: number): HTMLElement {
+  return el('div', { class: 'exp-rule' }, [
+    el('span', { class: 'card-badge', style: `--c:${color}` }, [emoji]),
+    el('span', {}, [el('strong', {}, [t(`atl.r${n}.t` as Key)]), el('small', {}, [t(`atl.r${n}.p` as Key)])]),
+  ]);
 }
 
 export interface AtelierIntroHandlers {
@@ -99,7 +94,7 @@ export interface AtelierIntroHandlers {
 }
 
 /** Présentation de l'atelier, avec reprise ou abandon de celui en cours. */
-export function atelierIntroScreen(h: AtelierIntroHandlers, tabs: HTMLElement): Screen & { open(saved: SavedAtelier | null, diffName: string, note?: string): void } {
+export function atelierIntroScreen(h: AtelierIntroHandlers): Screen & { open(saved: SavedAtelier | null, diffName: string, note?: string): void } {
   const hero = el('div', { class: 'exp-hero atl-hero' });
   hero.innerHTML = orderSvg({ kind: 'triangle', color: 1 });
   const meta = el('p', { class: 'exp-meta' });
@@ -116,16 +111,15 @@ export function atelierIntroScreen(h: AtelierIntroHandlers, tabs: HTMLElement): 
   back.addEventListener('click', () => h.back());
   const screen = new Screen('screen-atelier', [
     el('div', { class: 'panel exp-intro' }, [
-      tabs,
       hero,
-      el('h2', {}, [t('atl.tabAtelier')]),
+      el('h2', {}, [t('mode.atelier.name')]),
       el('p', { class: 'exp-tagline' }, [t('atl.tagline')]),
       saved,
       el('div', { class: 'exp-rules' }, [
-        rule('📋', 'var(--t3)', 1, 'atl'),
-        rule('❤️', 'var(--t0)', 2, 'atl'),
-        rule('🪙', 'var(--t1)', 3, 'atl'),
-        rule('🏆', 'var(--t4)', 4, 'atl'),
+        rule('📋', 'var(--t3)', 1),
+        rule('❤️', 'var(--t0)', 2),
+        rule('🪙', 'var(--t1)', 3),
+        rule('🏆', 'var(--t4)', 4),
       ]),
       meta,
       freeNote,

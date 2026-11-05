@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dayKey, expeditionAllowed, FREE_STAGES, modeLocked, stageLocked, themeLocked, PREMIUM_THEME } from '../src/core/premium';
+import { dayKey, atelierAllowed, FREE_STAGES, modeLocked, stageLocked, themeLocked, PREMIUM_THEME } from '../src/core/premium';
 
 describe('version gratuite et version complète', () => {
   it('modes : Classique et duel gratuits, les autres avec l\'achat', () => {
@@ -24,13 +24,13 @@ describe('version gratuite et version complète', () => {
     expect(themeLocked(0, false)).toBe(false);
   });
 
-  it('expédition : une gratuite par jour', () => {
+  it('atelier : un gratuit par jour', () => {
     const today = dayKey(new Date(2026, 9, 31, 23, 59));
     expect(today).toBe('2026-10-31');
-    expect(expeditionAllowed(false, '', today)).toBe(true);
-    expect(expeditionAllowed(false, '2026-10-30', today)).toBe(true);
-    expect(expeditionAllowed(false, today, today)).toBe(false);
-    expect(expeditionAllowed(true, today, today)).toBe(true);
+    expect(atelierAllowed(false, '', today)).toBe(true);
+    expect(atelierAllowed(false, '2026-10-30', today)).toBe(true);
+    expect(atelierAllowed(false, today, today)).toBe(false);
+    expect(atelierAllowed(true, today, today)).toBe(true);
     expect(dayKey(new Date(2026, 10, 1, 0, 1))).toBe('2026-11-01');
   });
 });

@@ -36,8 +36,6 @@ import { longMission } from './core/missions';
 import { unlocksBetween } from './core/unlocks';
 import { STAGE_COUNT, stageConfig, stageSpec, starsFor } from './core/campaign';
 import { campaignScreen, loadStars, saveStars, totalStars } from './ui/campaign';
-import { drawCards, modsFor, RUN_STAGES, runStage, stagePoints } from './core/expedition';
-import { activeCards, cardBadge, cardsScreen, clearRun, expIntroScreen, loadExp, loadRun, saveExp, saveRun, SavedRun } from './ui/expedition';
 import { Rng } from './core/rng';
 import { Ai, AI_PROFILES, AiProfile, AiSkill } from './core/ai';
 import { Duel, duelConfig } from './core/duel';
@@ -56,9 +54,9 @@ import { duelResult } from './ui/duel-result';
 import { orderChip } from './ui/order-chip';
 import { resultBlock } from './ui/result';
 import { gameOverScreen, homeScreen, pauseScreen, rotateScreen } from './ui/screens';
-import { load, loadBest, loadDifficulty, save, saveBest, saveDifficulty } from './ui/storage';
+import { load, loadBest, loadDifficulty, remove, save, saveBest, saveDifficulty } from './ui/storage';
 import { Buzz, buzz, hideSplash, isNative, restoreSaves, statusBarFor } from './native';
-import { dayKey, expeditionAllowed, LockReason, modeLocked, stageLocked, themeLocked } from './core/premium';
+import { atelierAllowed, dayKey, LockReason, modeLocked, stageLocked, themeLocked } from './core/premium';
 import { initPurchases, isPremium, onPremiumChange } from './purchase';
 import { paywallScreen } from './ui/paywall';
 import { ATELIER_STAGES, atelierPoints, atelierStage, earnsTip, makeBon, MAX_TIPS } from './core/atelier';
@@ -68,8 +66,6 @@ import {
   atelierIntroScreen,
   bonStrip,
   clearAtelierRun,
-  expTabs,
-  ExpTab,
   loadAtelier,
   loadAtelierRun,
   saveAtelier,
@@ -86,6 +82,8 @@ function boot(): void {
   initTelemetry();
   if (dev) document.body.classList.add('dev');
   loadSavedConfig();
+  // Ancienne Expédition (mode à cartes, remplacé par l'Atelier) : ses sauvegardes sont effacées.
+  for (const k of ['tomettes.run', 'tomettes.expedition', 'tomettes.expFreeDay', 'tomettes.expTab']) remove(k);
 
   // --- DOM ---------------------------------------------------------------
   document.documentElement.lang = lang;
@@ -101,8 +99,6 @@ function boot(): void {
   const pauseBtn = el('button', { id: 'pause-btn', type: 'button', 'aria-label': t('common.pause') });
   pauseBtn.innerHTML = icon('pause');
   const incoming = el('div', { class: 'incoming' });
-  // Expédition : rappel des cartes en jeu sous le score (un appui ouvre la pause, avec le détail).
-  const runCards = el('button', { type: 'button', class: 'run-cards', 'aria-label': t('exp.active') });
   const mini = el('canvas', { id: 'duel-mini' });
   const chip = orderChip();
   chip.root.hidden = true;
@@ -112,7 +108,7 @@ function boot(): void {
     atl.tips--;
     saveAtelierRun(atl);
   });
-  const hud = el('header', { id: 'hud' }, [badge.root, el('div', { class: 'hud-score' }, [hudScore, hudSub, incoming, runCards, bonView.root]), chip.root, mini, pauseBtn]);
+  const hud = el('header', { id: 'hud' }, [badge.root, el('div', { class: 'hud-score' }, [hudScore, hudSub, incoming, bonView.root]), chip.root, mini, pauseBtn]);
   const canvas = el('canvas', { id: 'board' });
   const stage = el('main', { id: 'stage' }, [canvas]);
   const raise = el('button', { id: 'raise', type: 'button' }, [t('common.raise')]);
@@ -295,58 +291,13 @@ function boot(): void {
     },
     dev ? callRobot : undefined,
   );
-  /** Expédition en cours (null hors expédition). */
-  let run: SavedRun | null = null;
-  /** Jour de la dernière expédition gratuite (version gratuite : une par jour). */
-  const FREE_EXP_KEY = 'tomettes.expFreeDay';
-  function startExpedition(): void {
-    const today = dayKey(new Date());
-    if (!expeditionAllowed(isPremium(), load(FREE_EXP_KEY) ?? '', today)) return requireFull('expedition', startExpedition);
-    if (!isPremium()) save(FREE_EXP_KEY, today);
-    run = { stage: 1, cards: [], score: 0, shields: 0, time: 0, seed: randomSeed(), difficulty };
-    saveRun(run);
-    expIntro.hide();
-    launch('expedition');
-  }
-  /** Reprise d'une expédition sauvegardée : choix de carte en attente, ou début de la manche. */
-  function resumeExpedition(): void {
-    run = loadRun();
-    if (!run) return startExpedition();
-    expIntro.hide();
-    home.screen.hide();
-    mode = 'expedition';
-    if (run.choices) cardsView.open(run.stage, run.score, run.choices, run.cards);
-    else startGame(randomSeed(), 'expedition');
-  }
-  // Expédition : deux modes en onglets (« Les cartes », « L'Atelier ») ; le dernier choisi est retenu.
-  const EXP_TAB_KEY = 'tomettes.expTab';
-  const switchExpTab = (tab: ExpTab) => {
-    save(EXP_TAB_KEY, tab);
-    expIntro.hide();
-    atelierIntro.hide();
-    openExpIntro();
-  };
-  const expIntro = expIntroScreen({
-    start: startExpedition,
-    resume: resumeExpedition,
-    abandon: () => {
-      clearRun();
-      run = null;
-      openExpIntro();
-    },
-    back: () => {
-      expIntro.hide();
-      showHome();
-    },
-  }, expTabs('cards', switchExpTab));
-
   /** Atelier en cours (null hors atelier). */
   let atl: SavedAtelier | null = null;
   /** Jour du dernier atelier gratuit (version gratuite : un par jour). */
   const FREE_ATL_KEY = 'tomettes.atelierFreeDay';
   function startAtelier(): void {
     const today = dayKey(new Date());
-    if (!expeditionAllowed(isPremium(), load(FREE_ATL_KEY) ?? '', today)) return requireFull('expedition', startAtelier);
+    if (!atelierAllowed(isPremium(), load(FREE_ATL_KEY) ?? '', today)) return requireFull('atelier', startAtelier);
     if (!isPremium()) save(FREE_ATL_KEY, today);
     atl = { stage: 1, score: 0, tips: 0, time: 0, delivered: 0, seed: randomSeed(), difficulty };
     saveAtelierRun(atl);
@@ -367,14 +318,13 @@ function boot(): void {
       abandon: () => {
         clearAtelierRun();
         atl = null;
-        openExpIntro();
+        openAtelierIntro();
       },
       back: () => {
         atelierIntro.hide();
         showHome();
       },
     },
-    expTabs('atelier', switchExpTab),
   );
   const atelierBreak = atelierBreakScreen(
     () => {
@@ -387,30 +337,13 @@ function boot(): void {
       showHome();
     },
   );
-  function openExpIntro(): void {
-    if (load(EXP_TAB_KEY) === 'atelier') {
-      const savedAtl = loadAtelierRun();
-      home.screen.hide();
-      const note = isPremium() ? '' : t(expeditionAllowed(false, load(FREE_ATL_KEY) ?? '', dayKey(new Date())) ? 'atl.freeDaily' : 'atl.freeUsed');
-      atelierIntro.open(savedAtl, t(`diff.${savedAtl?.difficulty ?? difficulty}` as Key), note);
-      return;
-    }
-    const saved = loadRun();
+  function openAtelierIntro(): void {
+    const saved = loadAtelierRun();
     home.screen.hide();
-    // Version gratuite : rappel de l'expédition du jour (ou qu'elle est déjà jouée).
-    const note = isPremium() ? '' : t(expeditionAllowed(false, load(FREE_EXP_KEY) ?? '', dayKey(new Date())) ? 'exp.freeDaily' : 'exp.freeUsed');
-    expIntro.open(saved, t(`diff.${saved?.difficulty ?? difficulty}` as Key), note);
+    // Version gratuite : rappel de l'atelier du jour (ou qu'il est déjà joué).
+    const note = isPremium() ? '' : t(atelierAllowed(false, load(FREE_ATL_KEY) ?? '', dayKey(new Date())) ? 'atl.freeDaily' : 'atl.freeUsed');
+    atelierIntro.open(saved, t(`diff.${saved?.difficulty ?? difficulty}` as Key), note);
   }
-  const cardsView = cardsScreen((id) => {
-    if (!run) return;
-    run.cards.push(id);
-    if (id === 'shield') run.shields++;
-    run.stage++;
-    run.choices = undefined;
-    saveRun(run);
-    cardsView.hide();
-    startGame(randomSeed(), 'expedition');
-  });
   /** Manche de campagne en cours (ou à lancer). */
   let stageNo = 1;
   let difficulty: Difficulty = loadDifficulty();
@@ -477,24 +410,16 @@ function boot(): void {
     shownScore = 0;
     mode = m;
     best = loadBest(mode, difficulty);
-    badge.label.textContent = mode === 'campaign' || mode === 'expedition' || mode === 'atelier' ? t('hud.stage') : modeById(mode).record === 'rosaces' ? t('hud.rosaces') : t('hud.level');
+    badge.label.textContent = mode === 'campaign' || mode === 'atelier' ? t('hud.stage') : modeById(mode).record === 'rosaces' ? t('hud.rosaces') : t('hud.level');
     hudRecLabel.textContent = t('hud.record');
     hudCache.length = 0;
     const prev = game.grid;
     cpu = ai = duel = null;
-    runCards.replaceChildren(...(m === 'expedition' && run ? [...new Set(run.cards)].map((id) => cardBadge(id, true)) : []));
     document.body.classList.toggle('duel', mode === 'duel' || mode === 'online');
     if (mode !== 'online') leaveOnline();
     if (mode === 'campaign') {
       const spec = stageSpec(stageNo, config);
       game = new Game(stageConfig(config, spec), seed, { mode, startLevel: spec.level, goalRows: spec.goal });
-    } else if (mode === 'expedition' && run) {
-      // L'expédition suit la difficulté choisie sur l'accueil.
-      const st = runStage(run.stage, { ...withDifficulty(config, run.difficulty) }, modsFor(run.cards));
-      stageNo = run.stage;
-      game = new Game(st.cfg, seed, { mode, startLevel: st.spec.level, goalRows: st.goal, orders: true });
-      game.shields = run.shields;
-      game.shots = modsFor(run.cards).shots;
     } else if (mode === 'atelier' && atl) {
       // L'atelier suit la difficulté choisie à son ouverture ; le bon découle de sa graine
       // (le même après une reprise).
@@ -528,9 +453,8 @@ function boot(): void {
     pause.screen.hide();
     tuto.hidden = true;
     window.clearTimeout(hintTimer);
-    // Explication de la ligne d'arrivée à la 1re manche seulement (la bulle disparaît seule) ;
-    // en expédition, celle du Carreau à la manche qui suit son choix.
-    const newShot = mode === 'expedition' && !!run && run.cards[run.cards.length - 1] === 'carreau';
+    // À la 1re manche seulement (la bulle disparaît seule) : le bon de commande dans l'atelier,
+    // la ligne d'arrivée en campagne.
     if (mode === 'atelier' && stageNo === 1) {
       // Atelier : le bon de commande et le pourboire, à la 1re manche.
       tutoTitle.textContent = `${t('hud.stage')} 1`;
@@ -540,13 +464,13 @@ function boot(): void {
       hintTimer = window.setTimeout(() => {
         if (state === 'playing' && mode === 'atelier') tuto.hidden = true;
       }, 6000);
-    } else if ((mode === 'campaign' || mode === 'expedition') && (stageNo === 1 || newShot)) {
+    } else if (mode === 'campaign' && stageNo === 1) {
       tutoTitle.textContent = t('camp.stageTitle', { n: stageNo, goal: game.goalRows });
-      tutoText.textContent = [stageNo === 1 ? t('camp.hint') : '', game.shots > 0 ? t('exp.shotHint') : ''].filter(Boolean).join(' ');
+      tutoText.textContent = t('camp.hint');
       tutoActions.replaceChildren();
       tuto.hidden = false;
       hintTimer = window.setTimeout(() => {
-        if (state === 'playing' && (mode === 'campaign' || mode === 'expedition')) tuto.hidden = true;
+        if (state === 'playing' && mode === 'campaign') tuto.hidden = true;
       }, 5000);
     }
     renderer.hint = null;
@@ -560,31 +484,6 @@ function boot(): void {
   function endGame(): void {
     state = 'over';
     sound.stopMusic();
-    if (mode === 'expedition' && run) {
-      const mods = modsFor(run.cards);
-      run.score += stagePoints(run.stage, game.score, mods, game.won);
-      run.shields = game.shields;
-      run.time += game.elapsed;
-      if (game.won && run.stage < RUN_STAGES) {
-        // Manche réussie : la partie compte (stats, missions), puis choix d'une carte.
-        sound.level();
-        input.release();
-        game.manualRise = false;
-        progress.finish(game);
-        missions.finish(game);
-        if (run.stage + 1 >= 10) progress.grant(['expHalf']);
-        // Les cartes proposées découlent de la graine : les mêmes après une reprise.
-        const choices = drawCards(new Rng(run.seed + run.stage * 7919), run.cards);
-        run.choices = choices;
-        saveRun(run);
-        const stageDone = run.stage;
-        const total = run.score;
-        const show = () => cardsView.open(stageDone, total, choices, run?.cards ?? []);
-        if (config.animations) overTimer = window.setTimeout(show, GAME_OVER_FADE_MS + 250);
-        else show();
-        return;
-      }
-    }
     if (mode === 'atelier' && atl) {
       // Commandes livrées (une ligne sautée ne compte pas) et succès de la manche.
       atl.delivered += game.ordersDone;
@@ -592,6 +491,8 @@ function boot(): void {
       progress.grant([
         ...(delivered >= 100 ? ['atl100'] : []),
         ...(game.won && atl.stage >= 5 && !game.everAlert ? ['atlCalm'] : []),
+        // Mi-parcours : la manche 10 atteinte.
+        ...(game.won && atl.stage + 1 >= 10 ? ['expHalf'] : []),
       ]);
       atl.score += atelierPoints(atl.stage, game.score, game.won);
       atl.time += game.elapsed;
@@ -627,7 +528,7 @@ function boot(): void {
     game.manualRise = false;
     const value = game.recordValue;
     const prevBest = best;
-    const record = value > best && mode !== 'duel' && mode !== 'campaign' && mode !== 'expedition' && mode !== 'atelier';
+    const record = value > best && mode !== 'duel' && mode !== 'campaign' && mode !== 'atelier';
     if (record) {
       best = value;
       saveBest(best, mode, difficulty);
@@ -690,15 +591,15 @@ function boot(): void {
       const done = game.won && atl.stage >= ATELIER_STAGES;
       clearAtelierRun();
       const better = saveAtelier(atl.score, done ? ATELIER_STAGES : atl.stage);
-      if (done) progress.grant(['atl20']);
+      if (done) progress.grant(['atl20', ...(atl.difficulty === 'hard' || atl.difficulty === 'extreme' ? ['expExpert'] : [])]);
       block = resultBlock({
         tone: done ? 'gold' : 'grey',
         art: done ? 'flag' : 'crack',
         title: done ? t('atl.done') : t('atl.over'),
-        sub: `${t('atl.tabAtelier')} · ${formatTime(atl.time)}`,
+        sub: `${t('mode.atelier.name')} · ${formatTime(atl.time)}`,
         cards: [
           {
-            title: t('atl.tabAtelier'),
+            title: t('mode.atelier.name'),
             color: 'var(--t1)',
             big: String(atl.score),
             rows: [
@@ -712,39 +613,6 @@ function boot(): void {
       });
       over.screen.root.classList.add(done ? 'gold' : 'grey');
       over.replay.textContent = t('atl.new');
-    } else if (mode === 'expedition' && run) {
-      // Fin d'expédition : réussie (8 manches) ou perdue.
-      const done = game.won && run.stage >= RUN_STAGES;
-      clearRun();
-      const better = saveExp(run.score, done ? RUN_STAGES : run.stage);
-      const grants = [
-        ...(run.stage >= 10 ? ['expHalf'] : []),
-        ...(done ? ['exp1'] : []),
-        ...(done && !run.cards.includes('shield') ? ['expNoShield'] : []),
-        ...(done && (run.difficulty === 'hard' || run.difficulty === 'extreme') ? ['expExpert'] : []),
-      ];
-      if (grants.length) progress.grant(grants);
-      block = resultBlock({
-        tone: done ? 'gold' : 'grey',
-        art: done ? 'flag' : 'crack',
-        title: done ? t('exp.done') : t('exp.over'),
-        sub: `${t('mode.expedition.name')} · ${formatTime(run.time)}`,
-        cards: [
-          {
-            title: t('mode.expedition.name'),
-            color: 'var(--t1)',
-            big: String(run.score),
-            rows: [
-              [t('exp.reached'), `${done ? RUN_STAGES : run.stage}/${RUN_STAGES}`],
-              [t('exp.cards'), String(run.cards.length)],
-            ],
-          },
-        ],
-        footer: [better ? t('over.newRecord') : t('exp.record', { n: loadExp().best })],
-        confetti: done,
-      });
-      over.screen.root.classList.add(done ? 'gold' : 'grey');
-      over.replay.textContent = t('exp.new');
     } else if (mode === 'campaign') {
       // Campagne : étoiles selon le temps, manche suivante si réussie.
       const spec = stageSpec(stageNo, config);
@@ -860,7 +728,6 @@ function boot(): void {
       formatTime(game.timeLeft === null ? game.elapsed : Math.ceil(game.timeLeft)),
     ].join(' · ');
     syncPauseToggles();
-    pause.cards.replaceChildren(...(mode === 'expedition' && run && run.cards.length ? [el('h3', {}, [t('exp.active')]), activeCards(run.cards)] : []));
     pause.screen.show();
   }
 
@@ -919,9 +786,9 @@ function boot(): void {
     home.playerLevel.replaceChildren(el('strong', {}, [t('player.level', { n: lv.level })]), bar(lv.into, lv.need), el('small', {}, [t('player.xp', { n: lv.into, need: lv.need })]));
     const daily = missions.state.daily;
     home.missionsCount.textContent = `${daily.filter((m) => m.done).length}/${daily.length}`;
-    const exp = loadExp();
-    const saved = loadRun();
-    home.expedition.rec.textContent = saved ? `▶ ${saved.choices ? saved.stage + 1 : saved.stage}/${RUN_STAGES}` : exp.best ? `${exp.bestStage}/${RUN_STAGES}` : '—';
+    const atlRec = loadAtelier();
+    const atlSaved = loadAtelierRun();
+    home.atelier.rec.textContent = atlSaved ? `▶ ${atlSaved.stage}/${ATELIER_STAGES}` : atlRec.best ? `${atlRec.bestStage}/${ATELIER_STAGES}` : '—';
     home.campaign.rec.textContent = `★ ${totalStars()}/${STAGE_COUNT * 3}`;
     home.duel.rec.textContent = t('duel.wins', { n: loadDuel()[aiSkill()].wins });
     over.screen.hide();
@@ -1029,8 +896,7 @@ function boot(): void {
       over.replay.textContent = rematchAsked ? t('online.connecting') : t('online.rematchWait');
       return;
     }
-    if (mode === 'expedition') startExpedition();
-    else if (mode === 'atelier') startAtelier();
+    if (mode === 'atelier') startAtelier();
     else startGame();
   });
   over.next.addEventListener('click', () => {
@@ -1088,8 +954,7 @@ function boot(): void {
   pause.restart.addEventListener('click', () => {
     if (mode === 'atelier') {
       if (window.confirm(t('atl.abandonConfirm'))) startAtelier();
-    } else if (mode !== 'expedition') startGame();
-    else if (window.confirm(t('exp.abandonConfirm'))) startExpedition();
+    } else startGame();
   });
   pause.settings.addEventListener('click', () => openSettings('pause'));
   pause.howto.addEventListener('click', () => openHowto('pause'));
@@ -1158,7 +1023,7 @@ function boot(): void {
   };
   home.player.addEventListener('click', openMissions);
   home.missions.addEventListener('click', openMissions);
-  home.expedition.button.addEventListener('click', openExpIntro);
+  home.atelier.button.addEventListener('click', openAtelierIntro);
   home.progress.addEventListener('click', () => {
     progressView.refresh();
     progressView.root.scrollTop = 0;
@@ -1169,7 +1034,6 @@ function boot(): void {
   function quitOnline(): void {
     if (state === 'playing' && window.confirm(t('online.quit'))) game.over = true;
   }
-  runCards.addEventListener('click', () => pauseGame());
   pauseBtn.addEventListener('click', () => {
     if (linked) {
       quitOnline();
@@ -1214,7 +1078,7 @@ function boot(): void {
     }
     if (dev && e.code === 'KeyW' && state === 'playing') {
       if (cpu) cpu.over = true;
-      else if (mode === 'campaign' || mode === 'expedition' || mode === 'atelier') game.won = game.over = true;
+      else if (mode === 'campaign' || mode === 'atelier') game.won = game.over = true;
       return;
     }
     if (e.code !== 'Space' || debugOpen) return;
@@ -1273,8 +1137,6 @@ function boot(): void {
     const limit = game.mode.timeLimitS(game.cfg);
     const dur = Math.max(1e-6, game.cfg.levelDurationS);
     chip.set(game.order);
-    // Boucliers de l'expédition, sous le score.
-    if (!duel && !linked) setText(6, incoming, '🛡'.repeat(game.shields) + '🎯'.repeat(game.shots));
     if (duel && cpu) setText(1, hudBest, String(cpu.score));
     else if (linked) setText(1, hudBest, String(remote?.stats.score ?? 0));
     else if (game.goalRows > 0) {
@@ -1311,11 +1173,10 @@ function boot(): void {
   function startTutorial(then: ModeId | null): void {
     tutoThen = then;
     tutoStep = 0;
-    // Le tutoriel se joue seul : pas d'adversaire, pas de cartes d'expédition.
+    // Le tutoriel se joue seul : pas d'adversaire.
     cpu = ai = duel = null;
     leaveOnline();
     document.body.classList.remove('duel');
-    runCards.replaceChildren();
     window.clearTimeout(overTimer);
     home.screen.hide();
     howto.hide();
@@ -1409,16 +1270,14 @@ function boot(): void {
     }
     game.signals.length = 0;
     for (const n of game.notices) {
-      if (n === 'order' || n === 'orderGold' || n === 'fireworks' || n === 'rainbow') {
+      if (n === 'order' || n === 'orderGold') {
         sound.rosace();
         haptic('success');
       } else if (n === 'orderStep') {
         sound.repair();
         haptic('light');
       } else if (n === 'orderSkip') sound.slide();
-      else if (n === 'mistral') sound.slide();
-      else if (n === 'shot') sound.repair();
-      else if (n === 'shield' || n === 'blocked' || n === 'counter' || n === 'shieldUsed') sound.repair();
+      else if (n === 'shield' || n === 'blocked' || n === 'counter') sound.repair();
       else {
         // Attaque reçue (dalle, nuit, gel, fêlures, séisme) ou cigale.
         sound.mortar();

@@ -30,7 +30,8 @@ export const snapshot = (g: Game): Snapshot => ({
 /** Statistiques et succès : sauvegarde, vérification en direct, notifications. */
 export class Progress {
   totals: Totals = readJson(TOTALS_KEY, emptyTotals());
-  unlocked = new Set<string>(readJson<{ ids: string[] }>(UNLOCKED_KEY, { ids: [] }).ids);
+  /** Succès obtenus (ceux retirés du jeu, comme ceux de l'ancienne Expédition, ne comptent plus). */
+  unlocked = new Set<string>(readJson<{ ids: string[] }>(UNLOCKED_KEY, { ids: [] }).ids.filter((id) => ACHIEVEMENTS.some((a) => a.id === id)));
   private toast: HTMLDivElement;
   private queue: Achievement[] = [];
   private showing = false;
@@ -50,7 +51,7 @@ export class Progress {
     return list;
   }
 
-  /** Succès accordés directement (ceux qui dépendent d'une expédition entière). */
+  /** Succès accordés directement (ceux qui dépendent d'un atelier entier, d'une campagne, des duels). */
   grant(ids: string[]): Achievement[] {
     return this.unlock(ACHIEVEMENTS.filter((a) => ids.includes(a.id) && !this.unlocked.has(a.id)));
   }
