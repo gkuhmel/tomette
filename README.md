@@ -150,7 +150,7 @@ Règles : `src/core/premium.ts` ; achat : `src/purchase.ts` ; détails dans
 
 Modes : Classique (sans fin), Contre-la-montre (2 min), Mosaïque (un max de
 rosaces en 3 min), Express (départ au niveau 8). Difficultés Détente / Normal /
-Expert, un record par mode et par difficulté, 48 succès (dont 19 difficiles : chaîne ×7, campagne à 90 étoiles, Extrême… et 4 pour les
+Expert, un record par mode et par difficulté, 49 succès (dont 19 difficiles : chaîne ×7, campagne à 90 étoiles, Extrême… et 4 pour les
 victoires en ligne : 1, 10, 50, 100), statistiques, tutoriel
 guidé au premier lancement. Langues : français, anglais, espagnol, allemand,
 italien, chinois (`src/i18n/`).
