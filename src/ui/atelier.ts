@@ -205,7 +205,8 @@ export function bonStrip(onSkip: (index: number) => void): { root: HTMLElement; 
     root,
     update(bon, tips) {
       tipsNow = tips;
-      const k = bon ? `${bon.map((i) => `${i.done}`).join(',')}|${tips}|${armed}` : '';
+      // Tout ce qui se voit : motifs, couleurs, avancement (une nouvelle manche change le bon).
+      const k = bon ? `${bon.map((i) => `${i.steps.join('+')}:${i.color}:${i.count}:${i.done}`).join(',')}|${tips}|${armed}` : '';
       if (k === key) return;
       key = k;
       root.hidden = !bon;
