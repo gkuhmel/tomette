@@ -30,8 +30,11 @@ export interface BonItem {
   done: number;
 }
 
-/** Motifs de couleur (triangle, arc, farandole) : la couleur fait partie de la commande. */
-export const COLORED: readonly OrderKind[] = ['triangle', 'arc', 'farandole'];
+/** Motifs de couleur : la couleur fait partie de la commande. */
+export const COLORED: readonly OrderKind[] = ['triangle', 'arc', 'farandole', 'rosace'];
+
+/** Formes construites une à une : une seule forme ne remplit qu'une ligne du bon. */
+export const BUILT: readonly OrderKind[] = ['triangle', 'arc', 'farandole'];
 
 export const itemTotal = (i: BonItem) => i.steps.length * i.count;
 export const itemFinished = (i: BonItem) => i.done >= itemTotal(i);

@@ -37,6 +37,11 @@ function glyphImage(color: number): string {
   return canvas.toDataURL();
 }
 
+/** Motif sans forme imposée (combo, chaîne) : un court texte. */
+function textSvg(text: string, fill: string): string {
+  return `<svg viewBox="-3 -3 6 6" aria-hidden="true"><text x="0" y="1.1" text-anchor="middle" font-size="3.4" font-weight="900" fill="${fill}" font-family="Fredoka, sans-serif">${text}</text></svg>`;
+}
+
 /**
  * Dessin du motif commandé : petits hexagones dans la couleur demandée, avec son
  * pictogramme (la couleur seule se confond facilement avec sa voisine).
@@ -59,27 +64,25 @@ export function orderSvg(o: Order): string {
       cells = [[0, 0, 'var(--card)'], ...[0, 1, 2, 3].map((i): [number, number, string] => [...at(i), col])];
       break;
     case 'rosace':
-      cells = [[0, 0, '#f2c94c'], ...[0, 1, 2, 3, 4, 5].map((i): [number, number, string] => [...at(i), col])];
+      cells = [[0, 0, 'var(--card)'], ...[0, 1, 2, 3, 4, 5].map((i): [number, number, string] => [...at(i), col])];
       break;
     case 'combo5':
-      cells = [-2, -1, 0, 1, 2].map((k): [number, number, string] => [0, k * S3 * 0.62, 'var(--t1)']);
-      break;
+      // 5 tuiles ou plus d'un coup, quelle que soit la forme (pas une ligne : « 5+ »).
+      return textSvg('5+', 'var(--t3)');
     case 'chain3':
-      return `<svg viewBox="-3 -3 6 6" aria-hidden="true"><text x="0" y="1.1" text-anchor="middle" font-size="3.4" font-weight="900" fill="var(--t0)" font-family="Fredoka, sans-serif">×3</text></svg>`;
+      return textSvg('×3', 'var(--t0)');
   }
-  const scale = o.kind === 'combo5' ? 0.62 : 1;
   // Cadrage serré sur le motif, carré.
   const xs = cells.map((c) => c[0]);
   const ys = cells.map((c) => c[1]);
   const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
   const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
-  const half = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) / 2 + r * scale + 0.15;
+  const half = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) / 2 + r + 0.15;
   return `<svg viewBox="${(cx - half).toFixed(2)} ${(cy - half).toFixed(2)} ${(half * 2).toFixed(2)} ${(half * 2).toFixed(2)}" aria-hidden="true">${cells
     .map(([x, y, f]) => {
-      const tile = hex(x, y, r * scale, f, f === 'var(--card)' ? 'var(--muted)' : '');
+      const tile = hex(x, y, r, f, f === 'var(--card)' ? 'var(--muted)' : '');
       if (!glyph || f !== col) return tile;
-      const g = r * scale;
-      return `${tile}<image href="${glyph}" x="${(x - g).toFixed(2)}" y="${(y - g).toFixed(2)}" width="${(g * 2).toFixed(2)}" height="${(g * 2).toFixed(2)}"/>`;
+      return `${tile}<image href="${glyph}" x="${(x - r).toFixed(2)}" y="${(y - r).toFixed(2)}" width="${(r * 2).toFixed(2)}" height="${(r * 2).toFixed(2)}"/>`;
     })
     .join('')}</svg>`;
 }

@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/config';
 import { ATELIER_STAGES, atelierStage, BonItem, earnsTip, itemFinished, itemTotal, makeBon } from '../src/core/atelier';
 import { Game } from '../src/core/game';
-import { neighbor } from '../src/core/hex';
+import { ALL_DIRS, neighbor } from '../src/core/hex';
 import { Rng } from '../src/core/rng';
 import { RING } from '../src/core/shapes';
 import { cfg } from './helpers';
 
-const A = 0, C = 2;
+const A = 0, B = 1, C = 2;
 
 /** Jeu vide de l'atelier, sans montée, avec le bon donné. */
 function atelierGame(bon: BonItem[]): Game {
@@ -47,7 +47,7 @@ describe('Atelier', () => {
         for (const i of bon) {
           if (stage <= 3) expect(['triangle', 'combo5']).toContain(i.steps[0]);
           if (stage < 12) expect(itemTotal(i)).toBe(1);
-          if (i.steps[0] === 'combo5' || i.steps[0] === 'rosace' || i.steps[0] === 'chain3') expect(i.color).toBe(-1);
+          if (i.steps[0] === 'combo5' || i.steps[0] === 'chain3') expect(i.color).toBe(-1);
           else expect(i.color).toBeGreaterThanOrEqual(0);
         }
       }
@@ -97,6 +97,22 @@ describe('Atelier', () => {
     seq.tick();
     expect(seq.bon![0].done).toBe(1);
     expect(itemFinished(seq.bon![0])).toBe(false);
+  });
+
+  it('rosace commandée : seule une rosace de la bonne couleur la livre', () => {
+    // Rosace de couleur A autour de (3,10), centre B (comme dans tests/rosace.test.ts).
+    const withRosace = (wanted: number) => {
+      const game = atelierGame([line(['rosace'], wanted), line(['triangle'], C)]);
+      game.grid.place(3, 10, B);
+      for (const dir of ALL_DIRS) {
+        const n = neighbor(3, 10, dir);
+        game.grid.place(n.c, n.r, A);
+      }
+      game.tick();
+      return game;
+    };
+    expect(withRosace(C).bon![0].done).toBe(0);
+    expect(withRosace(A).bon![0].done).toBe(1);
   });
 
   it('pourboire : une manche livrée vite', () => {

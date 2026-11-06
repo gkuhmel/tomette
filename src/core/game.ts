@@ -10,7 +10,7 @@ import { activatePreview, fillInitial, generatePreview, levelAt, secondsPerRow }
 import { Rng } from './rng';
 import { Mode, modeById, ModeId } from './modes';
 import { nextOrder, Order, OrderKind } from './orders';
-import { BonItem, COLORED, itemFinished, itemStep } from './atelier';
+import { BonItem, BUILT, itemFinished, itemStep } from './atelier';
 import { Farandole, findFarandoles, findShapes, Shape } from './shapes';
 
 /** Pas de la logique (60 Hz). */
@@ -503,20 +503,20 @@ export class Game {
 
   /**
    * Atelier : ce clear fait avancer les lignes du bon qu'il remplit. Une forme construite
-   * (triangle, arc, farandole) ne compte que pour une ligne ; rosace, combo et chaîne
-   * comptent pour chaque ligne qui les demande.
+   * (triangle, arc, farandole) ne compte que pour une ligne ; rosace (de la bonne couleur),
+   * combo et chaîne comptent pour chaque ligne qui les demande.
    */
-  private advanceBon(c: { shape?: 'order' | 'farandole'; kind?: OrderKind; color: number; rosaces: number; size: number }): void {
+  private advanceBon(c: { shape?: 'order' | 'farandole'; kind?: OrderKind; color: number; rosaceColors: number[]; size: number }): void {
     let shapeUsed = false;
     for (const i of this.bon ?? []) {
       if (itemFinished(i)) continue;
       const step = itemStep(i);
       let ok = false;
       if (step === 'farandole') ok = c.shape === 'farandole' && c.color === i.color;
-      else if (COLORED.includes(step)) ok = c.shape === 'order' && c.kind === step && c.color === i.color;
-      else ok = (step === 'rosace' && c.rosaces > 0) || (step === 'combo5' && c.size >= 5) || (step === 'chain3' && this.chain >= 3);
-      if (!ok || (COLORED.includes(step) && shapeUsed)) continue;
-      if (COLORED.includes(step)) shapeUsed = true;
+      else if (step === 'triangle' || step === 'arc') ok = c.shape === 'order' && c.kind === step && c.color === i.color;
+      else ok = (step === 'rosace' && c.rosaceColors.includes(i.color)) || (step === 'combo5' && c.size >= 5) || (step === 'chain3' && this.chain >= 3);
+      if (!ok || (BUILT.includes(step) && shapeUsed)) continue;
+      if (BUILT.includes(step)) shapeUsed = true;
       i.done++;
       if (itemFinished(i)) this.deliverLine();
       else this.notices.push('orderStep');
@@ -682,12 +682,12 @@ export class Game {
       const done =
         (shape === 'order' && shapeKind === o.kind && shapeColor === o.color) ||
         (o.kind === 'farandole' && shape === 'farandole' && shapeColor === o.color) ||
-        (o.kind === 'rosace' && rosaces.length > 0) ||
+        (o.kind === 'rosace' && rosaces.some((k) => k.color === o.color)) ||
         (o.kind === 'combo5' && size >= 5) ||
         (o.kind === 'chain3' && this.chain >= 3);
       if (done) this.completeOrder();
     }
-    if (this.bon) this.advanceBon({ shape, kind: shapeKind, color: shapeColor, rosaces: rosaces.length, size });
+    if (this.bon) this.advanceBon({ shape, kind: shapeKind, color: shapeColor, rosaceColors: rosaces.map((k) => k.color), size });
   }
 
   /** La tomette d'or en `at` et toutes les tuiles posées de la couleur `color` disparaissent. */
