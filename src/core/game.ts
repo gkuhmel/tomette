@@ -504,7 +504,8 @@ export class Game {
   /**
    * Atelier : ce clear fait avancer les lignes du bon qu'il remplit. Une forme construite
    * (triangle, arc, farandole) ne compte que pour une ligne ; rosace (de la bonne couleur),
-   * combo et chaîne comptent pour chaque ligne qui les demande.
+   * combo et chaîne comptent pour chaque ligne qui les demande. Une rosace est une rosace :
+   * elle ne compte pas aussi comme « 5 tuiles ou plus ».
    */
   private advanceBon(c: { shape?: 'order' | 'farandole'; kind?: OrderKind; color: number; rosaceColors: number[]; size: number }): void {
     let shapeUsed = false;
@@ -514,7 +515,7 @@ export class Game {
       let ok = false;
       if (step === 'farandole') ok = c.shape === 'farandole' && c.color === i.color;
       else if (step === 'triangle' || step === 'arc') ok = c.shape === 'order' && c.kind === step && c.color === i.color;
-      else ok = (step === 'rosace' && c.rosaceColors.includes(i.color)) || (step === 'combo5' && c.size >= 5) || (step === 'chain3' && this.chain >= 3);
+      else ok = (step === 'rosace' && c.rosaceColors.includes(i.color)) || (step === 'combo5' && c.size >= 5 && !c.rosaceColors.length) || (step === 'chain3' && this.chain >= 3);
       if (!ok || (BUILT.includes(step) && shapeUsed)) continue;
       if (BUILT.includes(step)) shapeUsed = true;
       i.done++;
@@ -683,7 +684,8 @@ export class Game {
         (shape === 'order' && shapeKind === o.kind && shapeColor === o.color) ||
         (o.kind === 'farandole' && shape === 'farandole' && shapeColor === o.color) ||
         (o.kind === 'rosace' && rosaces.some((k) => k.color === o.color)) ||
-        (o.kind === 'combo5' && size >= 5) ||
+        // Une rosace compte comme rosace, pas aussi comme « 5 tuiles ou plus ».
+        (o.kind === 'combo5' && size >= 5 && !rosaces.length) ||
         (o.kind === 'chain3' && this.chain >= 3);
       if (done) this.completeOrder();
     }

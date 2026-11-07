@@ -115,6 +115,18 @@ describe('Atelier', () => {
     expect(withRosace(A).bon![0].done).toBe(1);
   });
 
+  it('une rosace ne compte pas aussi comme « 5 tuiles ou plus »', () => {
+    const game = atelierGame([line(['rosace'], A), line(['combo5'])]);
+    game.grid.place(3, 10, B);
+    for (const dir of ALL_DIRS) {
+      const n = neighbor(3, 10, dir);
+      game.grid.place(n.c, n.r, A);
+    }
+    game.tick();
+    expect(game.bon![0].done).toBe(1);
+    expect(game.bon![1].done).toBe(0);
+  });
+
   it('pourboire : une manche livrée vite', () => {
     const bon = [line(['triangle'], A), line(['combo5'])];
     expect(earnsTip(40, bon)).toBe(true);
