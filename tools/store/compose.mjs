@@ -20,6 +20,9 @@ const FORMATS = {
   'googleplay-phone': { w: 1080, h: 1920, src: 'android', shotW: 800, h1: 80, h2: 40, top: 80, bezel: 20, radius: 64 },
 };
 
+/** Formats à produire (variable FORMATS, ex. « appstore-iphone-6.9 ») ; par défaut tous. */
+const ONLY = process.env.FORMATS ? process.env.FORMATS.split(',') : Object.keys(FORMATS);
+
 const font = (re) => {
   const f = readdirSync(`${ROOT}/dist/assets`).find((n) => re.test(n));
   return `data:font/woff2;base64,${readFileSync(`${ROOT}/dist/assets/${f}`).toString('base64')}`;
@@ -89,7 +92,7 @@ function feature(lang) {
 
 const { b, p } = await open({ width: 1080, height: 1920, scale: 1 });
 for (const lang of LANGS) {
-  for (const fmt of Object.keys(FORMATS)) {
+  for (const fmt of ONLY) {
     const F = FORMATS[fmt];
     const dir = `${HERE}out/${fmt}/${lang}`;
     mkdirSync(dir, { recursive: true });
@@ -101,6 +104,10 @@ for (const lang of LANGS) {
       await p.clock.runFor(200);
       await p.screenshot({ path: `${dir}/${i + 1}-${scene.slice(2)}.jpg`, type: 'jpeg', quality: 92 });
     }
+  }
+  if (!ONLY.includes('googleplay-phone')) {
+    console.log('ok', lang);
+    continue;
   }
   mkdirSync(`${HERE}out/googleplay-feature`, { recursive: true });
   await p.setViewportSize({ width: 1024, height: 500 });

@@ -19,6 +19,8 @@ export async function open({ lang = 'fr', theme, width = 360, height = 640, scal
   await ctx.addInitScript(([lang, theme]) => {
     localStorage.setItem('tomettes.config', JSON.stringify({ music: 0, sound: 0, ...(theme !== undefined ? { theme } : {}) }));
     localStorage.setItem('tomettes.lang', lang); localStorage.setItem('tomettes.tutorial', '1');
+    // Vitrine : version complète (pas de cadenas sur les modes).
+    localStorage.setItem('tomettes.devFull', '1');
   }, [lang, theme]);
   const p = await ctx.newPage(); p.on('pageerror', e => console.log('ERR', String(e)));
   await p.clock.install({ time: 1_700_000_000_000 });
