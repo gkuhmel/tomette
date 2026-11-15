@@ -26,7 +26,7 @@ Sechseck-Fliesen-Puzzle
 match 3,sechseck,fliesen,provence,denkspiel,kombo,kette,rosette,duell,farben,logik,knobeln,offline
 ```
 
-## App Store · Description (identique sur Google Play) (1524/4000)
+## App Store · Description (identique sur Google Play) (1827/4000)
 
 ```text
 Tomettes ist ein Action-Puzzle, inspiriert von den sechseckigen Terrakottafliesen provenzalischer Häuser.
@@ -57,6 +57,10 @@ AUSSERDEM
 • 49 Erfolge, Statistiken, Themen und Symbolsätze zum Freischalten
 • Offline spielbar (außer dem Online-Duell)
 • Ohne Werbung, ohne Konto: Deine Spiele bleiben auf deinem Handy
+
+KOSTENLOS – UND KOMPLETT MIT EINEM KAUF
+• Kostenlos: Klassisch, Duell, die ersten 10 Runden der Kampagne und eine Werkstatt pro Tag
+• „Tomettes komplett“, ein einmaliger Kauf, schaltet alles andere frei: die ganze Kampagne, unbegrenzte Werkstatt, Gegen die Uhr, Mosaik, Express und das Tomettes-Design
 
 Die Terrakottafliesen aus Südfrankreich haben noch nie so viel Spaß gemacht.
 ```

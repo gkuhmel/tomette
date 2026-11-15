@@ -22,6 +22,7 @@ function offline(): Plugin {
         './icons/icon-maskable-512.png',
         './icons/favicon-64.png',
         './privacy.html',
+        './support.html',
       ];
       const version = Date.now().toString(36);
       const source = `// Généré au build — ne pas modifier.

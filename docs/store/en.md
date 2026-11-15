@@ -26,7 +26,7 @@ Open the Workshop: 20 stages, a single life and an order slip to deliver every s
 match 3,hex,tiles,provence,brain,combo,chain,rosette,duel,colors,colours,strategy,relaxing,offline
 ```
 
-## App Store · Description (identique sur Google Play) (1374/4000)
+## App Store · Description (identique sur Google Play) (1644/4000)
 
 ```text
 Tomettes is an action puzzle inspired by the hexagonal terracotta tiles of Provençal homes.
@@ -57,6 +57,10 @@ AND ALSO
 • 49 achievements, statistics, themes and icon sets to unlock
 • Plays offline (except the online duel)
 • No ads, no account: your games stay on your phone
+
+FREE, AND COMPLETE WITH ONE PURCHASE
+• Free: Classic, Duel, the first 10 Campaign stages and one Workshop a day
+• “Tomettes Full”, a one-time purchase, unlocks everything else: the whole Campaign, unlimited Workshop, Time attack, Mosaic, Express and the Tomettes theme
 
 The terracotta tiles found in every home in the South of France have never been this much fun.
 ```

@@ -26,7 +26,7 @@ Abre el Taller: 20 fases, una sola vida y un albarán que entregar en cada fase.
 match 3,hexágono,baldosas,provenza,rompecabezas,combo,cadena,rosetón,duelo,colores,lógica
 ```
 
-## App Store · Description (identique sur Google Play) (1484/4000)
+## App Store · Description (identique sur Google Play) (1759/4000)
 
 ```text
 Tomettes es un puzle de acción inspirado en las baldosas hexagonales de barro cocido de las casas de Provenza.
@@ -57,6 +57,10 @@ Y ADEMÁS
 • 49 logros, estadísticas, temas y juegos de iconos por desbloquear
 • Se juega sin conexión (salvo el duelo en línea)
 • Sin anuncios y sin cuenta: tus partidas se quedan en tu teléfono
+
+GRATIS, Y COMPLETO CON UNA SOLA COMPRA
+• Gratis: Clásico, Duelo, las 10 primeras fases de la Campaña y un Taller al día
+• «Tomettes completo», una compra única, desbloquea todo lo demás: la Campaña entera, Taller sin límite, Contrarreloj, Mosaico, Exprés y el tema Tomettes
 
 Las baldosas de barro cocido del sur de Francia nunca habían sido tan divertidas.
 ```

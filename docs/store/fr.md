@@ -26,7 +26,7 @@ Ouvre l'Atelier : 20 manches, une seule vie et un bon de commande à livrer à c
 match 3,hexagone,carreaux,provence,casse-tête,combo,chaîne,rosace,duel,couleurs,terre cuite
 ```
 
-## App Store · Description (identique sur Google Play) (1543/4000)
+## App Store · Description (identique sur Google Play) (1830/4000)
 
 ```text
 Tomettes, c'est le puzzle d'action inspiré des carreaux hexagonaux des maisons provençales.
@@ -57,6 +57,10 @@ ET AUSSI
 • 49 succès, des statistiques, des thèmes et des jeux de pictogrammes à débloquer
 • Jouable hors ligne (sauf le duel en ligne)
 • Sans publicité, sans compte : tes parties restent sur ton téléphone
+
+GRATUIT, ET COMPLET EN UN ACHAT
+• Gratuit : Classique, Duel, les 10 premières manches de la Campagne et un Atelier par jour
+• « Tomettes complet », un achat unique, débloque tout le reste : Campagne entière, Atelier sans limite, Contre-la-montre, Mosaïque, Express et le thème Tomettes
 
 Les tomettes, ces carreaux de terre cuite qu'on trouve dans toutes les maisons du Midi, n'ont jamais été aussi amusantes.
 ```

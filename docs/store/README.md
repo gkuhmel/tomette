@@ -39,8 +39,9 @@ on l'ouvre plus tard.
   officielle). Le chinois simplifié sert pour Singapour, la Malaisie et la diaspora ;
   une fiche en chinois traditionnel (Taïwan, Hong Kong) peut être ajoutée plus tard.
 - **Copyright** : © 2026 Calanques United.
-- **URL de confidentialité** : `https://<adresse du site>/privacy.html` (page déjà en ligne).
-- **URL d'assistance** : une page de contact ou une adresse e-mail dédiée (à créer).
+- **URL de confidentialité** : `https://tomettes.calanquesunited.com/privacy.html`.
+- **URL d'assistance** : `https://tomettes.calanquesunited.com/support.html` (contact et questions fréquentes, FR/EN).
+- **URL marketing** (facultative) : `https://tomettes.calanquesunited.com/`.
 - **Prix** : application gratuite, avec l'achat intégré « Tomettes complet » à 0,99 €.
   Ne jamais écrire de prix dans les textes (refusé par Apple).
 

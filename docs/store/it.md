@@ -26,7 +26,7 @@ Apri la Bottega: 20 manche, una sola vita e una bolla d'ordine da consegnare a o
 match 3,esagono,piastrelle,provenza,rompicapo,combo,catena,rosone,duello,colori,logica,offline
 ```
 
-## App Store · Description (identique sur Google Play) (1494/4000)
+## App Store · Description (identique sur Google Play) (1782/4000)
 
 ```text
 Tomettes è un puzzle d'azione ispirato alle piastrelle esagonali in cotto delle case provenzali.
@@ -57,6 +57,10 @@ E INOLTRE
 • 49 obiettivi, statistiche, temi e set di icone da sbloccare
 • Si gioca offline (tranne il duello online)
 • Senza pubblicità, senza account: le tue partite restano sul tuo telefono
+
+GRATIS, E COMPLETO CON UN SOLO ACQUISTO
+• Gratis: Classica, Duello, i primi 10 livelli della Campagna e una Bottega al giorno
+• «Tomettes completo», un acquisto unico, sblocca tutto il resto: la Campagna intera, Bottega senza limiti, Contro il tempo, Mosaico, Express e il tema Tomettes
 
 Le piastrelle in cotto del sud della Francia non sono mai state così divertenti.
 ```
