@@ -16,6 +16,8 @@ const SCENE_COLOR = ['#f2766b', '#2fb5b0', '#e0a92a', '#9b7ede', '#f2766b', '#34
 /** Formats : taille finale, capture source, largeur de la capture, tailles de texte. */
 const FORMATS = {
   'appstore-iphone-6.9': { w: 1320, h: 2868, src: 'iphone', shotW: 1000, h1: 108, h2: 54, top: 150, bezel: 26, radius: 96 },
+  // iPhone 6,1 / 6,3 pouces (emplacement distinct dans App Store Connect) : le même visuel réduit.
+  'appstore-iphone-6.3': { w: 1206, h: 2622, src: 'iphone', shotW: 914, h1: 99, h2: 49, top: 137, bezel: 24, radius: 88 },
   'appstore-ipad-13': { w: 2064, h: 2752, src: 'ipad', shotW: 1560, h1: 124, h2: 64, top: 140, bezel: 30, radius: 60 },
   'googleplay-phone': { w: 1080, h: 1920, src: 'android', shotW: 800, h1: 80, h2: 40, top: 80, bezel: 20, radius: 64 },
 };

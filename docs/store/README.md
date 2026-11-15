@@ -12,6 +12,7 @@ espagnol, allemand, italien, chinois simplifié).
 | Store | Emplacement | Fichiers | Format |
 |---|---|---|---|
 | App Store | Captures iPhone 6,9″ | `appstore-iphone-6.9/<langue>/1…7.jpg` | 1320 × 2868 |
+| App Store | Captures iPhone 6,1/6,3″ (si App Store Connect les demande) | `appstore-iphone-6.3/<langue>/1…7.jpg` | 1206 × 2622 |
 | App Store | Captures iPad 13″ (seulement si l'app est publiée pour iPad) | `appstore-ipad-13/<langue>/1…7.jpg` | 2064 × 2752 |
 | App Store | Icône (dans Xcode, pas dans App Store Connect) | `icons/appstore-icon-1024.png` | 1024 × 1024, sans transparence |
 | Google Play | Captures téléphone | `googleplay-phone/<langue>/1…7.jpg` | 1080 × 1920 |
