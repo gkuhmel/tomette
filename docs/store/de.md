@@ -65,10 +65,10 @@ KOSTENLOS – UND KOMPLETT MIT EINEM KAUF
 Die Terrakottafliesen aus Südfrankreich haben noch nie so viel Spaß gemacht.
 ```
 
-## App Store · Nouveautés de la version (42/4000)
+## App Store · Nouveautés de la version (196/4000)
 
 ```text
-Die erste Version von Tomettes. Viel Spaß!
+Neu: „Tomettes komplett“, ein einmaliger Kauf, der das ganze Spiel freischaltet (ganze Kampagne, unbegrenzte Werkstatt, Gegen die Uhr, Mosaik, Express und das Tomettes-Design). Kleine Korrekturen.
 ```
 
 ## Google Play · Titre (8/30)

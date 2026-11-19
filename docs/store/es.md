@@ -65,10 +65,10 @@ GRATIS, Y COMPLETO CON UNA SOLA COMPRA
 Las baldosas de barro cocido del sur de Francia nunca habían sido tan divertidas.
 ```
 
-## App Store · Nouveautés de la version (38/4000)
+## App Store · Nouveautés de la version (185/4000)
 
 ```text
-Primera versión de Tomettes. ¡A jugar!
+Novedad: «Tomettes completo», una compra única que desbloquea todo el juego (Campaña entera, Taller sin límite, Contrarreloj, Mosaico, Exprés y el tema Tomettes). Pequeñas correcciones.
 ```
 
 ## Google Play · Titre (8/30)

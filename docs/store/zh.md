@@ -65,10 +65,10 @@ Tomettes 是一款动作益智游戏，灵感来自普罗旺斯民居里的六�
 法国南部家家户户的陶土花砖，从来没有这么好玩过。
 ```
 
-## App Store · Nouveautés de la version (21/4000)
+## App Store · Nouveautés de la version (75/4000)
 
 ```text
-Tomettes 首个版本，祝你玩得开心！
+新内容：「Tomettes 完整版」，一次性购买即可解锁全部游戏内容（完整战役、无限工坊、计时赛、马赛克、快车和 Tomettes 主题）。细节修正。
 ```
 
 ## Google Play · Titre (8/30)

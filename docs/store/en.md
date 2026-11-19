@@ -65,10 +65,10 @@ FREE, AND COMPLETE WITH ONE PURCHASE
 The terracotta tiles found in every home in the South of France have never been this much fun.
 ```
 
-## App Store · Nouveautés de la version (40/4000)
+## App Store · Nouveautés de la version (172/4000)
 
 ```text
-The first version of Tomettes. Have fun!
+New: “Tomettes Full”, a one-time purchase that unlocks the whole game (full Campaign, unlimited Workshop, Time attack, Mosaic, Express and the Tomettes theme). Small fixes.
 ```
 
 ## Google Play · Titre (8/30)

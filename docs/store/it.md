@@ -65,10 +65,10 @@ GRATIS, E COMPLETO CON UN SOLO ACQUISTO
 Le piastrelle in cotto del sud della Francia non sono mai state così divertenti.
 ```
 
-## App Store · Nouveautés de la version (49/4000)
+## App Store · Nouveautés de la version (188/4000)
 
 ```text
-La prima versione di Tomettes. Buon divertimento!
+Novità: «Tomettes completo», un acquisto unico che sblocca tutto il gioco (Campagna intera, Bottega senza limiti, Contro il tempo, Mosaico, Express e il tema Tomettes). Piccole correzioni.
 ```
 
 ## Google Play · Titre (8/30)

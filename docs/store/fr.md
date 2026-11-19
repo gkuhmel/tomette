@@ -65,10 +65,10 @@ GRATUIT, ET COMPLET EN UN ACHAT
 Les tomettes, ces carreaux de terre cuite qu'on trouve dans toutes les maisons du Midi, n'ont jamais été aussi amusantes.
 ```
 
-## App Store · Nouveautés de la version (39/4000)
+## App Store · Nouveautés de la version (194/4000)
 
 ```text
-Première version de Tomettes. Bon jeu !
+Nouveau : « Tomettes complet », un achat unique pour débloquer tout le jeu (Campagne entière, Atelier sans limite, Contre-la-montre, Mosaïque, Express et le thème Tomettes). Petites corrections.
 ```
 
 ## Google Play · Titre (8/30)
