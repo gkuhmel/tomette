@@ -18,9 +18,9 @@ export const SITE_ORIGIN = 'https://tomettes.calanquesunited.com';
 
 /**
  * Page de l'appli sur l'App Store (bouton de la version complète, sur le site).
- * Vide tant que l'appli n'est pas publiée : le site affiche alors « Bientôt sur l'App Store ».
+ * Vide : le site affiche « Bientôt sur l'App Store » à la place du bouton.
  */
-export const APP_STORE_URL = '';
+export const APP_STORE_URL = 'https://apps.apple.com/app/id6832052007';
 
 /** Origine du site (serveur du duel, liens à partager). */
 export function siteOrigin(): string {
